@@ -1116,9 +1116,6 @@ git filter-branch --index-filter 让每个提交的文件都复制到索引(.git
 最后-- --all 将所有ref（包括branch、tag）都执行上面的重写
 ##############################解释#################################
 
-
-<<<<<<< HEAD:T_Docker+Git.md
-=======
     
 git push origin --force --all
 git push origin --force --tags
@@ -1137,7 +1134,8 @@ git push --force
 
 
 
->>>>>>> a422c3362363be336f2919522247dfed5665e492:T_Docker+Git.md
+
+
 ## 添加key
 
 ```bash
@@ -1193,7 +1191,7 @@ https://blog.csdn.net/downanddusk/article/details/88344389
 
 ## upstream/master
 
-```shell
+​```shell
 1.本地创建一个本地仓库 
 
 2.关联远程端:
