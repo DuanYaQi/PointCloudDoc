@@ -1093,7 +1093,7 @@ git push origin :main
 
 
 
-## 删除一个文件所有内容
+## 删除一个文件所有历史记录日志
 
 ```shell
 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch T_Temp.md' --prune-empty --tag-name-filter cat -- --all
