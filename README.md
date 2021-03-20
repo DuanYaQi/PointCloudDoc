@@ -70,7 +70,6 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 |  [colab](T_Colab.md)    |      |
 |  [Fish](T_Fish.md)    |  摸鱼    |
 |  [GPU Program](T_GPU编程.md)    |      |
-|  [MY_IDEA](T_MY_IDEA.md)    |      |
 |  [PaperVocabulary](T_PaperVocabulary.md)    |  词汇表    |
 |   [PCList](T_PCList.md)   |入门点云文章      |
 |  [pypoisson](T_pypoisson.md)    | 泊松重建     |

@@ -1093,6 +1093,36 @@ git push origin :main
 
 
 
+## 删除一个文件所有内容
+
+```shell
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch T_MY_IDEA.md' --prune-empty --tag-name-filter cat -- --all
+
+##############################解释#################################
+git filter-branch --index-filter 让每个提交的文件都复制到索引(.git/index)中
+然后运行过滤器命令：git rm --cached --ignore-unmatch 文件名 ，让每个提交都删除掉“文件名”文件
+然后--prune-empty 把空的提交“修剪”掉
+然后--tag-name-filter cat 把每个tag保持原名字，指向修改后的对应提交
+最后-- --all 将所有ref（包括branch、tag）都执行上面的重写
+##############################解释#################################
+
+
+    
+git push origin --force --all
+git push origin --force --tags
+
+
+# 删除缓存下来的ref和git操作记录
+git for-each-ref --format='delete %(refname)' refs/original | git update-ref --stdin
+git reflog expire --expire=now --all
+
+#垃圾回收
+git gc --prune=now
+
+# 强推
+git push --force
+```
+
 
 
 ## 添加key
@@ -1101,6 +1131,8 @@ git push origin :main
 ssh-keygen -t rsa -C "837738300@qq.com" 
 cat ~/.ssh/id_rsa.pub
 ```
+
+
 
 
 
