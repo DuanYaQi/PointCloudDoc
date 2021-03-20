@@ -745,11 +745,21 @@ https://mp.weixin.qq.com/s?__biz=MzIwOTc2MTUyMg==&mid=2247496031&idx=2&sn=c4cffb
 ---
 
 # docker cpu
+<<<<<<< HEAD:T_Docker+Git.md
+=======
+
+cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker 
+
+Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.html
+>>>>>>> a422c3362363be336f2919522247dfed5665e492:T_Docker+Git.md
 
 cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker 
 
 Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.html
 
+
+
+---
 
 
 ---
@@ -1107,6 +1117,8 @@ git filter-branch --index-filter 让每个提交的文件都复制到索引(.git
 ##############################解释#################################
 
 
+<<<<<<< HEAD:T_Docker+Git.md
+=======
     
 git push origin --force --all
 git push origin --force --tags
@@ -1125,14 +1137,13 @@ git push --force
 
 
 
+>>>>>>> a422c3362363be336f2919522247dfed5665e492:T_Docker+Git.md
 ## 添加key
 
 ```bash
 ssh-keygen -t rsa -C "837738300@qq.com" 
 cat ~/.ssh/id_rsa.pub
 ```
-
-
 
 
 
@@ -1165,9 +1176,44 @@ git branch --set-upstream-to=origin/master master
 fatal: branch 'master' does not exist
 
 
+<<<<<<< HEAD:T_Docker+Git.md
 原因:
 本地仓没有在master上所以报错了
 
+=======
+## ! [rejected]       master -> master (fetch first/non-fast-forward)
+
+```
+git pull --rebase origin master
+git push -u origin master
+```
+
+https://blog.csdn.net/downanddusk/article/details/88344389
+
+
+## upstream/master
+
+```shell
+1.本地创建一个本地仓库 
+
+2.关联远程端:
+git remote add origin git@github.com:用户名/远程库名.git
+
+3.同步远程仓库到本地
+git pull
+这个时候会报错
+If you wish to set tracking information for this branch you can do so with:
+git branch --set-upstream-to=origin/<branch> master
+再按提示执行
+git branch --set-upstream-to=origin/master master
+继续报错
+fatal: branch 'master' does not exist
+
+
+原因:
+本地仓没有在master上所以报错了
+
+>>>>>>> a422c3362363be336f2919522247dfed5665e492:T_Docker+Git.md
 解决:
 4.在本地仓切换到master，那么刚刚同步的文件就出来了
 git checkout master
