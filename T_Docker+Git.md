@@ -1096,7 +1096,7 @@ git push origin :main
 ## 删除一个文件所有内容
 
 ```shell
-git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch T_MY_IDEA.md' --prune-empty --tag-name-filter cat -- --all
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch T_Temp.md' --prune-empty --tag-name-filter cat -- --all
 
 ##############################解释#################################
 git filter-branch --index-filter 让每个提交的文件都复制到索引(.git/index)中
