@@ -137,7 +137,6 @@ $$
 J_f^{-1} = J_{f^{-1}} \tag{2}
 $$
 
-
 ---
 
 ### Determinant
@@ -186,7 +185,6 @@ $$
 \operatorname{det}\left(J_{f}\right)=1 / \operatorname{det}\left(J_{f^{-1}}\right)
 \end{array} \tag{3}
 $$
-
 
 ---
 
@@ -492,7 +490,6 @@ x_{i>d}=\beta_{i} z_{i>d}+\gamma_{i}
 \end{array} \tag{5}
 $$
 
-
 ---
 
 #### Backward
@@ -540,7 +537,6 @@ $$
 &=\beta_{d+1} \beta_{d+2} \cdots \beta_{D}
 \end{array}
 $$
-
 
 ---
 
