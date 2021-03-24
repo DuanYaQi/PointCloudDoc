@@ -6,6 +6,8 @@
 
 deeplearning.ai
 
+https://www.coursera.org/learn/neural-networks-deep-learning?action=enroll
+
 
 
 ## 神经网络和深度学习
@@ -168,7 +170,7 @@ $$
 
 ---
 
-#### 2.3. logistic 回归损失函数
+#### 2.3. logistic 回归损失函数<span id="logistic"></span>
 
 为了训练 w 和 b 两个参数，需要定义一个 loss function。给定输入$(x^{(1)},y^{(1)}) , (x^{(2)},y^{(2)}), \dots, (x^{(m)},y^{(m)})$ ，我们希望预测到的 $\hat{y}^{(i)} \approx  y^{(i)}$
 
@@ -194,9 +196,9 @@ $$
 
 loss函数衡量了**单个**训练样本的表现。cost 函数衡量**全体**训练样本的表现。
 $$
-\begin{equation}
- J(w, b)=\frac{1}{m} \sum_{i=1}^{m} L\left(\hat{y}^{(i)}, y^{(i)}\right)=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \hat{y}^{(i)}+\left(1-y^{(i)}\right) \log \left(1-\hat{y}^{(i)}\right)\right]
-\end{equation}
+\begin{split}
+ J(w, b)&=\frac{1}{m} \sum_{i=1}^{m} L\left(\hat{y}^{(i)}, y^{(i)}\right)\\&=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \hat{y}^{(i)}+\left(1-y^{(i)}\right) \log \left(1-\hat{y}^{(i)}\right)\right]
+\end{split}
 $$
 即损失函数的平均值。
 
@@ -210,11 +212,13 @@ gradient descent
 
 已知待训练sigmod函数： $ \hat{y}=\sigma\left(w^{T} x+b\right), \sigma(z)=\frac{1}{1+e^{-z}} $
 
-成本函数： $ J(w, b)=\frac{1}{m} \sum_{i=1}^{m} L\left(\hat{y}^{(i)}, y^{(i)}\right)=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \hat{y}^{(i)}+\left(1-y^{(i)}\right) \log \left(1-\hat{y}^{(i)}\right)\right]$
-
+成本函数： 
+$$
+\begin{split} J(w, b)&=\frac{1}{m} \sum_{i=1}^{m} L\left(\hat{y}^{(i)}, y^{(i)}\right)\\&=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \hat{y}^{(i)}+\left(1-y^{(i)}\right) \log \left(1-\hat{y}^{(i)}\right)\right]\end{split} 
+$$
 找到合适的 w 和 b 让成本函数较小。
 
-图
+![image-20210324213334658](assets/image-20210324213334658.png)
 
 **J(w,b) 是在水平轴 w 和 b 上的曲面，找到 J(w,b) 最小值对应的参数。**
 
@@ -263,7 +267,154 @@ df = f(a2) - f(a1) / (a2 - a1) = 6.003 - 6 / (2.001 - 2) = 3
 
 ---
 
-#### 2.18 logistic 损失函数的解释
+#### 2.7. 计算图
+
+computation graph
+
+神经网络都是按照**前向**或者**反向传播**过程来实现的。
+
+首先计算出神经网络的输出，紧接着进行一个**反向传输操作**。后者用来计算出对应的梯度或者导数。
+
+$J(a,b,c) = 3(a + b * c)$ 是三个变量a,b,c的函数，我们可以设定`u = b*c`，`v = a + u`，`J = 3*v`，则有下图
+
+
+
+![image-20210324205340803](assets/image-20210324205340803.png)
+
+
+
+通过一个从左向右的过程，可以计算出 $J$ 的值。通过从右向左可以计算出导数。
+
+
+
+---
+
+#### 2.8. 计算图中的导数计算
+
+按照上图计算，$J$ 对 $v$ 的导数，$\frac{dJ}{dv} = 3$。a的值改变，v的值就会改变，J的值也会改变。a改变，v改变量取决于 $\frac{dv}{da}$，
+
+链式法则 $\frac{dJ}{da} = \frac{dJ}{dv}  \frac{dv}{da}$，$\frac{dJ}{db} = \frac{dJ}{dv}  \frac{dv}{du} \frac{du}{db}$，$\frac{dJ}{dc} = \frac{dJ}{dv}  \frac{dv}{du} \frac{du}{dc}$
+
+
+
+---
+
+#### 2.9. logistic回归中的梯度下降法
+
+$$
+z = w^Tx+b
+$$
+
+$$
+\hat{y} = a =\sigma (z)
+$$
+
+$$
+\mathcal{L}(\hat{y}, y)=-(y \log a+(1-y) \log (1-a))
+$$
+
+a是logistics函数的输出，y是标签真值。
+
+如果有两个特征 $x_1$ 和 $x_2$ 则
+$$
+z = w_1^Tx_1+w_2^Tx_2 +b
+$$
+在logistic回归中，我们需要做的是，**变换参数**w和b来最小化损失函数，
+
+![image-20210324211215820](assets/image-20210324211215820.png)
+
+其中
+$$
+\frac{dL}{da} = -\frac{y}{a} + \frac{1-y}{1-a}
+$$
+其中
+$$
+\begin{split}\frac{dL}{dz} &= \frac{dL}{da} \frac{da}{dz}\\&=(-\frac{y}{a} + \frac{1-y}{1-a}) * (a(1-a))\\&=a-y\end{split}
+$$
+其中目标函数对三个参数的导数如下：
+$$
+\begin{split}
+\frac{dL}{dw_1} &= x_1*\frac{dL}{dz}\\
+\frac{dL}{dw_2} &= x_2*\frac{dL}{dz}\\
+\frac{dL}{db} &= \frac{dL}{dz}
+\end{split}
+$$
+然后根据下式更新参数。
+$$
+\begin{split}
+w_1 &= w_1 - \alpha \frac{dL}{dw_1}\\
+w_2 &= w_2 - \alpha \frac{dL}{dw_2}\\
+b &= b - \alpha \frac{dL}{db}
+\end{split}
+$$
+
+
+---
+
+#### 2.10. m个样本的梯度下降
+
+上一节均为单一样本的求导与参数更新。实际情况下，训练集会有很多样本。
+
+$$
+\begin{split}
+ J(w, b)&=\frac{1}{m} \sum_{i=1}^{m} L(\hat{y}^{(i)}, y^{(i)})\\&=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \hat{y}^{(i)}+(1-y^{(i)}) \log (1-\hat{y}^{(i)})\right]
+\end{split}
+$$
+其中
+$$
+\hat{y}^{i} = a =\sigma (z^{i})=\sigma (w^Tx^{i}+b)
+$$
+直接求导
+$$
+\frac{\partial J(w, b)}{\partial w_1} = \frac{1}{m} \sum_{i=1}^{m}\frac{\partial L(\hat{y}^{(i)}, y^{(i)})}{\partial w_i}
+$$
+计算每一个样本的梯度值，然后求平均，会得到全局梯度值，可以直接用到梯度下降法。
+
+![image-20210324214705487](assets/image-20210324214705487.png)
+
+整个过程相当于一次epoch。每次将所有样本计算过一边后，梯度下降一次，更改参数。重复多次。
+
+**显式的使用循环，会使算法很低效。**因此向量化编程有很大的帮助。
+
+
+
+---
+
+#### 2.11. 向量化
+
+
+
+#### 2.12. 向量化的更多例子
+
+
+
+#### 2.13. 向量化 logistics 回归
+
+
+
+#### 2.14. 向量化 logistics 回归的梯度输出
+
+
+
+#### 2.15. Python 中的广播
+
+
+
+#### 2.16. 关于 python/numpy 向量的说明
+
+
+
+
+
+#### 2.17. Jupyter/Ipython笔记本的快速指南
+
+
+
+
+
+---
+
+#### 2.18 logistic 损失函数的[解释](#logistic)
 
 $$
 \hat{y} = \sigma (w^Tx+b)
@@ -347,6 +498,237 @@ $$
 
 
 ---
+
+
+
+
+
+
+
+
+
+# 全栈深度学习训练营
+
+https://www.bilibili.com/video/BV1BT4y1P7u6
+
+https://fullstackdeeplearning.com/spring2021/
+
+课外网站 http://neuralnetworksanddeeplearning.com/
+
+每周阅读一章
+
+---
+
+## Week 1: Fundamentals
+
+### Lecture 1: DL Fundamentals
+
+**Neural Networks**
+
+![image-20210324221541329](assets/image-20210324221541329.png)
+
+
+
+受生物学启发，通过神经元对我们的身体进行所有计算。
+
+![image-20210324221345170](assets/image-20210324221345170.png)
+
+axon 轴突（神经细胞的突起，将信号发送到其他细胞）
+
+synapse 突触（一个神经元的冲动传到另一个神经元或传到另一细胞间的相互接触的结构）
+
+dendrite 树突(位于神经元末端的细分支，接收其他神经元传来的信号)
+
+b就是一个偏差，因为这是想要的线性函数，对 y 截距的偏移。通过激活函数，变成非线性函数。
+
+![image-20210324221858158](assets/image-20210324221858158.png)
+
+
+
+神经元也就是感知器。如果将感知器如下分层排列。
+
+![image-20210324222025335](assets/image-20210324222025335.png)
+
+每一个感知器都有自己的权重 w 和偏差 y，这个网络表示了某个函数 $y =f(x)$
+
+目的是让这个函数变得有用且正确。
+
+
+
+---
+
+**Universality**
+
+万能近似定理（universal approximation theorem）
+
+有一个连续函数 $f(x)$ ，如果一个两层神经网络有足够多的隐藏单元（即神经元），一定存在一组权重能够让神经网络无限近似函数$f(x)$
+
+
+
+---
+
+**Learning Problems**
+
+- 无监督学习，了解数据的结构，从而了解输入。预测下一个单词，寻找相关关系，预测下一个像素，VAE，GAN，learn X
+
+- 监督学习，图像识别，语音识别，机器翻译   learn X --> Y
+- 强化学习，环境交互   learn to interact with environment  $x_t -> a_t, x_{t+1} -> a_{t+1}, ...$
+
+![image-20210324222952463](assets/image-20210324222952463.png)
+
+
+
+- 迁移学习
+- 模仿学习
+- 元学习
+
+
+
+---
+
+**Empirical Risk Minimization / Loss Function**
+
+![image-20210324223817582](assets/image-20210324223817582.png)
+
+线性规划，找到一条合适的线，表示这些数据的关系
+
+最小化平方差
+$$
+\min _{w, b} \sum_{i=1}^{m}\left(w \cdot x^{(i)}+b-y^{(i)}\right)^{2} 
+$$
+在具体些，最小化损失函数
+$$
+\min _{w, b} \sum_{i=1}^{m} L\left(f_{w, b}\left(x^{(i)}\right), y^{(i)}\right)
+$$
+找到最好的参数，最优化损失函数。（MSE，Huber，cross-entropy）
+
+
+
+---
+
+**Gradient Descent**
+
+更新参数$w_i$
+$$
+\begin{aligned}
+w_{i} & \leftarrow w_{i}-\alpha \frac{\partial}{\partial w_{i}} \mathcal{L}(w, b) \\
+\frac{\partial}{\partial w_{i}} \mathcal{L}(w, b) &=\lim _{\varepsilon \rightarrow 0} \frac{\mathcal{L}\left(w+\varepsilon e_{i}, b\right)-\mathcal{L}\left(w-\varepsilon e_{i}, b\right)}{2 \varepsilon}
+\end{aligned}
+$$
+
+
+变换形式
+$$
+\begin{array}{l}
+w \leftarrow w-\alpha \nabla_{w} \mathcal{L}(w, b) \\
+\left(\nabla_{w} \mathcal{L}(w, b)\right)_{i}=\frac{\partial}{\partial w_{i}} \mathcal{L}(w, b)
+\end{array}
+$$
+$\nabla$ 是场论中的符号,是矢量(向量)微分算符，所代表的的意义是：某一点上，变化最快的方向。实例：
+$$
+f (x,y,z) = 3xy + z^2 \\
+∇f = (3y, 3x, 2z)
+$$
+
+
+数据在所有维度上均具有零均值和均等方差，这样梯度下降效果要好，可以让梯度最大程度的下降。
+
+![image-20210324225104663](assets/image-20210324225104663.png)
+
+调整策略有如下，重点看加粗部分：
+
+- **Initialization** (more later)
+- Normalization
+  - **Batch norm**, weight norm, layer norm, ... (more later)
+- Second order methods:
+  - Exact:
+    - Newton’s method
+    - Natural gradient
+  - Approximate second order methods:
+    - Adagrad, **Adam**, Momentum
+
+
+
+实际训练时，只计算一部分数据而不是整个数据的梯度
+$$
+w \leftarrow w-\alpha \nabla_{w} \sum_{i\in minibatch} L\left(w, b, x^{(i)}, y^{(i)}\right)
+$$
+批量梯度下降或随机梯度下降（Stochastic Gradient Descent）。因为可能一个参数适合一小批的学习和迭代。如果千万级别，取平均然后作为梯度值下降也没有意义。
+
+
+
+---
+
+**Backpropagation / Automatic Differentation**
+
+链式求导法则
+$$
+f(x) = g(h(x))\\
+f^{'}(x)=g^{'}(h(x))h^{'}(x)
+$$
+Automatic differentiation software 自动求导软件
+
+- e.g. PyTorch, TensorFlow, Theano, Chainer, etc.
+- Only need to program the function f(x,w).
+- Software automatically computes all derivatives
+- This is typically done by **caching info** during **forward** computation pass off, and then doing a backward pass = “**backpropagation**”
+
+
+
+---
+
+**Architectural Considerations (deep/conv/rnn)**
+
+最简单的就是多层感知机，全连接
+
+
+
+- Data efficiency: 数据效率
+  - Extremely large networks can represent anything (see “universal function approximation theorem”) but might also need extremely large amount of data to latch onto（抓住） the right thing
+  - -> Encode prior knowledge into the architecture, e.g.:
+    - Computer vision: Convolutional Networks = spatial translation invariance 空间平移不变性
+    - Sequence processing (e.g. NLP): Recurrent Networks = temporal invariance 时间不变性
+- Optimization landscape / conditioning: 
+  - Depth over Width 深度宽度
+  - Skip connections 残差层
+  - Batch / Weight / Layer Normalization 标准化处理
+- Computational / Parameter efficiency 计算效率
+  - Factorized convolutions 分解卷积
+  - Strided convolutions 步长卷积
+
+
+
+---
+
+**CUDA / Cores of Compute**
+
+神经网络计算只是矩阵乘法。
+
+
+
+---
+
+### Lab 1: Setup and Intro
+
+
+
+---
+
+## Week 2: CNNs
+
+### Lecture 2A: CNNs
+
+
+
+### Lecture 2B: Computer Vision Applications
+
+
+
+### Lab 2: CNNs
+
+
+
+
 
 
 

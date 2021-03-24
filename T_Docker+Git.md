@@ -2,42 +2,35 @@
 
 ## 管理
 
-````bash
-# PU-Flow
-docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE nvidia/cudagl:10.2-devel-ubuntu18.04
+| tag                                  |                             网络                             |                             配置                             |
+| :----------------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| tensorflow/tensorflow:1.13.2-gpu     |                            PUGeo                             | cuda-10.0 + python2.7 + python3.6 + tensorflow_gpu-1.31.1(python2.7) |
+| tensorflow/tensorflow:1.13.2-gpu-py3 |                 PU-Net<br>SampleNet<br>PUGeo                 |   cuda-10.0 + python3.6 + tensorflow_gpu-1.13.1(python3.6)   |
+| ecnet:1.3.0-gpu                      |                            EC-Net                            | cuda-8.0 + python2.7 + python3.5 + tensorflow_gpu-1.3.0(python2.7) |
+| nvidia/cudagl:duan                   | latent_3d_points_Pytorch <br>pointnet.pytorch<br> pytorch-NICE<br>MSN | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
+| nvidia/cudagl:10.2-devel-ubuntu18.04 |                           PU-Flow                            | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
+| tensorflow/pu-gan:latest             |                     PU-GAN<br/>pypoisson                     | cuda-9.0 + python2.7 + python3.5 + python3.6 + tensorflow_gpu-1.11.0(python3.6) |
+
+
+
+```bash
+docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE nvidia/cudagl:duan
 
 docker commit -p 43d4f8e0674a nvidia/cudagl:10.2-devel-ubuntu18.04
 
 tensorboard --logdir ./runs/lightning_logs
-````
 
-```bash
-# latent_3d_points_Pytorch  
-# pointnet.pytorch
-# NICE
-# MSN
-docker run --runtime=nvidia --rm -it -p 127.0.0.2:8097:8097 -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE nvidia/cudagl:duan
-
-docker commit -p 06ea5c52cbaa nvidia/cudagl:duan
 python -m visdom.server # 开启visdom服务
-
 http://127.0.0.2:8097/
 
-# /usr/local/lib/python3.6/dist-packages/
-```
+# /usr/local/cuda						   cuda
+# /usr/local/lib/python2.7/dist-packages/  tensorflow/torch/torchvision
+# /usr/local/lib/python3.6/dist-packages/ 
+# glxinfo | grep "OpenGL version"          OpenGL version string: 4.6.0 NVIDIA 450.102.04
 
-```bash
-# samplenet
-docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE tensorflow/tensorflow:1.13.2-gpu-py3
 
-docker commit -p f3c9beddda91 tensorflow/tensorflow:1.13.2-gpu-py3
-```
-
-```bash
-# pugan
-docker run --runtime=nvidia --rm -it -w /root/PU-GAN -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE tensorflow/pu-gan:latest
-
-docker commit -p f3c9beddda91 tensorflow/pu-gan:latest
+# 如果是系统自带的python，会使用dist-packages目录；
+# 如果你手动安装python，它会直接使用目录site-packages。
 ```
 
 
@@ -291,15 +284,15 @@ cd /etc/systemd/system/multi-user.target.wants
 
 vi docker.service
 
-ExecStart=/usr/bin/dockerd --graph=/data/docker --storage-driver=overlay --registry-mirror=https://jxus37ad.mirror.aliyuncs.com
+ExecStart=/usr/bin/dockerd --graph=/home/duan/workspace/docker --storage-driver=overlay --registry-mirror=https://jxus37ad.mirror.aliyuncs.com
 
 --graph=/data/docker：docker新的存储位置
 --storage-driver=overlay ： 当前docker所使用的存储驱动
 注：存储驱动貌似不改也会变成overlay
 　　
 # 2.2 重启docker　
-systemctl daemon-reload
-systemctl restart docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
 docker info
 
 # 2.3
@@ -307,6 +300,11 @@ docker info
 ```
 
 
+
+```bash
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.soc
+https://www.it1352.com/647824.html
+```
 
 
 
@@ -745,13 +743,9 @@ https://mp.weixin.qq.com/s?__biz=MzIwOTc2MTUyMg==&mid=2247496031&idx=2&sn=c4cffb
 ---
 
 # docker cpu
-<<<<<<< HEAD:T_Docker+Git.md
-=======
-
 cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker 
 
 Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.html
->>>>>>> a422c3362363be336f2919522247dfed5665e492:T_Docker+Git.md
 
 cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker 
 
@@ -768,7 +762,7 @@ Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.htm
 
 ## 流程
 
-![img](pic/640.webp)
+![img](assets/640.webp)
 
 Workspace：工作区
 
@@ -1153,6 +1147,7 @@ git push -u origin master
 https://blog.csdn.net/downanddusk/article/details/88344389
 
 
+
 ## upstream/master
 
 ```shell
@@ -1241,22 +1236,6 @@ Updates were rejected because the tip of your current branch is behind
 ```bash
 git push -u origin master -f 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

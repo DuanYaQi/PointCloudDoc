@@ -6,6 +6,14 @@
 
 
 
+```shell
+docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE nvidia/cudagl:duan
+
+docker commit -p 78d220933b21 nvidia/cudagl:duan
+```
+
+
+
 
 
 # CUDA C编程权威指南
@@ -125,14 +133,13 @@ CUDA编程非常适合解决**数据并行计算**的问题。本书的重点便
 
 ![1616394765462](assets/1616394765462.png)
 
-图1-4所示为对一维数据进行划分的两个例子。在块划分中，每个线程仅需处理数据的一部
-分，而在周期划分中，每个线程要处理数据的多个部分。
+图1-4所示为对一维数据进行划分的两个例子。在块划分中，每个线程仅需处理数据的一部分，而在周期划分中，每个线程要处理数据的多个部分。
 
-
+<span id="pic15"></span>
 
 ![1616394775788](assets/1616394775788.png)
 
-<span id="pic15"></span>
+
 
 图1-5所示为对二维数据进行划分的3个例子：沿 y 轴的块划分，沿 x 轴和 y 轴的块划分，以及沿 x 轴的周期划分。其余的划分方式为沿 x 轴的块划分，沿 x 轴和 y 轴的周期划分，以及沿 y 轴的周期划分留作练习。
 
@@ -401,7 +408,9 @@ $ which nvcc
 $ ls -l /dev/nv*
 
 /dev/nvidia0
-/dev/nvidia1
+/dev/nvidia-uvm      
+/dev/nvidia-uvm-tools
+/dev/nvidiactl
 ```
 
 现在准备好写你的第一个CUDA C程序。写一个CUDA C程序，你需要以下几个**步骤**：
@@ -469,7 +478,7 @@ $ nvcc -arch sm_20 hello.cu -o hello
 $ ./hello
 ```
 
-开关语句-arch sm_20使编译器为Fermi架构生成设备代码。运行这个可执行文件，它将输出10条字符串“Hello World from GPU”，每个线程输出1条。
+语句`-arch sm_20`使编译器为 Fermi 架构生成设备代码。运行这个可执行文件，它将输出10条字符串“Hello World from GPU”，每个线程输出1条。
 
 ##### CUDA编程结构
 
@@ -551,9 +560,13 @@ CPU＋GPU的异构系统在高性能计算领域已经成为主流。这种变�
 
 
 
-2.从hello.cu中移除cudaDeviceReset函数，然后编译运行，看看会发生什么。
+2.从`hello.cu`中移除`cudaDeviceReset`函数，然后编译运行，看看会发生什么。
 
-3.用cudaDeviceSynchronize函数来替换hello.cu中的cudaDeviceReset函数，然后编译运行，看看会发生什么。
+> 答：只输出1句。10个线程的hello没有输出
+
+3.用`cudaDeviceSynchronize`函数来替换`hello.cu`中的`cudaDeviceReset`函数，然后编译运行，看看会发生什么。
+
+>答：输出了11句。
 
 4.参考1.3节，从编译器命令行中移除设备架构标志，然后按照下面的方式进行编译，看看会发生什么。
 
@@ -561,7 +574,7 @@ CPU＋GPU的异构系统在高性能计算领域已经成为主流。这种变�
 $ nvcc hello.cu -o hello
 ```
 
-
+> 答：在GTX 960M，没有差别
 
 5.参阅CUDA在线文档（http://docs.nvidia.com/cuda/index.html）。基于“CUDA编译器驱动 NVCC”一节，谈谈nvcc对带有哪些后缀的文件支持编译？
 
@@ -572,6 +585,19 @@ $ ./hello
 Hello World from CPU!
 Hello World from GPU thread 5!
 ```
+
+> 答：
+>
+> ```c++
+> __global__ void helloFromGPU() {
+>     int i = threadIdx.x;
+>     if (i == 5) {
+>         printf("Hello World from GPU thread %d!\n", i);
+>     }     
+> }
+> ```
+
+
 
 
 
@@ -708,7 +734,7 @@ void sumArraysOnHost(float *A, float *B, float *C, const int N) {
 
 void initialData(float *ip, int size) {
     //generate different seed for random number
-    time_t = t;
+    time_t t;
     srand( (unsigned int) time(&t) );
     
     for (int i = 0; i< size; ++i) {
@@ -725,8 +751,8 @@ int main(int argc, char **argv){
     h_B = (float *)malloc(nBytes);
     h_C = (float *)malloc(nBytes);
     
-    initialData(h_A);
-    initialData(h_B);
+    initialData(h_A, nElem);
+    initialData(h_B, nElem);
     
     sumArraysOnHost(h_A, h_B, h_C, nElem);
     
@@ -747,7 +773,7 @@ $ nvcc -Xcompiler -std=c99 sumArraysOnHost.c -o sum
 $ ./sum
 ```
 
-nvcc 封装了几种内部编译工具，CUDA 编译器允许通过命令行选项在不同阶段启动不同的工具完成编译工作。`- Xcompiler`用于指定命令行选项是指向C编译器还是预处理器。在前面的例子中，将 `-std=c99` 传递给编译器，因为这里的C程序是按照 **C99** 标准编写的。你可以在CUDA编译器文件中找到[编译器选项 ](https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options)。
+`nvcc` 封装了几种内部编译工具，CUDA 编译器允许通过命令行选项在不同阶段启动不同的工具完成编译工作。`-Xcompiler`用于指定命令行选项是指向C编译器还是预处理器。在前面的例子中，将 `-std=c99` 传递给编译器，因为这里的C程序是按照 **C99** 标准编写的。你可以在CUDA编译器文件中找到[编译器选项 ](https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options)。
 
 现在，你可以在GPU上修改代码来进行数组加法运算，用`cudaMalloc`在GPU上**申请内存**。
 
@@ -924,6 +950,19 @@ $ ./check
 
 因为 `printf` 函数只支持 `Fermi` 及以上版本的 `GPU` 架构，所以必须添加 `-arch=sm_20` 编译器选项。默认情况下，`nvcc` 会产生支持最低版本GPU架构的代码。这个应用程序的运行结果如下。可以看到，每个线程都有自己的坐标，所有的线程都有相同的块维度和网格维度。
 
+```c++
+grid.x: 2 grid.y: 1 grid.z: 1
+block.x: 3 block.y: 1 block.z: 1
+threadIdx: (0, 0, 0) blockIdx: (1, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+threadIdx: (1, 0, 0) blockIdx: (1, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+threadIdx: (2, 0, 0) blockIdx: (1, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+threadIdx: (0, 0, 0) blockIdx: (0, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+threadIdx: (1, 0, 0) blockIdx: (0, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+threadIdx: (2, 0, 0) blockIdx: (0, 0, 0) blockDim: (3, 1, 1) gridDim: (2, 1, 1)
+```
+
+
+
 
 
 ---
@@ -957,6 +996,7 @@ blockDim.x , blockDim.y , blockDim.z
 代码清单2-3使用了一个一维网格和一个一维块来说明当块的大小改变时，网格的尺寸也会随之改变。
 
 ```c++
+//Define grid and block dimensions on the host (defineGridBlock.cu)
 #include <cuda_runtime.h>
 #include <stdio.h>
 
@@ -968,15 +1008,20 @@ int main(int argc, char **argv) {
     dim3 block (1024);
     dim3 grid  ((nElem + block.x - 1) / block.x);
     printf("gird.x %d, block.x %d \n", grid.x, block.x);
-    
+
     //reset block structure
-    dim3 block (256);
-    dim3 grid  ((nElem + block.x - 1) / block.x);
+    block.x = 512;
+    grid.x = ((nElem + block.x - 1) / block.x);
     printf("gird.x %d, block.x %d \n", grid.x, block.x);
     
     //reset block structure
-    dim3 block (128);
-    dim3 grid  ((nElem + block.x - 1) / block.x);
+    block.x = 256;
+    grid.x = ((nElem + block.x - 1) / block.x);
+    printf("gird.x %d, block.x %d \n", grid.x, block.x);
+    
+    //reset block structure
+    block.x = 128;
+    grid.x = ((nElem + block.x - 1) / block.x);
     printf("gird.x %d, block.x %d \n", grid.x, block.x);
     
     //reset device
@@ -996,10 +1041,10 @@ $ ./block
 下面是一个输出示例。由于应用程序中的数据大小是固定的，因此当块的大小发生改变时，相应的网格尺寸也会发生改变。
 
 ```c++
-grid.x 1 block.x 1024
-grid.x 2 block.x 512
-grid.x 4 block.x 256
-grid.x 8 block.x 128
+gird.x 1, block.x 1024 
+gird.x 2, block.x 512 
+gird.x 4, block.x 256 
+gird.x 8, block.x 128 
 ```
 
 
@@ -1070,7 +1115,7 @@ kernel_name <<<32,1>>>(argument list);
 cudaError_t cudaDeviceSynchronize(void)
 ```
 
-一些CUDA运行时API在主机和设备之间是隐式同步的。当使用 `cudaMemcpy` 函数在主机和设备之间拷贝数据时，主机端**隐式同步**，即主机端程序必须等待数据拷贝完成后才能继续执行程序。
+一些CUDA运行时`API`在主机和设备之间是隐式同步的。当使用 `cudaMemcpy` 函数在主机和设备之间拷贝数据时，主机端**隐式同步**，即主机端程序必须等待数据拷贝完成后才能继续执行程序。
 
 ```C++
 cudaError_t cudaMemcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind);
@@ -1227,21 +1272,23 @@ CHECK(cudaDeviceSynchronize());
 #include <cuda_runtime.h>
 #include <stdio.h>
 
-#define CHECK(call)
-{
-    const cudaError_t error = call;
-    if (error != cudaSuccess) {
-        printf("Error: %s:%d", __FILE__, __LINE__);
-        printf("code:%d, reason:%s\n", error, cudaGetErrorString(error));
-        exit(1);
-    } 
-}
+#define CHECK(call)                                                         \
+{                                                                           \
+    const cudaError_t error = call;                                         \
+    if (error != cudaSuccess)                                               \
+    {                                                                       \
+        printf("Error: %s:%d, ", __FILE__, __LINE__);                       \
+        printf("code:%d, reason: %s\n", error, cudaGetErrorString(error));  \
+        exit(1);                                                            \
+    }                                                                       \
+}                                                                           \
+
 
 void checkResult(float *hostRef, float *gpuRef, const int N) {
     double epsilon = 1.0e-8;
     int match = 1;
-    for (int i = 0; i < M; i++) {
-        if (abs(hostRef[i] - gpuRef[i] > epsilon) {
+    for (int i = 0; i < N; i++) {
+        if (abs(hostRef[i] - gpuRef[i] > epsilon)) {
             match = 0;
             printf("Arrays do not match! \n");
             printf("host %5.2f ,gpu %5.2f at current %d\n", hostRef[i], gpuRef[i], i);
@@ -1307,7 +1354,7 @@ int main(int argc, char **argv) {
     // invoke kernel at host side   
     dim3 block (nElem);   
     dim3 grid  (nElem/block.x);
-    sumArraysOnGPU<<< grid, block  >>>(d_A, d_B, d_C);   
+    sumArraysOnGPU<<<grid, block>>>(d_A, d_B, d_C);   
     printf("Execution configuration <<<%d, %d>>>\n",grid.x,block.x);
     
     // copy kernel result back to host side   
@@ -1357,8 +1404,8 @@ $ ./addvector
 系统报告结果如下：
 
 ```c++
-Starting...
-Vector size 21
+./addvector Starting...
+Vector size 32
 Execution configuration <<<1, 32>>>
 Arrays match.
 ```
