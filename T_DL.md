@@ -691,6 +691,14 @@ https://www.bilibili.com/video/BV1BT4y1P7u6
 
 https://fullstackdeeplearning.com/spring2021/
 
+https://github.com/full-stack-deep-learning/fsdl-text-recognizer-2021-labs/
+
+
+
+https://www.youtube.com/playlist?list=PL1T8fO7ArWlcWg04OgNiJy91PywMKT2lv
+
+
+
 课外网站 http://neuralnetworksanddeeplearning.com/
 
 每周阅读一章
@@ -884,9 +892,29 @@ Automatic differentiation software 自动求导软件
 
 
 
+
+
+### Notebook: Coding a neural net from scratch
+
+
+
 ---
 
-### Lab 1: Setup and Intro
+### Lab 1: Setup and Introduction
+
+ Formulate problem, structure codebase, train an MLP on MNIST data. 
+
+![1616667169882](assets/1616667169882.png)
+
+通过网络后端，POST请求发送图像编码，解码后输入至编译好的模型，输出结果。
+
+
+
+**Set up our computing environment**
+
+
+
+**Review Codebase and Train on MNIST**
 
 
 
