@@ -348,7 +348,6 @@ b &= b - \alpha \frac{dL}{db}
 \end{split}
 $$
 
-
 ---
 
 #### 2.10. m个样本的梯度下降
@@ -382,33 +381,214 @@ $$
 
 #### 2.11. 向量化
 
+消除代码中显式for循环语句的艺术。**不能使用显式for循环**，numpy隐式循环。
 
+
+
+ ```python
+import numpy as np
+import time 
+
+# vectorization version
+a = np.randrom.rand(1000000)
+b = np.randrom.rand(1000000)
+
+tic = time.time()
+c = np.dot(a,b)
+toc = time.tiem()
+
+print("Vectorized version:" + str(1000*(toc-tic)) + "ms")
+
+# for loop version
+c = 0
+tic = time.time()
+for i in range(1000000)
+	c += a[i]*b[i]
+toc = time.time()   
+print("For loop version:" + str(1000*(toc-tic)) + "ms")  # 时间比向量化版本长
+
+ ```
+
+CPU 和 GPU 都有并行处理能力 **SIMD 单指令多数据流**
+
+
+
+---
 
 #### 2.12. 向量化的更多例子
 
+计算
+$$
+\begin{split}
+u &= Av\\
+u_i &= \sum_i\sum_jA_{ij}v_j
+\end{split}
+$$
 
+```python
+u = np.zeros((n, 1))
+for i 
+	for j
+    	u[i] = A[i][j] * v[j]
+
+# 或
+u = np.dot(A,v)       
+```
+
+计算
+$$
+u_i = e^{v_i}
+$$
+
+```python
+u = np.zeros((n, 1))
+for i in range(n)
+	u[i] = math.exp(v[i])
+# 或
+u = np.exp(v);
+np.log(v);
+np.abs(v);
+np.maximun(v,0) # v中所有元素和0之间相比的最大值
+v**2			#v^2    
+1/v     		#v的倒数
+```
+
+
+
+Logistic 回归求导
+
+![1616648854396](assets/1616648854396.png)
+
+``` python
+J = 0, dw1 = 0, dw2 = 0, db = 0
+for i = 1 to n:
+    z[i] = w^T * x[i] + b
+    a[i] = sigma(z[i])  #sigma  1 / (1 + e^-x)
+    J += -[y[i] * log(yhat[i]) + (1 - y[i]) * log(1 - yhat[i])]
+    dz = a[i] * (1 - a[i])   # dz = da/dz
+    dw1 = x1[i] * dz[i]
+    dw2 = x2[i] * dz[i]
+    db += dz[i]
+J = J / m
+dw1 = dw1 / m
+dw2 = dw2 / m
+db = db / m
+```
+
+
+
+---
 
 #### 2.13. 向量化 logistics 回归
 
+```python
+z = np.dot(w.t ,x) + b
+a = 1 / np.exp(-z)
+```
 
+b 是一个实数，python会自动把实数b 扩展成一个` 1*m` 的行向量
+
+
+
+---
 
 #### 2.14. 向量化 logistics 回归的梯度输出
 
+```python
+dz = a - y;   # dz = dL/dz  不是   da/dz
+dw = np.sum(np.dot(x, dz.t)) / m
+db = np.sum(dz) / m
+```
 
+
+
+```python
+# 总向量化编程logistics回归
+z = np.dot(w.t ,x) + b
+a = 1 / np.exp(-z)
+dz = a - y;   # dz = dL/dz  不是   da/dz
+dw = np.sum(np.dot(x, dz.t)) / m
+db = np.sum(dz) / m
+
+w = w - alpha * dw
+b = b - alpha * db
+```
+
+仍然需要一个大 for 循环，实现每一次梯度更新，即eopch。
+
+
+
+---
 
 #### 2.15. Python 中的广播
 
+```python
+A = np.array([56 , 0 , 4.4 , 68],
+            [1.2, 104, 52, 8],
+            [1.8, 135, 99, 0.9])
+cal = A.sum(axis = 0) #按列求和  按行求和axis = 1
+percentage = 100 * A / cal.reshape(1,4)  #A 3x4         cal 1x4 
+#.reshape(1,4) 可以确保矩阵形状是我们想要的
 
+```
+
+广播（broadcasting）即**同型复制**
+
+**general principle**
+
+size ：[m,n] +-*/ [1,n]  把 [1,n] 复制m行变成  [m,n]再和前项运算
+
+size ：[m,n] +-*/ [m,1] 把 [m,1]复制n列变成 [m,n] 再和前项
+
+
+
+---
 
 #### 2.16. 关于 python/numpy 向量的说明
 
+```python
+# 避免使用秩为 1 的矩阵
+import numpy as np
+
+a = np.random.randn(5)
+
+a.shape  #(5, ) 秩为1的数组 
+np.dot(a, a.T)   # 算出来是内积 一个数
+
+# 尽量不要使用秩为1的数组 即
+a = np.random.randn(5) 
+# 改为
+a = np.random.randn(5, 1)
+
+a.shape  #(5, 1) 秩不为1的数组 
+np.dot(a, a.T)   # 算出来是外积 一个矩阵
+```
 
 
 
+```python
+# 使用断言加以保障 执行很快 
+assert(a.shape == (5,1))
+```
+
+
+
+```python
+#确保形状
+reshape
+```
+
+
+
+---
 
 #### 2.17. Jupyter/Ipython笔记本的快速指南
 
+shift + enter 执行代码段
 
+kernel 重启内核
+
+submit assignment 提交任务
 
 
 
@@ -492,8 +672,6 @@ $$
 最大似然估计，即求出一组参数，这里就是w和b，使这个式子取最大值。
 
 也就是说这个式子最大值，$\hat{y}$ 和 $y$ 越接近，网络越好。
-
-
 
 
 
