@@ -846,7 +846,9 @@ cudaMemcpy(gpuRef, d_C, nBytes, cudaMemcpyDeviceToHost);
 - `blockIdx`（线程块在线程格内的索引）
 - `threadIdx`（块内的线程索引）
 
-这些变量是**核函数**中**需要预初始化**的**内置变量**。当执行一个核函数时，CUDA运行时为每个线程分配坐标变量`blockIdx` 和 `threadIdx`。基于这些坐标，你可以将部分数据分配给不同的线程。
+这些变量是**核函数**中**需要预初始化**的**内置变量**。当执行一个核函数时，CUDA 运行时为每个线程分配坐标变量`blockIdx` 和 `threadIdx`。基于这些坐标，你可以将部分数据分配给不同的线程。
+
+
 
 该坐标变量是基于 `uint3` 定义的CUDA内置的向量类型，是一个包含**3个无符号整数**的结构，可以通过`x、y、z`三个字段来指定。
 
@@ -872,7 +874,17 @@ blockDim.y
 blockDim.z
 ```
 
----
+
+
+![1616733880257](assets/1616733880257.png)
+
+
+
+![1616733963235](assets/1616733963235.png)
+
+
+
+----
 
 ##### 网格和线程块的维度
 
@@ -1579,7 +1591,7 @@ int main(int argc, char **argv) {
 
 
 
-默认的执行配置被设置为一个包含16384个块的一维网格，每个块包含1024个线程。用以下命令编译并运行程序：
+默认的执行配置被设置为一个包含 16384 个块的一维网格，每个块包含 1024 个线程。用以下命令编译并运行程序：
 
 ```shell
 $ nvcc sumArraysOnGPU-timer.cu -o sumArraysOnGPU-timer
@@ -1686,17 +1698,517 @@ $ nvpro ./sumArraysOnGPU-timer
 
 ### 2.3. 组织并行线程
 
-2.3.1　使用块和线程建立矩阵索引
-2.3.2　使用二维网格和二维块对矩阵求和
-2.3.3　使用一维网格和一维块对矩阵求和
-2.3.4　使用二维网格和一维块对矩阵求和
-2.4　设备管理
-2.4.1　使用运行时API查询GPU信息
-2.4.2　确定最优GPU
-2.4.3　使用nvidia-smi查询GPU信息
-2.4.4　在运行时设置设备
-2.5　总结
-2.6　习题
+如果使用了**合适的网格和块大小**来正确地组织线程，那么可以对内核性能产生很大的影响。在向量加法的例子中，为了实现**最佳性能**我们调整了块的大小，并基于块大小和向量数据大小计算出了网格大小。
+
+现在通过一个矩阵加法的例子来进一步说明这一点。对于矩阵运算，传统的方法是在内核中使用一个包含二维网格与二维块的布局来组织线程。但是，这种传统的方法无法获得最佳性能。
+
+---
+
+#### 2.3.1　使用块和线程建立矩阵索引
+
+通常情况下，一个矩阵用**行优先**的方法在全局内存中进行**线性存储**。图2-9所示的是一个 8×6 矩阵的小例子。
+
+![1616736742296](assets/1616736742296.png)
+
+在一个**矩阵加法**核函数中，一个线程通常被分配一个数据元素来处理。首先要完成的任务是使用块和线程索引从全局内存中访问指定的数据。通常情况下，对一个二维示例来说，需要管理3种索引：
+
+- 线程和块**索引**
+- 矩阵中给定点的**坐标**
+- 全局线性内存中的**偏移量**
+
+对于一个给定的线程，首先可以通过把线程和块索引映射到矩阵坐标上来获取线程块和线程索引的全局内存偏移量，然后将这些矩阵坐标映射到全局内存的存储单元中。
+
+第一步，可以用以下公式把线程和块索引**映射**到矩阵坐标上：
+
+```c++
+ix = threadIdx.x + blockIdx.x * blockDim.x
+iy = threadIdx.y + blockIdx.y * blockDim.y
+```
+
+第二步，可以用以下公式把矩阵坐标**映射**到全局内存中的索引/存储单元上：
+
+```c++
+idx = iy * nx + ix
+```
+
+下图 2-10 说明了块和线程索引、矩阵坐标以及线性全局内存索引之间的对应关系。
+
+![1616736983090](assets/1616736983090.png)
+
+`printThreadInfo` 函数被用于输出关于每个线程的以下信息：
+
+- 线程索引
+- 块索引
+- 矩阵坐标
+- 线性全局内存偏移量
+- 相应元素的值
+
+用以下命令编译并运行该程序：
+
+```shell
+$ nvcc -arch=sm_20 checkThreadIndex.cu -o checkIndex
+$ ./checkIndex
+```
+
+对于每个线程，你可以获取以下信息：
+
+```c++
+thread_id(2,1) block_id(1,0) coordinate(6,1) global index 14 ival 14
+```
+
+下图 2-11 说明了这三项索引之间的关系。
+
+![1616737125946](assets/1616737125946.png)
+
+
+
+```c++
+//代码清单 2-6　检查块和线程索引（checkThreadIndex.cu）
+#include <cuda_runtime.h>
+#include <stdio.h>
+
+#define CHECK(call) 														\
+{ 																			\
+	const cudaError_t error = call; 										\
+    if (error != cudaSuccess) 												\
+    { 																		\
+    	printf("Error: %s:%d, ", __FILE__, __LINE__); 						\
+     	printf("code:%d, reason: %s\n", error, cudaGetErrorString(error)); 	\
+     	exit(-10*error); 													\
+    } 																		\
+}																			
+
+void initialInt(int *ip, int size) {
+    for (int i=0; i<size; i++) {
+        ip[i] = i;
+    }
+}
+
+void printMatrix(int *C, const int nx, const int ny) {
+    int *ic = C;
+    printf("\nMatrix: (%d.%d)\n",nx,ny);
+    for (int iy=0; iy<ny; iy++) {
+        for (int ix=0; ix<nx; ix++) {
+            printf("%3d",ic[ix]);
+        }
+        ic += nx;
+        printf("\n");
+    }
+    printf("\n");
+}
+
+__global__ void printThreadIndex(int *A, const int nx, const int ny) {
+    int ix = threadIdx.x + blockIdx.x * blockDim.x;
+    int iy = threadIdx.y + blockIdx.y * blockDim.y;
+    unsigned int idx = iy*nx + ix;
+    printf("thread_id (%d,%d) block_id (%d,%d) coordinate (%d,%d) "
+           "global index %2d ival %2d\n", threadIdx.x, threadIdx.y, blockIdx.x,
+           blockIdx.y, ix, iy, idx, A[idx]);
+}
+
+int main(int argc, char **argv) {
+    printf("%s Starting...\n", argv[0]);
+    
+    // get device information
+    int dev = 0;
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, dev));
+    printf("Using Device %d: %s\n", dev, deviceProp.name);
+    CHECK(cudaSetDevice(dev));
+    
+    // set matrix dimension
+    int nx = 8;
+    int ny = 6;
+    int nxy = nx*ny;
+    int nBytes = nxy * sizeof(float);
+    
+    // malloc host memory
+    int *h_A;
+    h_A = (int *)malloc(nBytes);
+    
+    // iniitialize host matrix with integer
+    initialInt(h_A, nxy);
+    printMatrix(h_A, nx, ny);
+    
+    // malloc device memory 分配所需的内存空间,并返回一个指向它的指针
+    int *d_MatA;
+    cudaMalloc((void **)&d_MatA, nBytes);
+    
+    // transfer data from host to device
+    cudaMemcpy(d_MatA, h_A, nBytes, cudaMemcpyHostToDevice);
+    
+    // set up execution configuration
+    dim3 block(4, 2);
+    dim3 grid((nx + block.x - 1) / block.x, (ny + block.y - 1) / block.y);
+    
+    // invoke the kernel
+    printThreadIndex <<< grid, block >>>(d_MatA, nx, ny);
+    cudaDeviceSynchronize();
+    
+    // free host and devide memory
+    cudaFree(d_MatA);
+    free(h_A);
+    
+    // reset device
+    cudaDeviceReset();
+    
+    return (0);
+}
+```
+
+
+
+---
+
+#### 2.3.2　使用二维网格和二维块对矩阵求和
+
+在本节中，我们将使用一个二维网格和二维块来编写一个矩阵加法核函数。首先，应编写一个校验主函数以验证矩阵加法核函数是否能得出正确的结果：
+
+```c++
+void sumMatrixOnHost(float *A, float *B, float *C, const int nx, const int ny) {
+    float *ia = A;
+    float *ib = B;
+    float *ic = C;
+    
+    for (int iy = 0; iy < ny; iy++) {
+        for (int ix = 0; ix < nx; ix++) {
+            ic[ix] = ia[ix] + ib[ix];
+        }
+        ia += nx; ib += nx; ic+=nx;
+    }
+}
+```
+
+然后，创建一个新的核函数，目的是采用一个二维线程块来进行矩阵求和：
+
+```c++
+__global__ void sumMatrixOnGPU2D(float *MatA, float *MatB, float *MatC, int nx, int ny) {
+    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
+    unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
+    unsigned int idx = iy * nx + ix;
+    
+    if (ix < nx && iy < ny) {
+        MatC[idx] = MatA[idx] + MatB[idx];
+    }
+}
+```
+
+这个核函数的关键步骤是将每个线程从它的线程索引映射到全局线性内存索引中，如图 2-12 所示。
+
+接下来，每个维度下的矩阵大小可以按如下方法设置为16384个元素：
+
+```c++
+int nx = 1<<14;
+int ny = 1<<14;
+```
+
+然后，使用一个二维网格和二维块按如下方法设置核函数的执行配置：
+
+```c++
+int dimx = 32;
+int dimy = 32;
+dim3 block(dimx, dimy);
+dim3 grid((nx + block.x - 1) / block.x, (ny + block.y - 1) / block.y);
+```
+
+![1616758425445](assets/1616758425445.png)
+
+把所有的代码整合到名为 `sumMatrixOnGPU-2D-grid-2D-block.cu` 的文件中。主函数代码如代码清单2-7所示。
+
+```c++
+//代码清单2-7　使用一个二维网格和二维块的矩阵加法（sumMatrixOnGPU-2D-grid-2D-block.cu）
+int main(int argc, char **argv) {
+    printf("%s Starting...\n", argv[0]);
+    
+    // set up device
+    int dev = 0;
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, dev));
+    printf("Using Device %d: %s\n", dev, deviceProp.name);
+    CHECK(cudaSetDevice(dev));
+    
+    // set up date size of matrix
+    int nx = 1<<14;
+    int ny = 1<<14;
+    int nxy = nx*ny;
+    int nBytes = nxy * sizeof(float);
+    printf("Matrix size: nx %d ny %d\n",nx, ny);
+    
+    // malloc host memory
+    float *h_A, *h_B, *hostRef, *gpuRef;
+    h_A = (float *)malloc(nBytes);
+    h_B = (float *)malloc(nBytes);
+    hostRef = (float *)malloc(nBytes);
+    gpuRef = (float *)malloc(nBytes);
+    
+    // initialize data at host side
+    double iStart = cpuSecond();
+    initialData (h_A, nxy);
+    initialData (h_B, nxy);
+    double iElaps = cpuSecond() - iStart;
+    memset(hostRef, 0, nBytes);
+    memset(gpuRef, 0, nBytes);
+    
+    // add matrix at host side for result checks
+    iStart = cpuSecond();
+    sumMatrixOnHost (h_A, h_B, hostRef, nx,ny);
+    iElaps = cpuSecond() - iStart;
+    
+    // malloc device global memory
+    float *d_MatA, *d_MatB, *d_MatC;
+    cudaMalloc((void **)&d_MatA, nBytes);
+    cudaMalloc((void **)&d_MatB, nBytes);
+    cudaMalloc((void **)&d_MatC, nBytes);
+    
+    // transfer data from host to device
+    cudaMemcpy(d_MatA, h_A, nBytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_MatB, h_B, nBytes, cudaMemcpyHostToDevice);
+
+    // invoke kernel at host side
+    int dimx = 32;
+    int dimy = 32;
+    dim3 block(dimx, dimy);
+    dim3 grid((nx+block.x-1)/block.x, (ny+block.y-1)/block.y);
+    iStart = cpuSecond();
+    sumMatrixOnGPU2D <<< grid, block >>>(d_MatA, d_MatB, d_MatC, nx, ny);
+    cudaDeviceSynchronize();
+    iElaps = cpuSecond() - iStart;
+    printf("sumMatrixOnGPU2D <<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x,
+           grid.y, block.x, block.y, iElaps);
+    
+    // copy kernel result back to host side
+    cudaMemcpy(gpuRef, d_MatC, nBytes, cudaMemcpyDeviceToHost);
+    
+    // check device results
+    checkResult(hostRef, gpuRef, nxy);
+    
+    // free device global memory
+    cudaFree(d_MatA);
+    cudaFree(d_MatB);
+    cudaFree(d_MatC);
+    
+    // free host memory
+    free(h_A);
+    free(h_B);
+    free(hostRef);
+    free(gpuRef);
+    
+    // reset device
+    cudaDeviceReset();
+    
+    return (0);
+}
+```
+
+用以下命令编译并运行该代码：
+
+```shell
+$ nvcc sumMatrixOnGPU-2D-grid-2D-block.cu -o martix2D
+$ ./matrix2D
+```
+
+运行结果：
+
+```c++
+
+```
+
+接下来，调整块的尺寸为32×16并重新编译和运行该代码。核函数的执行速度几乎快了两倍：
+
+```c++
+sumMatrixOnGPU2D <<< (512,1024) , (32,16) >>> epapsed 0.038041 sec
+```
+
+为什么只是改变了执行配置，内核性能就几乎翻了一倍。可能会觉得这是因为第二次配置的线程块数是第一次配置块数的两倍，所以并行性也是两倍。你的直觉是正确的，但是，如果进一步减小块的大小变为16×16，相比第一次配置你已经将块的数量翻了四倍。如下所示，这种配置的结果比第一个好但是不如第二个。
+
+```c++
+sumMatrixOnGPU2D <<< (1024,1024) , (16,16) >>> epapsed 0.045535 sec
+```
+
+下表2-3总结了不同执行配置的性能。结果显示，增加块的数量不一定能提升内核性能。在第3章中，你将会学习到为什么不同的执行配置会影响核函数的性能。
+
+![1616758726844](assets/1616758726844.png)
+
+
+
+---
+
+#### 2.3.3　使用一维网格和一维块对矩阵求和
+
+为了使用一维网格和一维块，你需要写一个新的核函数，其中每个线程处理 `ny` 个数据元素，如图2-13所示。
+
+![1616758760012](assets/1616758760012.png)
+
+由于在新的核函数中每个线程都要处理 `ny` 个元素，与使用二维网格和二维块的矩阵求和的核函数相比，从线程和块索引到全局线性内存索引的映射都将会有很大不同。由于在这个核函数启动中使用了一个一维块布局，因此只有`threadIdx.x` 是有用的，并且使用内核中的一个循环来处理每个线程中的 `ny` 个元素。
+
+```c++
+__global__ void sumMatrixOnGPU2D(float *MatA, float *MatB, float *MatC, int nx, int ny) {
+    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
+    
+    if (ix < nx) {
+        for (int iy = 0; iy < ny; iy++) {
+            int idx = iy * nx +ix;
+        	MatC[idx] = MatA[idx] + MatB[idx];
+        }
+    }
+}
+```
+
+一维网格和块的配置如下：
+
+```c++
+dim3 block(32, 1);
+dim3 grid((nx + block.x - 1) / block.x, 1);
+```
+
+使用以下配置调用核函数：
+
+```c++
+sumMatrixOnGPU1D <<< grid, block >>> (d_MatA, d_MatB, d_MatC, nx, ny);
+```
+
+使用一维网格和一维块的更改替换代码清单2-7中的部分，并保存到文件 `sumMatrixOnGPU-1D-grid-1D-block.cu` 中，使用以下命令编译并运行该程序：
+
+```shell
+$ nvcc sumMatrixOnGPU-1D-block.cu -o matrix1D
+$ ./matrix1D
+```
+
+结果显示，与使用一个二维网格和块（32×32）的配置结果相比，两者的性能基本相同。
+
+
+
+接下来，按如下所示的方法增加块的大小：
+
+```c++
+dim3 block(128, 1);
+dim3 grid((nx + block.x - 1) / block.x, 1);
+```
+
+重新编译并运行，可以看出核函数运行得更快了。
+
+```c++
+sumMatrixOnGPU1D <<< (128,1), (128,1) >>> elapsed 0.044701 sec
+```
+
+
+
+---
+
+#### 2.3.4　使用二维网格和一维块对矩阵求和
+
+当使用一个包含一维块的二维网格时，每个线程都只关注一个数据元素并且网格的第二个维数等于 `ny`，如图2-14所示。
+
+这可以看作是含有一个二维块的二维网格的特殊情况，其中块的第二个维数是1。因此，从块和线程索引到矩阵坐标的映射就变成：
+
+```shell
+ix = threadIdx.x + blockIdx.x * blockDim.x;
+iy = blockIdx.y;
+```
+
+![1616759081332](assets/1616759081332.png)
+
+从矩阵坐标到全局线性内存偏移量的映射保持不变。新的核函数如下：
+
+```c++
+__global__ void sumMatrixOnGPU2D(float *MatA, float *MatB, float *MatC, int nx, int ny) {
+    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
+    unsigned int iy = blockIdx.y;
+    unsigned int idx = iy * nx + ix;
+    
+    if (ix < nx && iy < ny) {
+        MatC[idx] = MatA[idx] + MatB[idx];
+    }
+}
+```
+
+注意，二维核函数 `sumMatrixOnGPU2D` 也为这个执行配置工作。编写新内核的唯一优点是每个线程省去了一次整数乘法和一次整数加法的运算。
+
+将块尺寸设置为32，并在此基础上计算网格大小：
+
+```C++
+dim3 block(32);
+dim3 grid((nx + block.x - 1) / block.x, ny);
+```
+
+如下所示调用内核：
+
+```C++
+sumMatrixOnGPU1D <<< grid, block >>> (d_MatA, d_MatB, d_MatC, nx, ny);
+```
+
+对代码清单2-7进行更改替换，并将替换后的程序保存到名为`sumMatrixOnGPU-2D-grid-1D-block.cu`的文件中，然后使用以下命令编译并运行。
+
+```c++
+$ nvcc sumMatrixOnGPU-2D-block.cu -o mat2D1D
+$ ./mat2D1D
+```
+
+运行结果为：
+
+```
+
+```
+
+如下所示，将线程块的大小增加到256：
+
+```c++
+dim3 block(256);
+```
+
+然后重新编译运行，系统会表现出目前为止最佳的性能（见表2-4）：
+
+```
+sumMatrixOnGPU1D <<< (128,1), (128,1) >>> elapsed 0.044701 sec
+```
+
+
+
+![1616759348210](assets/1616759348210.png)
+
+从矩阵加法的例子中可以看出：
+
+- 改变执行配置对内核性能有影响
+- 传统的核函数实现一般不能获得最佳性能
+- 对于一个给定的核函数，尝试使用**不同的网格和线程块大小**可以获得更好的性能
+
+在第3章，将会从硬件的角度学习产生这些问题的原因。
+
+
+
+---
+
+### 2.4　设备管理
+
+#### 2.4.1　使用运行时API查询GPU信息
+
+
+
+#### 2.4.2　确定最优GPU
+
+
+
+#### 2.4.3　使用nvidia-smi查询GPU信息
+
+
+
+#### 2.4.4　在运行时设置设备
+
+
+
+---
+
+### 2.5　总结
+
+
+
+---
+
+### 2.6　习题
+
+
+
+
 
 ---
 

@@ -677,260 +677,174 @@ $$
 
 ---
 
+### 第三周 浅层神经网络
+
+#### 3.1. 神经网络概览
+
+右上角方括号内表示网络的层数
+
+右上角圆括号表示第几个训练样本
+
+右下角表示特征索引
 
 
 
+### ![1616728252104](assets/1616728252104.png)
 
-
-
-
-
-# 全栈深度学习训练营
-
-https://www.bilibili.com/video/BV1BT4y1P7u6
-
-https://fullstackdeeplearning.com/spring2021/
-
-https://github.com/full-stack-deep-learning/fsdl-text-recognizer-2021-labs/
-
-
-
-https://www.youtube.com/playlist?list=PL1T8fO7ArWlcWg04OgNiJy91PywMKT2lv
-
-
-
-课外网站 http://neuralnetworksanddeeplearning.com/
-
-每周阅读一章
-
----
-
-## Week 1: Fundamentals
-
-### Lecture 1: DL Fundamentals
-
-**Neural Networks**
-
-![image-20210324221541329](assets/image-20210324221541329.png)
-
-
-
-受生物学启发，通过神经元对我们的身体进行所有计算。
-
-![image-20210324221345170](assets/image-20210324221345170.png)
-
-axon 轴突（神经细胞的突起，将信号发送到其他细胞）
-
-synapse 突触（一个神经元的冲动传到另一个神经元或传到另一细胞间的相互接触的结构）
-
-dendrite 树突(位于神经元末端的细分支，接收其他神经元传来的信号)
-
-b就是一个偏差，因为这是想要的线性函数，对 y 截距的偏移。通过激活函数，变成非线性函数。
-
-![image-20210324221858158](assets/image-20210324221858158.png)
-
-
-
-神经元也就是感知器。如果将感知器如下分层排列。
-
-![image-20210324222025335](assets/image-20210324222025335.png)
-
-每一个感知器都有自己的权重 w 和偏差 y，这个网络表示了某个函数 $y =f(x)$
-
-目的是让这个函数变得有用且正确。
+这是一个简单的两层神经网络的计算过程，第一层得到的概率 $a^{[1]}$ ，又被输入到下一层，再次进行学习，第二层得到的概率为最终输出 $a^{[2]}$，并进一步计算 loss
 
 
 
 ---
 
-**Universality**
+#### 3.2. 神经网络表示
 
-万能近似定理（universal approximation theorem）
+下图为双层神经网络，输入层不算在内。 
 
-有一个连续函数 $f(x)$ ，如果一个两层神经网络有足够多的隐藏单元（即神经元），一定存在一组权重能够让神经网络无限近似函数$f(x)$
+![1616728799846](assets/1616728799846.png)
+
+左边一层称为输入层，第二层称为隐藏层，第三层只有一个节点，称为输出层。在训练时，隐藏层节点的值，不知道。
+
+$X$ 或 $a^{[0]}$表示输入。第二层为 $a^{[1]}$ 是一个四维向量。输出为 $a^{[2]}$。
+
+隐藏层有两个相关的参数 W 和 b，W 是（4，3）的矩阵，有三个输入，b 是（4，1）的矩阵。
+
+输出层有两个相关的参数 W 和 b，W 是（1，4）的矩阵，有四个隐藏层单元，b 是（1，4）的矩阵。
+
+ 
+
+---
+
+#### 3.3. 计算神经网络的输出
+
+![1616729421965](assets/1616729421965.png)
+
+这个圆圈代表了回归计算的两个步骤，首先按照步骤计算出z，然后在第二步计算激活函数。神经网络就是不断重复这个过程
+
+![1616729548101](assets/1616729548101.png)
+
+**第一隐藏层的第一个**节点先计算
+$$
+\begin{equation}
+ z_{1}^{[1]}=\omega_{1}^{[1]} x+b_{1}^{[1]} 
+\end{equation}
+$$
+再计算
+$$
+\begin{equation}
+ a_{1}^{[1]}=\sigma(z_{1}^{[1]}) 
+\end{equation}
+$$
+上标表示层数，下标表示节点索引（1-4）
+
+
+
+
+
+![1616729708292](assets/1616729708292.png)
+
+**第一隐藏层的第二个**节点先计算
+$$
+\begin{equation}
+ z_{2}^{[1]}=\omega_{2}^{[1]} x+b_{2}^{[1]} 
+\end{equation}
+$$
+再计算
+$$
+\begin{equation}
+ a_{2}^{[1]}=\sigma(z_{2}^{[1]}) 
+\end{equation}
+$$
+
+
+如下图
+
+![1616729799515](assets/1616729799515.png)
+$$
+\begin{split}
+z_{1}^{[1]}=\omega_{1}^{[1]T} x+b_{1}^{[1]}, a_{1}^{[1]}=\sigma(z_{1}^{[1]}) \\
+z_{2}^{[1]}=\omega_{2}^{[1]T} x+b_{2}^{[1]}, a_{2}^{[1]}=\sigma(z_{2}^{[1]}) \\
+z_{3}^{[1]}=\omega_{3}^{[1]T} x+b_{3}^{[1]}, a_{3}^{[1]}=\sigma(z_{3}^{[1]}) \\
+z_{4}^{[1]}=\omega_{4}^{[1]T} x+b_{4}^{[1]}, a_{4}^{[1]}=\sigma(z_{4}^{[1]}) \\
+\end{split}
+$$
+矩阵化
+
+![1616731945222](assets/1616731945222.png)
+
+上述输出为 $z^{[1]}$ 第一层的输出向量
+
+给定输入 x
+$$
+\begin{split}
+z^{[1]}&=W^{[1]} x+b^{[1]} \\
+a^{[1]}&=\sigma(z^{[1]}) \\
+\end{split}
+$$
+(4,1) = (4,3) * (3,1) + (4,1)               W 是四个不同的节点，对三个输入的权重
+
+(4,1) = (4,1)
+$$
+\begin{split}
+z^{[2]}&=W^{[2]} a^{[1]}+b^{[2]} \\
+a^{[2]}&=\sigma(z^{[2]}) 
+\end{split}
+$$
+(1,1) = (1,4) * (4,1) + (1,1)
+
+(1,1) = (1,1)
+
+
+
+
 
 
 
 ---
 
-**Learning Problems**
+#### 3.4. 多个例子中的向量化
 
-- 无监督学习，了解数据的结构，从而了解输入。预测下一个单词，寻找相关关系，预测下一个像素，VAE，GAN，learn X
+ 样本的循环正向反向，权重是同一套。
 
-- 监督学习，图像识别，语音识别，机器翻译   learn X --> Y
-- 强化学习，环境交互   learn to interact with environment  $x_t -> a_t, x_{t+1} -> a_{t+1}, ...$
+![1616732735832](assets/1616732735832.png)
 
-![image-20210324222952463](assets/image-20210324222952463.png)
-
-
-
-- 迁移学习
-- 模仿学习
-- 元学习
+  全部变成矩阵运算。
 
 
 
 ---
 
-**Empirical Risk Minimization / Loss Function**
+#### 3.5. 向量化实现的解释
 
-![image-20210324223817582](assets/image-20210324223817582.png)
-
-线性规划，找到一条合适的线，表示这些数据的关系
-
-最小化平方差
-$$
-\min _{w, b} \sum_{i=1}^{m}\left(w \cdot x^{(i)}+b-y^{(i)}\right)^{2} 
-$$
-在具体些，最小化损失函数
-$$
-\min _{w, b} \sum_{i=1}^{m} L\left(f_{w, b}\left(x^{(i)}\right), y^{(i)}\right)
-$$
-找到最好的参数，最优化损失函数。（MSE，Huber，cross-entropy）
+ 以样本数目直接扩展为矩阵
 
 
 
 ---
 
-**Gradient Descent**
-
-更新参数$w_i$
-$$
-\begin{aligned}
-w_{i} & \leftarrow w_{i}-\alpha \frac{\partial}{\partial w_{i}} \mathcal{L}(w, b) \\
-\frac{\partial}{\partial w_{i}} \mathcal{L}(w, b) &=\lim _{\varepsilon \rightarrow 0} \frac{\mathcal{L}\left(w+\varepsilon e_{i}, b\right)-\mathcal{L}\left(w-\varepsilon e_{i}, b\right)}{2 \varepsilon}
-\end{aligned}
-$$
-
-
-变换形式
-$$
-\begin{array}{l}
-w \leftarrow w-\alpha \nabla_{w} \mathcal{L}(w, b) \\
-\left(\nabla_{w} \mathcal{L}(w, b)\right)_{i}=\frac{\partial}{\partial w_{i}} \mathcal{L}(w, b)
-\end{array}
-$$
-$\nabla$ 是场论中的符号,是矢量(向量)微分算符，所代表的的意义是：某一点上，变化最快的方向。实例：
-$$
-f (x,y,z) = 3xy + z^2 \\
-∇f = (3y, 3x, 2z)
-$$
-
-
-数据在所有维度上均具有零均值和均等方差，这样梯度下降效果要好，可以让梯度最大程度的下降。
-
-![image-20210324225104663](assets/image-20210324225104663.png)
-
-调整策略有如下，重点看加粗部分：
-
-- **Initialization** (more later)
-- Normalization
-  - **Batch norm**, weight norm, layer norm, ... (more later)
-- Second order methods:
-  - Exact:
-    - Newton’s method
-    - Natural gradient
-  - Approximate second order methods:
-    - Adagrad, **Adam**, Momentum
-
-
-
-实际训练时，只计算一部分数据而不是整个数据的梯度
-$$
-w \leftarrow w-\alpha \nabla_{w} \sum_{i\in minibatch} L\left(w, b, x^{(i)}, y^{(i)}\right)
-$$
-批量梯度下降或随机梯度下降（Stochastic Gradient Descent）。因为可能一个参数适合一小批的学习和迭代。如果千万级别，取平均然后作为梯度值下降也没有意义。
-
-
-
----
-
-**Backpropagation / Automatic Differentation**
-
-链式求导法则
-$$
-f(x) = g(h(x))\\
-f^{'}(x)=g^{'}(h(x))h^{'}(x)
-$$
-Automatic differentiation software 自动求导软件
-
-- e.g. PyTorch, TensorFlow, Theano, Chainer, etc.
-- Only need to program the function f(x,w).
-- Software automatically computes all derivatives
-- This is typically done by **caching info** during **forward** computation pass off, and then doing a backward pass = “**backpropagation**”
-
-
-
----
-
-**Architectural Considerations (deep/conv/rnn)**
-
-最简单的就是多层感知机，全连接
-
-
-
-- Data efficiency: 数据效率
-  - Extremely large networks can represent anything (see “universal function approximation theorem”) but might also need extremely large amount of data to latch onto（抓住） the right thing
-  - -> Encode prior knowledge into the architecture, e.g.:
-    - Computer vision: Convolutional Networks = spatial translation invariance 空间平移不变性
-    - Sequence processing (e.g. NLP): Recurrent Networks = temporal invariance 时间不变性
-- Optimization landscape / conditioning: 
-  - Depth over Width 深度宽度
-  - Skip connections 残差层
-  - Batch / Weight / Layer Normalization 标准化处理
-- Computational / Parameter efficiency 计算效率
-  - Factorized convolutions 分解卷积
-  - Strided convolutions 步长卷积
-
-
-
----
-
-**CUDA / Cores of Compute**
-
-神经网络计算只是矩阵乘法。
+#### 3.6. 激活函数
 
 
 
 
 
-### Notebook: Coding a neural net from scratch
+#### 3.7. 为什么需要非线性激活函数？
 
 
 
----
-
-### Lab 1: Setup and Introduction
-
- Formulate problem, structure codebase, train an MLP on MNIST data. 
-
-![1616667169882](assets/1616667169882.png)
-
-通过网络后端，POST请求发送图像编码，解码后输入至编译好的模型，输出结果。
+#### 3.8. 激活函数的导数
 
 
 
-**Set up our computing environment**
+#### 3.9. 神经网络的梯度下降法
 
 
 
-**Review Codebase and Train on MNIST**
+#### 3.10. 直观理解反向传播
 
 
 
----
-
-## Week 2: CNNs
-
-### Lecture 2A: CNNs
-
-
-
-### Lecture 2B: Computer Vision Applications
-
-
-
-### Lab 2: CNNs
+#### 3.11. 随机初始化
 
 
 
