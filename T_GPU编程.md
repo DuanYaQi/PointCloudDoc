@@ -2785,3 +2785,33 @@ https://moocaholic.medium.com/fp64-fp32-fp16-bfloat16-tf32-and-other-members-of-
 
 FP64, FP32, FP16, BFLOAT16, TF32, and other members of the ZOO
 
+
+
+---
+
+# 深度学习工作站
+
+https://www.youtube.com/watch?v=UbiSQ0g_D4I&t=114s
+
+Nvidia RTX 3060是否适合深度学习初学者？加密矿禁令，对您有帮助吗？
+
+
+
+|             | cuda核心 |  boost clock  | 显存 | 显存类型 |
+| :---------: | :------: | :-----------: | :--: | :------: |
+|  RTX 3060   |   3584   |   1777 MHz    | 12GB |  GDDR6   |
+| RTX 3060 Ti |   4864   |   1665 MHz    | 8GB  |  GDDR6   |
+|  RTX 3070   |   5888   |   1725 MHz    | 8GB  |  GDDR6   |
+|  RTX 3080   |   8704   |    1710MHz    | 10GB |  GDDR6X  |
+|  RTX 3090   |  10496   |   1695 MHz    | 24GB |  GDDR6X  |
+| RTX 2080 Ti |   4352   | 1545/1635 MHz | 11GB |  GDDR6   |
+| RTX 1080 Ti |   3584   |   1582 MHz    | 11GB |  GDDR5X  |
+|             |          |               |      |          |
+|             |          |               |      |          |
+
+
+
+cuda 核心数量越多，并行计算的数量越多。RTX 3060 意味着它可以同时处理 3584 个并行计算。
+
+
+
