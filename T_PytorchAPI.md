@@ -1,10 +1,10 @@
 # PytorchAPI
 
-## torch::one:
+## 1. Torch-
 
-### Tensor::two:
+### 1.1. Tensor-张量
 
-#### Creation Ops::three:
+#### 1.1.1. Creation Ops-张量生成
 
 ##### torch.arange()-连续张量
 
@@ -132,15 +132,13 @@ torch.ones(*sizes, out=None) → Tensor
 
 
 
-##### torch.ones_like()-全1向量，size=input.size
+##### torch.ones_like()-全1向量
 
 ```python
 torch.ones_like(input, *, dtype=None, layout=None, device=None, requires_grad=False, memory_format=torch.preserve_format) → Tensor
 ```
 
-​	返回一个填充有标量值1的张量，其大小与输入相同。 
-
-
+​	返回一个填充有标量值1的张量，其大小与输入相同。 size=input.size
 
 
 
@@ -218,13 +216,13 @@ tensor([ 0.,  0.,  0.,  0.,  0.])
 
 
 
-##### torch.zeros_like()-全0向量，size=input.size
+##### torch.zeros_like()-全0向量
 
 ```python
 torch.zeros_like(input, *, dtype=None, layout=None, device=None, requires_grad=False, memory_format=torch.preserve_format) → Tensor
 ```
 
-​	返回一个填充有标量值0的张量，其大小与输入相同。 
+​	返回一个填充有标量值0的张量，其大小与输入相同。 size=input.size
 
 
 
@@ -236,7 +234,7 @@ torch.zeros_like(input, *, dtype=None, layout=None, device=None, requires_grad=F
 
 ---
 
-#### Indexing, Slicing, Joining, Mutating Ops::three:
+#### 1.1.2. Indexing, Slicing, Joining, Mutating Ops-张量处理
 
 ##### torch.index_select()-选择指定索引张量
 
@@ -336,9 +334,9 @@ tensor([[1.0779, 0.0383],
 
 ----
 
-### Math operations::two:
+### 1.2. Math operations-数学操作
 
-#### Pointwise Ops::three:
+#### 1.2.1. Pointwise Ops-逐步操作
 
 ##### torch.clamp()-限制范围
 
@@ -380,7 +378,7 @@ $$
 
 
 
-#### BLAS and LAPACK Operations::three:
+#### 1.2.2. BLAS and LAPACK Operations-线性代数
 
 ##### torch.mm()-矩阵乘法
 
@@ -398,7 +396,7 @@ torch.mm(input, mat2, *, out=None) → Tensor
 
 ---
 
-#### Reduction Ops::three:
+#### 1.2.3. Reduction Ops-降维操作
 
 ##### torch.sum()-求和
 
@@ -444,7 +442,7 @@ tensor([[3., 3.]])
 
 
 
-#### Other Ops::three:
+#### 1.2.4. Other Ops-其他操作
 
 ##### torch.diag()-对角2d张量
 
@@ -497,7 +495,7 @@ tensor([[ 0.0000,  0.0000, 0.0000, 0.0000, 0.0000]
 
 ---
 
-### Random sampling::two:
+### 1.3. Random sampling-随机采样
 
 #### torch.rand()-随机均匀分布
 
@@ -584,9 +582,9 @@ torch.normal(mean, std, *, generator=None, out=None) → Tensor
 
 ---
 
-## torch.nn::one:
+## 2. torch.nn-神经网络
 
-### Convolution Layers::two:
+### 2.1. Convolution Layers-卷积层
 
 #### nn.Conv1d()-1维卷积
 
@@ -743,7 +741,7 @@ class CNN(nn.Module):
 
 ---
 
-### Linear Layers::two:
+### 2.2. Linear Layers-线性层
 
 #### nn.Linear()-线性转换
 
@@ -792,7 +790,7 @@ True
 
 ---
 
-### Non-linear Activations (weighted sum, nonlinearity)::two:
+### 2.3. Non-linear Activations (weighted sum, nonlinearity)-非线性激活
 
 #### nn.relu()-relu激活函数
 
@@ -804,7 +802,7 @@ $$
 \operatorname{ReLU}(\mathrm{x})=(\mathrm{x})^{+}=\max (0, \mathrm{x})
 $$
 
-![../_images/ReLU.png](../assets/ReLU.png)
+![../_images/ReLU.png](assets/ReLU.png)
 
 
 
@@ -818,15 +816,31 @@ class torch.nn.Sigmoid
 '''
 ```
 
-![../_images/Sigmoid.png](../assets/Sigmoid.png)
-
-
+![../_images/Sigmoid.png](assets/Sigmoid.png)
 
 
 
 ---
 
-### Pooling layers::two:
+#### nn.LeakyReLU()-leakyrelu激活函数
+
+```python
+class torch.nn.LeakyReLU(negative_slope=0.01, inplace=False)
+
+
+- negative_slope –控制负斜率的角度。 默认值：1e-2 
+- inplace –可以选择in-place操作。   默认值：False
+```
+
+
+
+![image-20210329160315136](assets/image-20210329160315136.png)
+
+
+
+---
+
+### 2.4. Pooling layers-池化层
 
 #### nn.maxpool2d()-2维最大池化
 
@@ -840,9 +854,7 @@ class torch.nn.functional.max_pool2d(*args, **kwargs)
 x = F.max_pool2d(x, 2)   #应用2*2卷积核 对x进行池化操作
   ```
 
-![img](../assets/16715697-3d69c563031e9ec4.png)
-
-
+![img](assets/16715697-3d69c563031e9ec4.png)
 
 
 
@@ -852,7 +864,37 @@ x = F.max_pool2d(x, 2)   #应用2*2卷积核 对x进行池化操作
 
 ---
 
-## torch.nn.functional::one:
+### 2.5. Modlue-模组
+
+所有神经网络模块的**基类**。您的模型也应该继承此类。
+
+
+
+### 2.6. Sequential-序列
+
+**顺序**容器。modules 将按照在构造函数中传递的**顺序**添加到模块中。 
+
+或者，也可以传递模块的**有序字典**。
+
+
+
+### 2.7. Parameter-参数
+
+Parameter是Tensor子类，与Module一起使用时具有非常特殊的属性
+
+```python
+
+-data（张量）–参数张量。
+-require_grad（布尔型，可选）– 如果参数需要梯度。默认值：True
+```
+
+
+
+
+
+---
+
+## 3. torch.nn.functional-神经网络函数
 
 ```python
 relu()-relu激活函数
@@ -862,9 +904,13 @@ Linear()-线性转换
 
 
 
-## torch.utils.data::one:
+---
 
-### Memory Pinning::two: - 内存固定
+
+
+## 4. torch.utils.data-​数据处理
+
+### 4.1. Memory Pinning- - 内存固定
 
 #### DataLoader-导入数据集
 
@@ -937,6 +983,29 @@ torch.utils.data.random_split(dataset: torch.utils.data.dataset.Dataset[T],
 ```
 
 ​	将数据集随机拆分为给定长度的不重叠的新数据集。  
+
+
+
+
+
+----
+
+## 5. torchvision-计算机视觉库
+
+### 5.1. datasets-数据集
+
+#### MNIST-手写数字
+
+```python
+class torchvision.datasets.MNIST(root: str, train: bool = True, transform: Union[Callable, NoneType] = None, target_transform: Union[Callable, NoneType] = None, download: bool = False) → None
+
+	
+- root (string) – 保存MNIST/processed/training.pt 和 MNIST/processed/test.pt的根目录
+- train (bool, optional) – 如果为True，则从training.pt创建数据集，否则从test.pt创建数据集。
+- download (bool, optional) – 如果为true，则从Internet下载数据集并将其放在根目录中。 如果数据集已经下载，则不会再次下载。
+- transform (callable, optional) – 接受PIL图像并返回转换后版本的函数/转换。
+- target_transform (callable, optional) – 接受目标并对其进行转换的函数/转换。
+```
 
 
 
