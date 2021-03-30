@@ -1,3 +1,33 @@
+# Debug
+
+#### 1. bool value of Tensor with more than one value is ambiguous
+
+函数或者可调用对象使用时候没有加括号。
+
+
+
+#### 2. 注意：关于减少时间消耗
+
+(1)只要是用到for循环都是在cpu上进行的，会消耗巨量的时间
+
+(2)只要是用到生成矩阵这种操作都是在cpu上进行的，会很消耗时间。
+
+(3)数据往cuda()上搬运会比较消耗时间，也就是说 .cuda() 会比较消耗时间，能去掉就去掉。
+
+(4)在服务器上，如果可以在一块 gpu 上运行就不要采用 `net = nn.DataParallel(net)`，这种 gpu 并行方式比单个 gpu 要耗时。
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 吃掉Pytorch
 
 ## TODO

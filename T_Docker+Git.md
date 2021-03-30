@@ -14,14 +14,17 @@
 
 
 ```bash
-docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE nvidia/cudagl:duan
+docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE tensorflow/tensorflow:1.13.2-gpu-py3
 
-docker commit -p 43d4f8e0674a nvidia/cudagl:10.2-devel-ubuntu18.04
+docker commit -p 432e298f0214 nvidia/cudagl:10.2-devel-ubuntu18.04
+
+
+# -v /home/duan/windows/udata:/home/data/ 映射目录
+# -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE 可视化显示  宿主机需要xhost +
 
 tensorboard --logdir ./runs/lightning_logs
 
-python -m visdom.server # 开启visdom服务
-http://127.0.0.2:8097/
+python -m visdom.server # 开启visdom服务  开启时加参数 -p 127.0.0.2:8097:8097 http://127.0.0.2:8097/
 
 # /usr/local/cuda						   cuda
 # /usr/local/lib/python2.7/dist-packages/  tensorflow/torch/torchvision
@@ -1076,7 +1079,7 @@ git commit -m "first commit"
 ## 添加仓库关联
 
 ```
-git remote add origin git@github.com:DuanYaQi/PointCloudDoc.git
+git remote add origin git@github.com:DuanYaQi/E_VAE.git
 ```
 
 
