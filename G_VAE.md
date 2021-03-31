@@ -258,7 +258,172 @@ $$
 
 ---
 
+# 李宏毅 VAE
 
+https://www.bilibili.com/video/BV15b411g7Wd?p=75
+
+
+
+## AE
+
+encoder的权重参数**不**一定非要与decoder 的权重**互逆**
+
+
+
+**De-noising auto-encoder**
+
+![image-20210331170249532](assets/image-20210331170249532.png)
+
+
+
+**Contractive auto-encoder**
+
+改变 input 使，input对encoder的改变最小化。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 博客 AE
+
+## AutoEncoder详解（一）
+
+https://blog.csdn.net/roguesir/article/details/77469665
+
+encode和decode两个过程可以理解成互为反函数，在encode过程不断降维，在decode过程提高维度。
+
+当AutoEncoder过程中用卷积操作提取特征，相当于encode过程为一个深度卷积神经网络，好多层的卷积池化，那么decode过程就需要进行反卷积和反池化，那么，反卷积和反池化如何定义呢？
+
+
+
+### **反池化**
+
+其实在池化过程中，会**标记**像素点中最大值的位置，在Unpooling过程将最大值**还原**，其他位置填0
+
+![img](assets/20170822134210572)
+
+### **反卷积**
+
+将反卷积中的输入做padding=2，这样原本输入维度由3个变成了7个，再做正向卷积
+
+![img](assets/v2-78be59f3fee31730d49372bca2cec843_720w.jpg)
+
+
+
+
+
+---
+
+## AutoEncoder详解（二）
+
+https://roguesir.blog.csdn.net/article/details/81173557
+
+### Undercomplete AutoEncoder
+
+AutoEncoder（自编码器，AE）是神经网络的一种，基本结构分为编码、解码过程，即找到随机映射 $f=p_{encoder}(h|x)$ 和 $g=p_{decoder}(x|h)$ 。其基本结构如下图所示：
+
+![image-20210331172419059](assets/image-20210331172419059.png)
+
+其中，$f$ 为编码器，$g$ 为解码器，实际上，可以将 $f$ 和 $g$ 理解成反函数的映射关系，AutoEncoder的目的是使输入 $x$ 和输出 $r$ 差异最小，但这并不是关键之处，关键之处在于让模型通过编码解码过程**学习到特征**，或者说**学习到数据的分布**。
+
+当 $h$ 的维数大于输入 $x$ 时，模型不会学习到任何有用的特征，因为模型的目标函数即为最小化 $x$ 和 $r$ 之间的差异， $h$ 的维数足够大时，只需进行输入数据的**复制**即可得到与输入相同的输出，但这并不是模型想要达到的效果，因此在AutoEncoder设置时， $h$  的维数会**小于输入的维数**，这样才能迫使模型丢弃没用的特征（或者说**丢弃不影响数据分布的特征**），学习并保留有用的特征，这种自编码器就称为欠完备自编码器（Undercomplete AutoEncoder），学习欠完备的表示将会强制自编码器捕捉数据中的显著特征。
+
+
+### De-noising AutoEncoder
+
+![image-20210331170249532](assets/image-20210331170249532.png)
+
+以处理图像数据为例，将原始输入 x 加入随机噪声生成  x&#x27;  ，将 x&#x27; 输入到AutoEncoder中进行训练，经过encoder和decoder过程之后得到输出 y，损失函数则是计算原始输入 x 和输出 y 之间的差异，损失函数可以是**均方差**、**绝对误差**等，如此训练出的模型**具有降噪功能**，对含有噪声的图片不敏感。
+常见的引入噪声的形式有两种：
+
+- 对于图片，引入高斯噪声
+- 对于向量，随机dropout
+
+
+
+---
+
+## 相对熵与交叉熵
+
+### 相对熵
+
+相对熵 (relative entropy) 又称为**KL散度**（Kullback-Leibler divergence），KL距离，是两个随机**分布**间**距离**的度量。记为 $D_{KL}(p||q)$。它度量当真实分布为p时，假设分布q的无效性。
+$$
+\begin{equation}D_{KL}(p \| q)=E_{p}\left[\log \frac{p(x)}{q(x)}\right]=\sum_{x \in \mathcal{X}} p(x) \log \frac{p(x)}{q(x)}\end{equation}
+$$
+
+---
+
+### 交叉熵
+
+假设有两个分布p，q，则它们在给定样本集上的交叉熵定义如下：
+$$
+\begin{equation}C E H(p, q)=E_{p}[-\log q]=-\sum_{x \in \mathcal{X}} p(x) \log q(x)=H(p)+D_{K L}(p \| q)\end{equation}
+$$
+交叉熵与的相对熵仅相差了 $H(p)$,当 $p$ 已知时，可以把 $H(p)$ 看做一个常数，此时交叉熵与KL距离在行为上是等价的，都反映了分布 $p，q$ 的相似程度。最小化交叉熵等于最小化 $KL$ 距离。它们都将在 $p=q$ 时取得最小值 $H(p)$（$p=q$ 时KL距离为0），
+
+
+
+特别的，在logistic regression中，
+
+$p$: 真实样本分布，服从参数为p的0-1分布，即X∼B(1,p)
+$q$: 待估计的模型，服从参数为q的0-1分布，即X∼B(1,q)
+
+两者的交叉熵为：
+$$
+\begin{equation}C E H(p, q)=-\left[\mathbf{y} \log \mathbf{h}_{\theta}(x)+(1-\mathbf{y}) \log \left(1-\mathbf{h}_{\theta}(x)\right)\right]\end{equation}
+$$
+取均值得：
+$$
+\begin{equation}-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log h_{\theta}\left(x^{(i)}\right)+\left(1-y^{(i)}\right) \log \left(1-h_{\theta}\left(x^{(i)}\right)\right)\right]\end{equation}
+$$
+
+
+这个结果与通过**最大似然估计方法**求出来的结果一致。
+
+
+
+
+
+---
 
 # 深度学习-自编码器 基本原理及项目实战
 

@@ -110,9 +110,35 @@ https://blog.csdn.net/qq_24624539/article/details/81775635
 
 
 ---
->>>>>>> a422c3362363be336f2919522247dfed5665e492
+
 
 ## 优化
+
+删除无用软件
+
+删除libreoffice
+
+```shell
+sudo apt-get remove libreoffice-common  
+```
+
+删除Amazon的链接
+
+```shell
+sudo apt-get remove unity-webapps-common  
+```
+
+删掉基本不用的自带软件（用的时候再装也来得及）
+
+```shell
+sudo apt-get remove thunderbird totem rhythmbox empathy brasero simple-scan gnome-mahjongg aisleriot gnome-mines cheese transmission-common gnome-orca webbrowser-app gnome-sudoku  landscape-client-ui-install
+
+sudo apt-get remove onboard deja-dup  
+```
+
+
+
+
 
 ### vpn
 
