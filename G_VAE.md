@@ -16,7 +16,7 @@ https://spaces.ac.cn/archives/5253
 
 设$B_1,B_2,\dots,B_n$是一组事件,若
 
-（1）$\forall i \neq j \in \left\{1,2,\dots,n \right\},B_i\cap B_j=\varnothing $
+（1）$\forall i \neq j \in \left\{1,2,\dots,n \right\},B_i\cap B_j=\varnothing$
 
 （2）$B_1∪B_2∪…∪B_n=Ω$
 
