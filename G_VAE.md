@@ -286,6 +286,12 @@ encoder的权重参数**不**一定非要与decoder 的权重**互逆**
 
 
 
+## AE for CNN
+
+
+
+
+
 
 
 
@@ -383,6 +389,42 @@ AutoEncoder（自编码器，AE）是神经网络的一种，基本结构分为�
 
 ## 相对熵与交叉熵
 
+### 信息量
+
+信息量作为信息的度量，可以用来衡量熵的定义，设 $p(x_i)$ 表示 $x_i$ 发生的概率，则信息量可以表示为：
+$$
+\begin{equation}h\left(x_{i}\right)=-\log _{a} p\left(x_{i}\right)=\log _{a} \frac{1}{p\left(x_{i}\right)}\end{equation}
+$$
+其中，a值常取2，表示比特，即非0即1，由此可知，**信息量与概率成反比**，可以理解为：**事件发生概率越高，含有的信息量就越低，事件就越寻常易见**。
+
+
+
+---
+
+### 熵
+
+熵（Entropy）最初在热力学中提出，用来描述物质的混乱程度，用来衡量不确定性，也就是说，物质越混乱，不确定性越大，熵值越大。
+
+后由香农引入**信息论**中，成为一个重要物理量，同步到信息论中，事件发生的不确定性越大，则熵越大。
+
+**熵是信息量的期望**，公式如下
+$$
+\begin{equation}H(X)=-\sum_{i=1}^{n} p\left(x_{i}\right) \log _{a} p\left(x_{i}\right)=\sum_{i=1}^{n} p\left(x_{i}\right) \log _{a} \frac{1}{p\left(x_{i}\right)}\end{equation}
+$$
+其中 $\log _{a} \frac{1}{p\left(x_{i}\right)}$ 表示信息量， $\sum_{i=1}^{n} p\left(x_{i}\right) \log _{a} \frac{1}{p\left(x_{i}\right)}$ 则表示信息量的期望，反应不确定性。
+定义熵时，约定确定事件的熵为0，如下：
+$$
+\begin{equation}\lim _{p \rightarrow 0^{+}} \operatorname{plog}_{a} p=0\end{equation}
+$$
+概率和熵具有如下的性质：
+$$
+\begin{equation}0 \leq p \leq 1\space\space\space\space \sum p=1\\
+\exists H(X) \quad H(X)>1\end{equation}
+$$
+
+
+
+
 ### 相对熵
 
 相对熵 (relative entropy) 又称为**KL散度**（Kullback-Leibler divergence），KL距离，是两个随机**分布**间**距离**的度量。记为 $D_{KL}(p||q)$。它度量当真实分布为p时，假设分布q的无效性。
@@ -402,6 +444,8 @@ $$
 
 
 
+### logistic regression
+
 特别的，在logistic regression中，
 
 $p$: 真实样本分布，服从参数为p的0-1分布，即X∼B(1,p)
@@ -418,6 +462,43 @@ $$
 
 
 这个结果与通过**最大似然估计方法**求出来的结果一致。
+
+
+
+---
+
+## VAE
+
+变分自编码是一个使用**学好的近似推断**的有向模型，可以纯粹地使用基于梯度的方法进行训练。
+
+对于AutoEncoder，当训练得到Decoder之后，我们希望输入一个code，通过decoder生成一张图片，但实际上仅仅通过AutoEncoder得到的结果并不好。
+
+但如果使用VAE，相比之下效果就会好很多。VAE的实现过程如下：与AE相比，encoder过程和decoder过程都不变，在中间加入了一些trick，encoder输出两个vector，假设原本AE中生成的code是十维，生成的两个即 $\left(m_{1}, m_{2}, m_{3}, \cdots, m_{10}\right)$ 和 $\left(\sigma_{1}, \sigma_{2}, \sigma_{3}, \cdots, \sigma_{10}\right)$，之后再从正态分布（normal distribution）中生成一个vector: 执行如下计算：
+$$
+\begin{equation}c_{i}=\exp \left(\sigma_{i}\right) \cdot e_{i}+m_{i}\end{equation}
+$$
+从而生成 $\left(c_{1}, c_{2}, c_{3}, \cdots, c_{10}\right)$，再把$\left(c_{1}, c_{2}, c_{3}, \cdots, c_{10}\right)$ 丢进decoder中得到输出，通过“使input和output越接近越好“这个目标来优化模型。
+
+那上面的计算过程有什么作用呢？实际上，在AE的基础上通过encoder产生的向量，可以这么理解：
+
+假如在AE中，一张满月的图片作为输入，模型得到的输出是一张满月的图片；一张弦月的图片作为输入，模型得到的是一张弦月的图片。当从满月的code和弦月的code中间sample出一个点，我们希望是一张介于满月和弦月之间的图片，但实际上，对于AE我们没办法确定模型会输出什么样的图片，因为我们并不知道模型从满月的code到弦月的code发生了什么变化。
+
+
+而VAE做的事情，实际上就是在原本满月和弦月生成的code上面加了noise，即在某个数值区间内，每个点理论上都可以输出满月的图片；在某个数值区间内，每个点理论上都可以输出弦月的图片，当调整这个noise的值的时候，也就是改变了这个数值区间，如下图所示，当两个区间出现重合的公共点，那么理论上，这个点既应该像满月，又应该像弦月，因此输出的图片就应该兼具满月和弦月的图片特点，也就生成一张介于满月和弦月之间的月相，而这个月相，在原本的输入中是不存在的，即生成了新的图片。
+
+
+上面说的noise，就是上面示意图中的乘积部分：$m$ 对应与原来AE中的code，$\sigma$ 是从输入图片中生成的，但它表示 noise 的 variance，$e$ 是从正态分布中抽样得到的，二者相乘即得到了影响code的数值区间的noise，variance影响了noise的大小，而且是由encoder训练得到的，如果只考虑“使input和output越接近越好“这个目标来优化模型，那训练得到的variance为0时候模型理论最佳，也就变成了原来的AE。因此需要对这个计算过程做一个限制，如下：
+$$
+\begin{equation}inimize $\sum_{i=1}^{10}\left(\exp \left(\sigma_{i}\right)-\left(1+\sigma_{i}\right)+\left(m_{i}\right)^{2}\right)\end{equation}
+$$
+对于上式，$\exp \left(\sigma_{i}\right)$  的图像如下图蓝色所示， 的图像如下图红色部分所示，即当 为0时，二者的差会取得最小值，因此需要加上一个L-2正则项，强迫这个variance不能太小。
+
+
+VAE 过程有一个优势就是：可以通过调整 code 中的某维来确定 code 的维度所代表的东西，假设得到的 code 是十维的向量，我们控制其中的八维，来讨论省下的两维，如下图所示，先在坐标系中均匀采点，然后把取样的点连同固定的八维一起丢到decoder中，这样就可以观察这两维对于VAE生成图片的作用效果。
+
+
+
+如下图所示，分别为人脸的生成映射和MNIST数据集上固定其中两维进行图像生成，从左侧的人脸图片中，可以猜测两维特征可能分别控制着人脸的角度和表情；右侧MNIST数据集中，两维特征可能控制着数字中笔画的弯曲程度和数字的倾斜程度。
 
 
 
