@@ -68,29 +68,173 @@ To address this problem, we propose a novel unpaired point cloud completion netw
 
 ![1616750680725](assets/1616750680725.png)
 
-**图2.b** 缺少区域编码的解决方案。 我们建议使用可学习的代码Z（在上图中表示为Z1，Z2，Z3）来编码缺失区域
+**图2.b** 缺失区域编码的解决方案。 我们建议使用可学习的代码Z（在上图中表示为Z1，Z2，Z3）来编码缺失区域
+
+
+不完整形状的表示可以分解为两部分：一个是其相应完整形状的表示A，另一个是用于编码其缺失区域的代码 Z。 从不完整的形状预测完整形状时，仅考虑表示A，而从完整的形状预测不完整形状时，则考虑表示 A 和编码 Z。 因此，转换网络 FY 将通过学习将一个完整的输入投影到几个不完整的目标来减轻混乱。 取而代之的是，可学习的缺失区域代码Z可以帮助网络澄清哪个不完整形状是当前的转换目标，并缓解目标混乱的问题。 我们的主要贡献概述如下。
 
 
 
-The representations of incomplete shapes can be decomposed into two parts: one is the representation A of their corresponding complete shape, and the other one is the code Z to encode their missing regions. When predicting the complete shapes from the incomplete ones, only the representation A is considered, and when predicting the incomplete shapes from the complete ones, both the representation A and code Z are considered. Thus, the transformation network FY will relieve the confusion by learning to project one complete input to several incomplete targets. Instead, the learnable missing region code Z can help the network clarify which incomplete shape is the current target for transformation, and relieve the target confusion problem. Our main contributions are summarized as follows.
-不完整形状的表示可以分解为两部分：一个是其相应完整形状的表示A，另一个是用于编码其缺失区域的代码Z。 从不完整的形状预测完整形状时，仅考虑表示A，而从完整的形状预测不完整形状时，则考虑表示A和代码Z。 因此，转换网络FY将通过学习将一个完整的输入投影到几个不完整的目标来减轻混乱。 取而代之的是，可学习的缺失区域代码Z可以帮助网络澄清哪个不完整形状是当前的转换目标，并缓解目标混乱的问题。 我们的主要贡献概述如下。
-
-
-
-- We propose a novel unpaired point cloud completion network, named Cycle4Completion. Compared
-  with previous unpaired completion methods which only consider the single-side correspondence from incomplete shapes to complete ones, Cycle4Completion can enhance the completion performance by establishing the geometric correspondence between complete shapes and incomplete shapes from both directions.我们提出了一种新颖的不成对的点云完成网络，称为Cycle4Completion。与以前的不成对完成方法仅考虑从不完整形状到完整形状的单边对应关系相比，Cycle4Completion可以通过在两个方向上在完整形状和不完整形状之间建立几何对应关系来提高完成性能。
+- We propose a novel unpaired point cloud completion network, named Cycle4Completion. Compared with previous unpaired completion methods which only consider the single-side correspondence from incomplete shapes to complete ones, Cycle4Completion can enhance the completion performance by establishing the geometric correspondence between complete shapes and incomplete shapes from both directions.我们提出了一种新颖的不成对的点云完成网络，称为Cycle4Completion。与以前的不成对完成方法仅考虑从不完整形状到完整形状的单边对应关系相比，Cycle4Completion可以通过在两个方向上在完整形状和不完整形状之间建立几何对应关系来提高完成性能。
 - We propose the partial matching loss and cycle matching loss, and combine them with the cycle transformations to establish the bidirectional geometric correspondence between the complete and incomplete shapes, and maintain the shape consistency throughout the whole transformation process.我们提出了局部匹配损失和循环匹配损失，并将它们与循环变换相结合，以建立完整和不完整形状之间的双向几何对应关系，并在整个变换过程中保持形状一致性。
 - We propose the missing region coding to decompose the incomplete shape representation into a representation of its corresponding complete shape, and a missing region code to encode the missing regions of the incomplete shapes, respectively. This solves the target confusion when the network tries to predict multiple incomplete shapes based on a single complete shape. 我们建议使用缺失区域编码将不完整的形状表示分解为对应的完整形状的表示，并提出缺失区域代码分别对不完整形状的缺失区域进行编码。 当网络尝试基于单个完整形状预测多个不完整形状时，这解决了目标混乱。
 
 
 
+## 2. Related Work
+
+近年来，3D形状补全已引起越来越多的关注。 先前的补全方法可以大致分为两类，即传统方法和基于深度学习的方法，我们将在下面详细介绍。
+
+
+
+**Traditional approaches for 3D shape completion.** 
+
+基于传统几何/统计的方法[30、1、34、27、24、28]利用部分输入上的曲面的几何特征来生成3D形状的缺失区域[30、1、32、34]或利用 大型形状数据库以搜索相似的形状/补丁来填充3D形状的缺失区域[27、20、24、28]。 例如，Hu等人[34] 提出通过定义点云的平滑和去噪特性并在相似区域中全局搜索缺失区域，来利用点云的局部平滑度和非局部自相似性。 另一方面，数据驱动的形状完成方法，如Shen等[28]。 将3D形状的完成过程作为自下而上的零件组装过程进行描述，其中以3D形状存储库为参考来恢复各种高级完整结构。 总之，这些传统的形状完成方法主要基于手工规则来描述缺失区域的特征以及缺失区域与完整形状之间的相似性。 因此，这种方法的泛化能力通常受到限制。 例如，Sung等人[30]提出的方法。 预定义3D形状的语义部分的几类，并使用几何特征（例如部分位置，比例和方向）从形状数据库中查找缺失区域的相似部分。 这种方法通常在形状更复杂的情况下失败，这超出了预定义的语义部分类别或几何特征的描述。相反，基于深度学习的完成方法可以学习更灵活的功能，以根据不完整的输入预测完整的形状。这种方法将在下面的小节中详细介绍。
+
+
+
+**Deep learning approaches for 3D shape completion.** 
+
+第二类包括基于神经网络的方法，该方法利用深度学习从输入形状[15、10、9、11、22]中学习表示形式，并使用编码器-解码器框架根据表示来预测完整形状 。 该类别可以根据不同的输入形状形式进一步分类，包括：体积形状完成度[4、6、29] 和点云完成度[40、31、26、18、33]。 我们的 Cycle4Completion 也属于这一类，它完成了由点云表示的 3D 形状。 最近的著名研究，例如 MAPVAE [16]，TopNet [31]和SA-Net [36]在监督点云完成任务上取得了令人印象深刻的结果。
+
+此外，RL-GAN-Net [26]在对抗训练中引入了强化学习，以进一步改善生成的完整点云的真实性和一致性。 但是，尽管在有监督的点云完成任务上已取得了很大的进步，但此任务在很大程度上取决于配对的训练数据，但是很少有用于不完整的真实世界扫描的配对G.T.。 另一方面，关于未配对点云完成任务的研究很少。 作为一项开创性的工作，AML [29]直接测量了不完整和完整形状的潜在表示之间的最大可能性。 遵循类似的做法，Pcl2Pcl [3]引入了GAN框架来弥合不完整和完整形状之间的语义鸿沟。
+
+与上述未配对方法相比，我们的Cycle4Completion还通过在潜在空间中从两个方向进行循环变换来建立自监督，这可以为学习不完整形状和完整形状之间的双向几何对应关系提供更好的指导。
+
+
+
+**Relationships with GANs.** 
+
+二维域中不成对的样式传输网络CycleGAN，其简单的 cycle-consistency 循环一致性损失通常无法指导生成器推断缺失的形状，因为为不完整的输入设想一致的缺失形状会更加复杂 而不是转移样式。
+
+因此，我们建议在**潜在空间中**执行循环变换，其中提出了部分和循环匹配损失以保持传递的形状一致性。 考虑到 3D 补全本质上是从 3D 形状到 3D 形状的重建过程，因此从 2D 图像[12、7、13]重建 3D 形状也是一个值得注意的研究方向，与3D补全密切相关。 两项任务之间的区别在于，从 2D 图像进行 3D 重建不需要输入3D信息，而基于 3D 形状的完成任务则需要 3D 形状信息作为输入。
 
 
 
 
 
+---
+
+## 3. The Architecture of Cycle4Completion
+
+### 3.1. Formulation
+
+如图3（a）所示，令 $ \mathcal{P}_{X}=\left\{\mathbf{p}_{i}^{x}\right\} $ 表示不完整形状的点云，而 $ \mathcal{P}_{Y}=\left\{\mathbf{p}_{i}^{y}\right\} $ 表示完整的点云。 我们的目标是学习不完整形状的潜在表示 $ {x} $ 与完整形状的潜在表示 ${y}$ 之间的两个映射 $ F_{X} $ 和 $ F_{Y} $。 这些表示分别由点云编码器 $ E_{X}: \mathcal{P}_{X} \rightarrow \mathbf{x} $ 和 $ E_{Y}: \mathcal{P}_{Y} \rightarrow \mathbf{y} $ 生成，它们分别在自动编码器框架下与点云生成器 $G_{X}$ 和 $G_Y$ 一起训练。 另外，引入了两个对抗鉴别器 $D_X$ 和 $D_Y$ 。 $D_X$ 旨在区分 ${\mathbf{x}}$ 和 ${\mathbf{y}_{x}}$，其中 $ \mathbf{y}_{x}=F_{Y}(\mathbf{y}) $。  $D_Y$ 旨在区分 ${\mathbf{y}}$ 和 ${\mathbf{x}_{y}}$，其中 $ \mathbf{x}_{y}=F_{X}(\mathbf{x}) $。我们将两个函数 $F_X$ 和 $F_Y$ 的复合运算表示为 $F_X F_Y$。
+
+![1617284106275](assets/1617284106275.png)
+
+**Fig. 3(a)** （a）中的整体结构包括（b）中的不完整周期变换以及（c）中的完整周期变换。 两个循环都使用自我重建来学习形状一致性
+
+### 3.2. 用于学习潜在空间的编码器-解码器
+
+两个自动编码器分别学习不完整和完整形状的潜在表示空间。我们将两个点云 $ \mathcal{P}_{1} $ 和 $ \mathcal{P}_{2} $ 之间的完整倒角距离（CD）定义为
+$$
+\begin{equation}
+ \mathcal{L}_{\mathrm{CD}}\left(\mathcal{P}_{1} \leftrightharpoons \mathcal{P}_{2}\right)=\sum_{\mathbf{p}_{i}^{1} \in \mathcal{P}_{1}} \min _{\mathbf{p}_{i}^{2} \in \mathcal{P}_{2}}\left\|\mathbf{p}_{i}^{1}-\mathbf{p}_{i}^{2}\right\|+\sum_{\mathbf{p}_{i}^{2} \in \mathcal{P}_{2}} \min _{\mathbf{D}_{i}^{1} \in \mathcal{P}_{1}}\left\|\mathbf{p}_{i}^{2}-\mathbf{p}_{i}^{1}\right\| . 
+\end{equation} \tag{1}
+$$
+用于训练自动编码器框架的重建损耗 $ \mathcal{L}_{A E} $ 公式为：
+$$
+\begin{equation}
+ \mathcal{L}_{A E}=\mathcal{L}_{C D}\left(\mathcal{P}_{X} \leftrightharpoons G_{X}(\mathbf{x})\right)+\mathcal{L}_{C D}\left(\mathcal{P}_{Y} \leftrightharpoons G_{Y}(\mathbf{y})\right) 
+\end{equation}\tag{2}
+$$
+
+
+---
+
+### 3.3. Cycle Transformation
+
+#### Transformation with missing region coding. 
+
+![1617286254236](assets/1617286254236.png)
+
+**Fig. 3(b)** 不完整周期变换，该变换从不完整的输入（红色）产生完整的预测（绿色）
+
+对于图3（b）中的不完整循环变换，当 $\mathbb{x}$ 从不完整域转换为完整域 $ \mathbf{x}_{y} $ 时，$F_X$ 会生成缺失区域代码 $ \mathbf{x}_{y}^{z} $ 和完整形状表示 $ \mathbf{x}_{y}^{r} $。 因此，$ \mathbf{x}_{y} $ 可以进一步表示为 $ \mathbf{x}_{y}=\left[\mathbf{x}_{y}^{r}: \mathbf{x}_{y}^{z}\right] $ 。 备注“：”表示两个特征向量的串联。 然后，基于 $ G_{Y} $ 的 $ \mathbf{x}_{y}^{r} $ 预测完整形状为 $ G_{Y}\left(\mathbf{x}_{y}^{r}\right) $。 判别器 $D_Y$ 仅在  $ \mathbf{x}_{y}^{r} $  和 $y$ 之间进行判别。 为了在变换过程中建立形状一致性，$ \mathbf{x}_{y} $ 再次由 $ F_{Y} $ 投射回不完全域，表示为 $ \hat{\mathbf{x}} $。 循环重建的形状由 $ G_{X} $ 预测，表示为 $ G_{X}(\hat{\mathbf{x}}) $。
+
+![1617286270674](assets/1617286270674.png)
 
 
 
+![1617286213830](assets/1617286213830.png)
+
+#### **Code matching Loss.** 
+
+在图3（c）的完整循环变换中，从均匀分布中采样缺失区域代码y z，以便从当前完整输入P Y创建缺失区域。 在形状P Y通过F Y和F X循环之后，变换网络F Y F X预测出新的缺失区域代码y y z。 因为y z和ˆ y z都对应于相同的不完整形状，所以两个代码应相等。 因此，我们建议使用y z和ˆ y z之间的欧几里得距离作为代码匹配损耗，可以表示为：
+$$
+\begin{equation}
+ \mathcal{L}_{\text {code }}=\left\|\mathbf{y}^{z}-\hat{\mathbf{y}}_{z}\right\|^{2} $
+\end{equation}\tag{3}
+$$
 
 
+#### **Cycle matching loss.** 
+
+循环匹配损耗的目的是使循环重建G Y（/ y）/ G X（ˆ x）的形状与它们相应的输入P Y / P X匹配，这应在整个转换过程中保持形状一致性。 具体而言，我们将循环匹配损耗定义为输入P Y / P X与重构点云G Y（ˆ y）/ G X（ˆ x）之间的完整倒角距离，即L CD（P X？
+   G X（ˆ x））和L CD（P Y？G Y（ˆ y））。 然后我们将转移网络F X和F Y的全周期匹配损失表示为：
+$$
+\begin{equation}
+ \mathcal{L}_{\text {cycle }}=\mathcal{L}_{\mathrm{CD}}\left(\mathcal{P}_{X} \leftrightharpoons G_{X}(\hat{\mathbf{x}})\right)+\mathcal{L}_{\mathrm{CD}}\left(\mathcal{P}_{Y} \leftrightharpoons G_{Y}(\hat{\mathbf{y}})\right) 
+\end{equation}\tag{4}
+$$
+
+
+#### **Partial matching loss.** 
+
+部分匹配损耗是方向性约束，旨在将一种形状匹配到另一种形状，而无需在反方向上进行匹配。 在以前的工作[3]中可以找到类似的做法，该工作采用定向Hausdoff距离将完全预测与不完全输入部分匹配。 但是，单方向的局部匹配不能为推断缺失区域提供进一步的指导，因此我们将局部匹配集成到循环变换中以在两个方向上建立更全面的几何对应关系。 我们将两个点云P 1和P 2之间的部分倒角距离定义为：
+$$
+\begin{equation}
+ \mathcal{L}_{\mathrm{CD}^{\prime}}\left(\mathcal{P}_{1} \rightarrow \mathcal{P}_{2}\right)=\sum_{\mathbf{p}_{i}^{1} \in \mathcal{P}_{1}} \min _{\mathbf{p}_{i}^{2} \in \mathcal{P}_{2}}\left\|\mathbf{p}_{i}^{1}-\mathbf{p}_{i}^{2}\right\| 
+\end{equation}\tag{5}
+$$
+
+
+这是仅要求P 2的形状与P 1的形状部分匹配的约束。 对于图3（b）中的不完整周期，部分匹配损耗表示为L CD 0（PX→GY（xry）），对于图3（c）中的完整周期，部分匹配损耗表示为L CD 0  （GX（yx）→PY）。 注意，以上两个部分倒角距离的方向总是从不完整的形状指向完整的形状，这保证了不完整的形状部分地匹配完整的形状，无论是预测的还是真实的。 全部的部分匹配损耗定义为：L部分= L CD 0（P X→G Y（x r y））+ L CD 0（G X（y x）→P Y）。
+   （6）
+
+
+
+#### Adversarial loss
+
+To further bridge the geometric gap be-
+tween the latent representations of complete and incomplete
+shapes, the adversarial learning framework is adopted as an
+unpaired constraint. Specifically, two discriminators D X
+and D Y are used to distinguish the real and fake representa-
+tions in the incomplete and complete domains, respectively.
+The D X in incomplete domain discriminates between the
+real latent representations {x} and the fake latent represen-
+tations {y x }; in the same way, the D Y in complete domain
+discriminates between {y} and {x y }. In order to stabilize
+the training, we formulate the objective loss for discrimina-
+tor under the WGAN-GP [5] framework. For simplicity, we
+formulate the loss for D X as:
+
+L D X = E x D X (x) − E y x D X (y x ) + λ gp T D X , (7)
+$$
+\begin{equation}
+ \mathcal{L}_{D_{X}}=\mathbb{E}_{\mathbf{x}} D_{X}(\mathbf{x})-\mathbb{E}_{\mathbf{y}_{x}} D_{X}\left(\mathbf{y}_{x}\right)+\lambda_{g p} \mathcal{T}_{D_{X}} 
+\end{equation}\tag{7}
+$$
+
+
+where λ gp is a pre-defined weight factor and T D X is gradi-
+ent penalty term, denoted as:
+$$
+\begin{equation}
+ \mathcal{T}_{D_{X}}=\mathbb{E}_{\mathbf{x}}\left[\left(\left\|\nabla_{\mathbf{x}} D_{X}(\mathbf{x})\right\|_{2}-1\right)^{2}\right] 
+\end{equation}\tag{8}
+$$
+The discriminator loss L D Y for D Y can be formulated in
+the same way. The final adversarial losses for generator
+{F X ,F Y } and discriminator {D X ,D Y } are given as
+$$
+\begin{equation}
+ \mathcal{L}_{D}=\mathcal{L}_{D_{X}}+\mathcal{L}_{D_{Y}} \tag{9}\\ 
+\end{equation}
+$$
+
+$$
+\mathcal{L}_{G}=\mathbb{E}_{\mathbf{y}_{x}}  D_{X}\left(\mathbf{y}_{x}\right)+\mathbb{E}_{\mathbf{x}_{y}}  D_{Y}\left(\mathbf{x}_{y}^{r}\right) \tag{10}
+$$
