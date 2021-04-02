@@ -140,7 +140,6 @@ $$
 \end{equation}\tag{2}
 $$
 
-
 ---
 
 ### 3.3. Cycle Transformation
@@ -159,7 +158,15 @@ $$
 
 ![1617286213830](assets/1617286213830.png)
 
-#### **Code matching Loss.** 
+对于图3（c）中的完整循环变换，编码器 $ E_{Y} $ 直接预测完整的形状表示 $ \mathbf{y}^{r} $。 为了预测不完整的形状，我们从 $[0,1]$ 之间的均匀分布（表示为 $ \mathbf{y}^{z} $）和与$ \mathbf{y}^{r} $（表示 $ \mathbf{y}=\left[\mathbf{y}^{r}: \mathbf{y}^{z}\right] $ ）之间的均匀分布中随机采样缺失的区域代码。 然后，变换网络 $ F_{Y} $ 将 $ \mathbf{y} $ 变换为不完整域，记为 $ \mathbf{y}_{x} $。 与不完全循环变换类似，基于  $ \mathbf{y}_{x} $ 由 $ G_{X} $ 预测不完全形状，记为 $ G_{X}\left(\mathbf{y}_{x}\right) $ 。 判别器 $ D_{X} $ 在 $ \mathbf{y}_{x} $ 和 $ \mathbf{x} $ 之间进行判别。 遵循不完全循环变换的反方向，通过预测重构形状 $ G_{Y}(\hat{\mathbf{y}}) $ 来建立完整周期变换期间的形状一致性，其中 $ \hat{\mathbf{y}}=F_{X}\left(\mathbf{y}_{x}\right) $。 请注意，与 $ \mathbf{y} $ 相同，$ \hat{\mathbf{y}} $ 还包含完整的表示 $ \hat{\mathbf{y}}^{r} $ 和缺失的区域代码 $ \hat{\mathbf{y}}^{z} $
+
+
+
+---
+
+
+
+#### Code matching Loss.
 
 在图3（c）的完整循环变换中，从均匀分布中采样缺失区域代码y z，以便从当前完整输入P Y创建缺失区域。 在形状P Y通过F Y和F X循环之后，变换网络F Y F X预测出新的缺失区域代码y y z。 因为y z和ˆ y z都对应于相同的不完整形状，所以两个代码应相等。 因此，我们建议使用y z和ˆ y z之间的欧几里得距离作为代码匹配损耗，可以表示为：
 $$
@@ -210,8 +217,6 @@ discriminates between {y} and {x y }. In order to stabilize
 the training, we formulate the objective loss for discrimina-
 tor under the WGAN-GP [5] framework. For simplicity, we
 formulate the loss for D X as:
-
-L D X = E x D X (x) − E y x D X (y x ) + λ gp T D X , (7)
 $$
 \begin{equation}
  \mathcal{L}_{D_{X}}=\mathbb{E}_{\mathbf{x}} D_{X}(\mathbf{x})-\mathbb{E}_{\mathbf{y}_{x}} D_{X}\left(\mathbf{y}_{x}\right)+\lambda_{g p} \mathcal{T}_{D_{X}} 
@@ -238,3 +243,11 @@ $$
 $$
 \mathcal{L}_{G}=\mathbb{E}_{\mathbf{y}_{x}}  D_{X}\left(\mathbf{y}_{x}\right)+\mathbb{E}_{\mathbf{x}_{y}}  D_{Y}\left(\mathbf{x}_{y}^{r}\right) \tag{10}
 $$
+
+
+
+
+
+## 5. Conclusions
+
+我们提出了不成对点的 Cycle4Completion 来处理点云补全任务。我们的模型成功捕捉到收入和收入之间的双向几何对应完整的形状，使学习没有成对完整形状的点云完成。 我们的模型有效地学习生成假的不完整 引导完成网络的形状。拟议的Cy- cle4Completion在广泛使用的ShapeNet上进行评估 数据集，实验结果表明 与其他不成对的组件相比 完全方法。

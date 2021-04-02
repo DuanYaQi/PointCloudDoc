@@ -18,7 +18,9 @@
 
 
 
+#### 3. DataLoader worker (pid 7413) is killed by signal: Bus error. It is possible that dataloader's workers are out of shared memory. Please try to raise your shared memory limit.
 
+出现这个错误的情况是，在服务器上的docker中运行训练代码时，batch size设置得过大，shared memory不够（因为docker限制了shm）.解决方法是，将Dataloader的num_workers设置为0.
 
 
 
