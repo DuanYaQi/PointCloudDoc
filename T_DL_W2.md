@@ -624,42 +624,169 @@ $$
 
 
 
-
 ---
 
 #### 2.6 动量梯度下降法
 
+> momentum：基本的想法是计算梯度的指数加权平均数，并利用该梯度更新你的权重
+
+梯度下降法，要很多计算步骤，慢慢摆动到最小值。摆动减慢了梯度下降的速度，无法使用较大的学习率。
+
+![这里写图片描述](assets/20171028142838569)
+
+希望纵向学习率低一点，减少摆动。横向学习率高一点，快速靠近最小值。采用
+$$
+\begin{equation}
+ v_{d W}=\beta v_{d W} +(1-\beta) d W =\beta v_{d W} +W
+\end{equation}
+$$
+即旧的惯性加新的方向。指数加权平均，减少纵轴波动，相当于取平均且平均为 0，正负数相互抵消。而所有的微分都指向横轴方向。momentum项 $v_{dW}$ 提供速度，微分项 $dW$ 提供加速度。$\beta$ 相当于提供摩擦力，不让无限加速下去。
 
 
 
+![1617433470211](assets/1617433470211.png)
+
+有两个超参数 $\alpha,\beta$，$\beta$ 常用 0.9 是很棒的鲁棒数。一般不适用偏差干扰项。且有时 $1-\beta$ 项会去掉，一般不去比较好，因为会影响 $\alpha$ 的值。
 
 
+
+---
 
 #### 2.7 RMSprop
 
+ root mean square prop 均方根，因为你将微分进行平方，然后最后使用平方根。
+$$
+\begin{equation}
+ S_{W}=\beta S_{d W}+(1-\beta) d W^{2} \\
+ S_{b}=\beta S_{d b}+(1-\beta) d b^{2} \\
+ W:=W-\alpha \frac{d W}{\sqrt{S_{W}}}, b:=b-\alpha \frac{d b}{\sqrt{S_{b}}} 
+\end{equation}
+$$
+从下图中可以看出，梯度下降（蓝色折线）在垂直方向（b）上**振荡较大**，在水平方向（W）上振荡较小，表示在b方向上**梯度较大**，即 $db$ 较大，而在 W 方向上梯度较小，即 $dW$ 较小。因此，上述表达式中 $S_b$ 较**大**，而 $S_W$ 较小。在更新 W 和 b 的表达式中，变化值 $ \frac{d W}{\sqrt{S W}} $ 较大，而 $ \frac{d b}{\sqrt{S_{b}}} $ 较**小**。也就使得 W 变化得多一些，b 变化得**少**一些。
+
+![这里写图片描述](assets/20171028163526337)
+
+
+即加快了W方向的速度，减小了b方向的速度，减小振荡，实现快速梯度下降算法，其梯度下降过程如绿色折线所示。总得来说，就是如果哪个方向振荡大，就减小该方向的更新速度，从而减小振荡。
+
+避免 RMSprop 算法中分母为零，通常可以在分母增加一个极小的常数 $ε$ ：
+$$
+\begin{equation}
+ W:=W-\alpha \frac{d W}{\sqrt{S_{W}}+\varepsilon}, b:=b-\alpha \frac{d b}{\sqrt{S_{b}}+\varepsilon} 
+\end{equation}
+$$
+其中，$ε=10^{−8}$，或者其它较小值。
 
 
 
-
-
+---
 
 #### 2.8 Adam 优化算法
 
+2015年 ICLR 提出的 A method for Stochastic Optimization, that the name is derived from adaptive moment estimation
+
+Stochastic Optimization 随机优化
+
+derived from 来源于
+
+adaptive moment estimation 自适应矩估计
 
 
 
+Init:  $V_{dW}=0, S_{dW},\space\space V_{db}=0, S_{db}=0$
+On iteration t:
+    Compute $dW,\space\space db$
+    $ V_{d W}=\beta_{1} V_{d W}+\left(1-\beta_{1}\right) d W,\space\space V_{d b}=\beta_{1} V_{d b}+\left(1-\beta_{1}\right) d b $
+    $ S_{d W}=\beta_{2} S_{d W}+\left(1-\beta_{2}\right) d W^{2},\space\space S_{d b}=\beta_{2} S_{d b}+\left(1-\beta_{2}\right) d b^{2} $
+    Compute bias corrected 偏差修正
+    $ V_{d W}^{\text {corrected }}=\frac{V_{d W}}{1-\beta_{1}^{t}},\space\space V_{d b}^{\text {corrected }}=\frac{V_{d b}}{1-\beta_{1}^{t}} $
+    $ S_{d W}^{\text {corrected }}=\frac{S_{d W}}{1-\beta_{2}^{t}},\space\space S_{d b}^{\text {corrected }}=\frac{S_{d b}}{1-\beta_{2}^{t}} $
+    $ W:=W-\alpha \frac{V_{d W}^{\text {corrected }}}{\sqrt{S_{d W}^{\text {Corrected }}}},\space\space b:=b-\alpha \frac{V_{d b}^{\text {corrected }}}{\sqrt{S_{d b}^{\text {corrected }}}} $
 
 
+
+计算**Momentum**指数加权平均数，用**RMSprop**进行更新。其中 $dW^2$ $db^2$ 是对整个积分进行平方（element-wise）。偏差修正时的 t 表示迭代次数。
+
+Adam算法包含了几个超参数，分别是：$α,β_1,β_2,ε$。其中，$β_1$ 通常设置为0.9，$β_2$ 通常设置为0.999，$ε$ 通常设置为 $10^{−8}$。一般只需要对 $β_1$ 和 $β_2$ 进行调试。
+
+实际应用中，Adam算法结合了动量梯度下降和RMSprop各自的优点，使得神经网络训练速度大大提高。
+
+
+
+adaptive moment estimation 自适应矩估计
+
+$β_1$ 用来计算微分 $dW$，叫做第一矩
+
+$β_2$ 用来计算平方数的指数加权平均数 $dW^2$ ，叫做第二矩。
+
+
+
+论文中的算法
+
+
+![img](assets/v2-5db14a3057bc9c9c407ede98f14eb6f6_720w.jpg)
+
+
+
+---
 
 #### 2.9 学习率衰减
 
+learning rate decay
+
+加快深度学习训练速度的一个办法，随时间慢慢减小学习率。
+
+如果学习率 $\alpha$ 是固定的值，且batch较小，算法不会收敛，只会在最优解附近不断徘徊。 
+
+下图中，蓝色折线表示使用恒定的学习因子 $α$，由于每次训练 $α$ 相同，步进长度不变，在接近最优值处的振荡也大，在最优值附近较大范围内振荡，与最优值距离就比较远。绿色折线表示使用不断减小的 $α$，随着训练次数增加，$α$ 逐渐减小，步进长度减小，使得能够在最优值处较小范围内微弱振荡，不断逼近最优值。相比较恒定的 $α$ 来说，learning rate decay 更接近最优值。
 
 
 
+1 epoch = 1 pass through datasets
+
+遍历一次数据集
 
 
+$$
+\begin{equation}
+ \alpha=\frac{1}{1+\underbrace{\text { decay-rate }}_{\text {hyperparameter }} \times \text { epoch }} \cdot \alpha_{0} 
+\end{equation}
+$$
+指数下降
+$$
+\begin{equation}
+ \alpha=\lambda^{\text {epoch-number }} \cdot \alpha_{0}, \quad \lambda<1 \sim 0.95 
+\end{equation}
+$$
+对数下降
+$$
+\begin{equation}
+ \alpha=\frac{\overbrace{\gamma_{c o n s t}}^{\text {hyperparameter }}}{\sqrt{\text { epoch-number }}} \cdot \alpha_{0} \quad  or  \quad=\frac{\gamma_{\text {const }}}{\sqrt{t}} \cdot \alpha_{0} 
+\end{equation}
+$$
+离散阶梯
+$$
+\begin{equation}
+ \alpha=f_{\text {discrete staircase }} 
+\end{equation}
+$$
+
+
+---
 
 #### 2.10 局部最优的问题
+
+**只要选择合理的强大的神经网络，一般不太可能陷入局部最优**
+
+平稳段是一块区域导数长期为0，会降低学习速度。
+
+
+
+如果都是凸函数，就很好求解。
+
+马鞍面，一凸一凹组成的，交点为鞍点。
+
+
 
 
 
