@@ -1,4 +1,4 @@
-深度学习工程师
+# 深度学习工程师
 
 由 deeplearning.ai 出品，网易引进的正版授权中文版深度学习工程师微专业课程，让你在了解丰富的人工智能应用案例的同时，学会在实践中搭建出最先进的神经网络模型，训练出属于你自己的 AI。
 
@@ -18,7 +18,7 @@ https://www.bilibili.com/video/av66524657
 
 **note**
 
-https://blog.csdn.net/red_stone1/article/details/78208851
+https://blog.csdn.net/red_stone1/article/details/78403416
 
 https://www.zhihu.com/column/DeepLearningNotebook
 
@@ -39,6 +39,7 @@ https://www.heywhale.com/mw/project/5e20243e2823a10036b542da
 ## Question
 
 - [ ] 改善深层神经网络-[1.11 权重初始化](#winit)，有这个概念，但没在主流模型的代码中见过。
+- [ ] 改善深层神经网络-[3.7 测试时的 Batch Norm](#BN-test)，指数加权平均过程很模糊 
 
 
 
@@ -142,6 +143,10 @@ bias variance trade off 权衡
 ---
 
 #### 1.4 正则化
+
+**正则化**：多任务学习、增加噪声，集成学习，早停止，稀疏表示，dropout，正切传播，参数绑定，权值共享，范数惩罚，数据增强
+
+
 
 如果网络过拟合，即存在高方差的问题。**正则化**可以处理！ 
 
@@ -320,9 +325,9 @@ dropout 缺点是损失函数不确定了 。
 
 ---
 
-#### 1.9 正则化输入
+#### 1.9 归一化输入
 
-归一化输入 normalizing 
+normalizing 
 
 ![1617165180456](assets/1617165180456.png)
 
@@ -683,6 +688,8 @@ $$
 
 #### 2.8 Adam 优化算法
 
+aidamu
+
 2015年 ICLR 提出的 A method for Stochastic Optimization, that the name is derived from adaptive moment estimation
 
 Stochastic Optimization 随机优化
@@ -771,7 +778,6 @@ $$
 \end{equation}
 $$
 
-
 ---
 
 #### 2.10 局部最优的问题
@@ -794,7 +800,231 @@ $$
 
 ---
 
+### 第三周 超参数调试、Batch 正则化和程序框架
 
+#### 3.1 调试处理
+
+T3 学习率 最重要
+
+T2 动量梯度下降因子 隐藏单元 mini-batch size 
+
+T1 网络层数，学习率衰减因子 
+
+T0 Adam算法参数
+
+
+
+参数较少时，可以全部试一遍
+
+参数较多时，随机采样。**coarse to fine** 由粗糙到精细的搜索。即采样后，也许你会发现效果最好的某个点，也许这个点周围的其他一些点效果也很好，那在接下来要做的是放大这块小区域，然后在其中更密集得取值或随机取值，聚集更多的资源。
+
+
+
+
+
+---
+
+#### 3.2 为超参数选择合适的范围
+
+参数在不同的数量级，对变化的敏感程度不一样，取**对数** log10，就是在数量级上均匀取值（分布），能快速确定数量级大小
+
+$α \in[ 10^a ~ 10^b]$
+
+```python
+r = np.random.uniform(a, b)
+alpha = 10 ** r
+```
+
+![这里写图片描述](assets/20171101094754376)
+
+
+
+$β \in[0.9 ~ 0.999] → [1-10^{b} ~ 1-10^{a}]$
+
+```python
+r = np.random.uniform(a, b)
+beta = 1 - 10 ** r
+```
+
+
+
+
+
+---
+
+#### 3.3 超参数训练的实践：Pandas VS Caviar
+
+**pandas**
+
+照看一个模型，通常是有庞大的数据组，但没有许多计算资源或足够的CPU和GPU的前提下，基本而言，你只可以一次负担起试验一个模型或一小批模型。
+
+比如，第0天，你将随机参数初始化，然后开始试验，然后你逐渐观察自己的模型评价曲线，在第1天内逐渐减少，那这一天末的时候，试着增加一点学习速率，看看它会怎样，也许结果证明它做得更好。两天后，它依旧做得不错，也许我现在可以填充下Momentum或减少变量。第三天，发现你的学习率太大了，所以你可能又回归之前的模型。
+
+每天花时间照看此模型，即使是它在许多天或许多星期的试验过程中。所以这是一个人们照料一个模型的方法，观察它的表现，耐心地调试学习率。
+
+
+
+**caviar**
+
+同时试验多种模型，你设置了一些超参数，尽管让它自己运行，或者是一天甚至多天，然后会获得多条模型评价曲线。最后快速选择工作效果最好的那个。
+
+
+
+---
+
+#### 3.4 归一化网络的激活函数
+
+对当前层的每个样本计算出的隐藏单元值进行归一化，共有m个样本(= mini batch_size)
+
+已知第 l 层的隐藏单元值为：$ z^{[l](i)}=z^{(1)}, z^{(2)}, \ldots, z^{(m)} $
+
+归一化：
+$$
+\begin{equation}
+ \begin{aligned} 
+ \mu &=\frac{1}{m} \sum_{i=1}^{m} z^{(i)} \\ 
+ \sigma^{2} &=\frac{1}{m} \sum_{i=1}^{m}\left(z^{(i)}-\mu\right)^{2} \\ 
+ z_{\text {norm }}^{(i)} &=\frac{z^{(i)}-\mu}{\sqrt{\sigma^{2}+\varepsilon}}
+ \end{aligned} 
+\end{equation}
+$$
+其中 $\varepsilon$ 防止分母为0，取值 $10^{-8}$。这样该隐藏层的所有输入 $z^{(i)}$ 均值为0，方差为1。
+
+但是，大部分情况下并不希望所有的  $z^{(i)}$ 均值都为 0，方差都为 1，也不太合理。通常需要对  $z^{(i)}$  进行进一步处理：
+$$
+\tilde{z}^{(i)} =\gamma z_{\text {norm }}^{(i)}+\beta
+$$
+其中 $\gamma,\beta$ 是需要学习的参数，可以通过梯度下降等算法求得。这里， $\gamma,\beta$ 的作用是让 $ \tilde{z}^{(i)} $ 的均值和方差为任意值，只需调整其值就可以了。特别的如果：
+$$
+\begin{equation}
+ \gamma=\sqrt{\sigma^{2}+\varepsilon}, \beta=u 
+\end{equation}
+$$
+则有 $ \tilde{z}^{(i)} = z^{(i)} $。通过Batch Normalization，对隐藏层的各个$z^{[l](i)}$ 进行归一化处理，且下一层的输入为 $ \tilde{z}^{[l](i)} $ ，而不是 $ z^{[l](i)} $
+
+
+
+输入的标准化处理 Normalizing inputs 和隐藏层的标准化处理 Batch Normalization 是**有区别的**。Normalizing inputs 使所有输入的均值为0，方差为1。而 Batch Normalization 可使各隐藏层输入的均值和方差为任意值。
+
+![img](assets/2d314293ae9aaa67285299267857632f.png)
+
+实际上，从激活函数的角度来说，如果各隐藏层的输入**均值**在靠近 **0** 的区域即处于激活函数的**线性**区域，这样不利于训练好的非线性神经网络，得到的模型效果也不会太好。这也解释了为什么需要用  $\gamma,\beta$  来对 $z^{[l](i)}$ 作进一步处理。
+
+
+
+---
+
+#### 3.5 将 Batch Norm 拟合进神经网络
+
+batch norm 在激活函数前进行
+
+全连接网络中共有 N * L * 2 个 BN 参数，L 表示层数，N 表示一层里隐藏单元数目。
+
+
+
+
+
+![[公式]](assets/equation-1617519745354.svg)
+
+如果使用 BN，那么 bias 即 $b$ 可以去除掉，因为要先将 $z^{[L]}$ 减去均值，而 bias 会被均值减法抵消掉。其实 $\beta$ 就把 $b$ 包括进去了，二者都在调整这一特征的平均的水平
+$$
+\begin{equation}
+ \begin{aligned} 
+ z^{[l]}&=W^{[l]} a^{[l-1]} \\
+ z_{norm}^{[l]} &= \frac{z^{[l]}-\mu}{\sqrt{\sigma^{2}+\varepsilon}} \\
+ \tilde{z}^{[l]}&=\gamma^{[l]} z_{\text {norm }}^{[l]}+\beta^{[l]} 
+ \end{aligned}
+\end{equation}
+$$
+Parameters: $ W^{[1]} \in \mathbb{R}^{n[l] \times n^{[l-1]}}, \quad \gamma^{[l]} \in \mathbb{R}^{n^{[l]} \times 1}, \quad \beta^{[l]} \in \mathbb{R}^{n^{[l]} \times 1} $
+
+
+
+for t = 1, 2, ..., num_mini_batches
+	forward prop on $X^{\{t\}}$
+	in each hidden layer, use BN to replace $z^{[l]}$ with $ \tilde{z}^{[l]}$
+	back prop to compute $dW^{[l]}, dγ^{[l]}, dβ^{[l]}$
+	update parameters
+$$
+\begin{equation}
+ W^{[l]}:=W^{[l]}-\alpha d W^{[l]} \\
+ \gamma^{[l]}:=\gamma^{[l]}-\alpha d\gamma^{[l]} \\
+ \beta^{[l]}:=\beta^{[l]}- \alpha d\beta^{[l]} 
+\end{equation}
+$$
+works with Momentum / RMSProp / Adam
+
+
+
+---
+
+#### 3.6 Batch Norm 为什么奏效？
+
+> covariate shift：两组数据分布不一致，但条件分布一致
+
+
+
+BN 减少了隐藏值分布变化的数量。哪怕前一层参数变换，BN后的均值和方差都一样（分布很相同）。
+
+限制了前层的**参数更新**会**影响**数值**分布**的程度。
+
+Batch Norm 减少了各层 $W^{[l]}$、$B^{[l]}$ 之间的**耦合性**，让各层更加**独立**，实现自我训练学习的效果。
+
+对于特别多层的网络，后面的累积**分布差异**跟原数据分布完全不一样。每换一个batch，分布又可能往另一种方式差异化。BN 解决了这个问题。
+
+简单的说就是让各层之间相对**独立**，不会因为前面层的变动导致后面层巨大变化。
+
+像是把一个工序相互影响很大的工厂变成流水线，当前一层只需要考虑上一层的结果和当前层的处理。上一层的结果（分布）也比较稳定，当前层做起来就比较轻松。
+
+
+
+BN 一次只能针对一个 mini-batch，每个mini-batch都有一个均值和方差，而不是用整个数据集计算。因此会产生 noise，迫使后边网络，不过分依赖于任何一个隐藏单元，slight 正则化效果。
+
+
+
+----
+
+#### 3.7 测试时的 Batch Norm<span id ="BN-test"></span>
+
+BN 将你的数据以mini-batch的形式逐一处理，但在测试时，你可能需要对每个样本逐一处理
+
+为了将你的神经网络运用于测试，就需要单独估算 $\mu$ 和 $\sigma^2$.
+
+可以把所有训练集放入最终的神经网络模型中，然后直接计算每层的参数。
+
+也可以用指数加权平均。
+
+
+
+---
+
+#### 3.8 Softmax 回归
+
+
+
+
+
+---
+
+#### 3.9 训练一个 Softmax 分类器
+
+
+
+
+
+----
+
+#### 3.10 深度学习框架
+
+
+
+----
+
+#### 3.11 TensorFlow
+
+
+
+---
 
 
 
