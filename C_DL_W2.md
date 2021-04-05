@@ -40,6 +40,7 @@ https://www.heywhale.com/mw/project/5e20243e2823a10036b542da
 
 - [ ] 改善深层神经网络-[1.11 权重初始化](#winit)，有这个概念，但没在主流模型的代码中见过。
 - [ ] 改善深层神经网络-[3.7 测试时的 Batch Norm](#BN-test)，指数加权平均过程很模糊 
+- [ ] 改善深层神经网络-[3.9 训练一个 Softmax 分类器](#dadz)，激活函数对 z 求导，https://www.cnblogs.com/lizhiqing/p/10684795.html
 
 
 
@@ -1000,15 +1001,86 @@ BN 将你的数据以mini-batch的形式逐一处理，但在测试时，你可�
 
 #### 3.8 Softmax 回归
 
+传统logistic回归为 神经网络输出层只有一个神经元，表示预测输出 $\hat{y}$ 是正类的概率$ P(y=1 \mid x)$，$\hat{y}>0.5 $ 则判断为正类，$\hat{y}<0.5 $ 则判断为负类。
 
+Softmax 处理多分类任务。神经网络中输出层就有C个神经元，即 $n^{[L]} = C$。每个神经元的输出依次对应属于该类的概率 $ P(y=C \mid x)$
+
+
+
+最后一层输出    
+$$
+\begin{equation}
+ z^{[L]}=W^{[L]} a^{[L-1]}+b^{[L]} 
+\end{equation}
+$$
+通过Softmax激活函数
+$$
+\begin{equation}
+ t=e^{z^{[L]}}, \quad t \in \mathbb{R}^{4 \times 1} \\ a^{[L]}=\frac{e^{z^{[L]}}}{\sum_{i=1}^{4} t_{i}}, \quad a_{i}^{[L]}=\frac{t_{i}}{\sum_{i=1}^{4} t_{i}} \\ \operatorname{softmax}: a_{(c, 1)}^{[L]}=g^{[L]}\left(z_{\{c, 1\rangle}^{[L]}\right) 
+\end{equation}
+$$
+其中 C 表示分类数量，例子中 C = 4，a 表示对应所属类的概率，维度与 z 相同。且
+$$
+\begin{equation}
+ \sum_{i=1}^{C} a_{i}^{[L]}=1 
+\end{equation}
+$$
+Softmax 回归是 logistic 回归的一般形式。Softmax回归 = 分C类的广义逻辑回归
+
+![详解softmax函数以及相关求导过程](assets/v2-11758fbc2fc5bbbc60106926625b3a4f_1440w.jpg)
 
 
 
 ---
 
-#### 3.9 训练一个 Softmax 分类器
+#### 3.9 训练一个 Softmax 分类器<span id ="dadz"></span>
 
+让 $\hat{y}2$ 尽可能大，除了第二项其余项都为零
+$$
+\begin{equation}
+ y=\left[\begin{array}{l}0 \\ 1 \\ 0 \\ 0\end{array}\right] \quad a^{[L]}=\hat{y}=\left[\begin{array}{c}0.3 \\ 0.2 \\ 0.1 \\ 0.4\end{array}\right] \quad C=4 \\
+ L(\hat{y}, y)=-\sum^{4} y_{j} \log \hat{y}_{j}=-\log \hat{y}_{2} \Rightarrow \hat{y}_{2} \uparrow 
+\end{equation}
+$$
+cost函数为
+$$
+\begin{equation}
+ J\left(W^{[1]}, b^{[1]}, \ldots, W^{[L]}, b^{[L]}\right)=\frac{1}{m} \sum_{i=1}^{m} L\left(\hat{y}^{(i)}, y^{(i)}\right) 
+\end{equation}
+$$
+损失函数为
+$$
+\begin{equation}
+ L(\hat{y}, y)=-\sum_{j=1}^{4} y_{j} \log \hat{y}_{j} 
+\end{equation}
+$$
+其中
+$$
+da = \frac{\part L}{\part a}=-\frac{y}{\hat{y}}=-\frac{1}{\hat{y}}
+$$
+因为 y 的值只有 0/1，0 项消掉了，只剩 1 项。
 
+激活函数
+$$
+\begin{equation}
+ t=e^{z^{[L]}}, \quad t \in \mathbb{R}^{C \times 1} \\ a^{[L]}=\frac{e^{z^{[L]}}}{\sum_{i=1}^{C} t_{i}}, \quad a_{i}^{[L]}=\frac{t_{i}}{\sum_{i=1}^{C} t_{i}} \\ \operatorname{softmax}: a_{(c, 1)}^{[L]}=g^{[L]}\left(z_{\{c, 1\rangle}^{[L]}\right) 
+\end{equation}
+$$
+其中
+$$
+\frac{\part a}{\part z} =  \frac{\partial}{\partial z} \cdot\left(\frac{e^{z_{i}}}{\sum_{i=1}^{C} e^{z_{i}}}\right) \\
+= a\cdot(1-a)
+$$
+得
+$$
+dz=\frac{\part L}{\part z} \\
+= \frac{\part L}{\part a}\frac{\part a}{\part z} \\
+=-\frac{1}{\hat{y}}*a(1-a)\\
+=-\frac{1}{\hat{y}}*\hat{y}(1-\hat{y})\\
+=\hat{y}-1\\
+=\hat{y}-y
+$$
+其中 a = $\hat{y}$ ，$y=1$
 
 
 
@@ -1016,27 +1088,116 @@ BN 将你的数据以mini-batch的形式逐一处理，但在测试时，你可�
 
 #### 3.10 深度学习框架
 
+易于编程，运行速度快，开源
+
 
 
 ----
 
 #### 3.11 TensorFlow
 
+例如cost function是参数w的函数：
+$$
+\begin{equation}
+ J=w^{2}-10 w+25 
+\end{equation}
+$$
+
+```python
+import numpy as np
+import tensorflow as tf
+
+coefficients = np.array([[1.], [-10.], [25.]])
+
+w = tf.Variable(0,dtype=tf.float32)  # 定义参数w 初始化为0 
+x = tf.placeholder(tf.float32, [3,1]) # training data size为 3x1 稍后为x提供数值    现在x变成了控制这个二次函数系数的数据
+cost = x[0][0]*w**2 + x[1][0]*w + x[2][0]
+
+
+# cost = tf.add(tf.add(w**2, tf.multiply(10., w)), 25) # 定义cost fucition
+cost = w**2 - 10*w + 25 # 重载了加减运算
+
+
+train = tf.train.GradientDescentOptimizer(0.01).minimize(cost) # 优化器为梯度下降 学习率0.01 指定最小化函数为cost
+
+init = tf.global_variables_initalizer() # 初始化
+session = tf.Sessions() # 开启一个tf session 
+session.run(init) # 初始化全局变量 给w赋初值
+session.run(w) # 评估变量w
+
+session.run(train) # 开始优化 1步
+session.run(train, feed_dict = {x:coefficients}) # 开始优化 并给x赋值
+
+for i in range(1000): # 优化1000步
+    session.run(train)
+    session.run(train, feed_dict = {x:coefficients}) # 开始优化 并给x赋值
+    
+```
+
+
+
+**TensorFlow** 中的 **placeholder** 是一个你之后会赋值的变量，这种方式便于把训练数据加入损失方程，把数据加入损失方程用的是这个句法，当你运行训练迭代，用 `feed_dict` 来让 `x=coefficients`。
+
+如果你在做 **mini-batch** 梯度下降，在每次迭代时，你需要插入不同的 **mini-batch**，那么每次迭代，你就用 `feed_dict` 来喂入训练集的不同子集，把不同的 **mini-batch** 喂入损失函数需要数据的地方。
+
+
+
+```python
+session = tf.Sessions() # 开启一个tf session 
+session.run(init) # 初始化全局变量 给w赋初值
+session.run(w) # 评估变量w
+
+# 可以替换为
+
+with tf.Session()  as session:
+	session.run(init)
+    print(session.run(w))
+```
+
+**Python**中的**with**命令更方便清理，以防在执行这个内循环时出现错误或例外
+
+
+
+TensorFlow的最大优点就是采用数据流图（data flow graphs）来进行数值运算。图中的节点（Nodes）表示**数学操作**，图中的线（edges）则表示在节点间相互联系的**多维数据数组**，即张量（tensor）。而且它灵活的架构让你可以在多种平台上展开计算，例如台式计算机中的一个或多个CPU（或GPU），服务器，移动设备等等。
 
 
 ---
 
+## 第四周【人工智能行业大师访谈】
+
+#### 4.1. 吴恩达采访 Yoshua Bengio
+
+花书作者
+
+self attention
 
 
 
 
 
+but i dont think that we need that everything be formalized mathematically but be formalized logically, not the sense that i can convice somebody that this should be work, whether this make sense. This is the most important aspect. And then math allows us to make that stronger and tighter. 
+
+不认为一切事物都要数学化， 而是要逻辑化，并不是我可以让别人相信这样有用，可行。 然后再通过数学来强化和精练。
 
 
 
+大多数人只停留在粗浅了解的程度，一旦出现问题，使用者很难解决，也不知道原因。所以大家要亲自实践，即便效率不高，只要知道是怎么回事就好，很有帮助，尽量亲自动手。 所以不要用那种几行代码就可以解决一切，却不知道其中原理的编程框架。尽量从基本原理入手获取知识。多阅读，多看别人的代码，多自己写代码。
+
+ 
+
+不要畏惧数学，发展直觉认识，一旦在直觉经验层面得心应手，数学问题会变得更容易理解。 
 
 
 
+---
+
+#### 4.2. 吴恩达采访 林元庆
+
+ 国家深度学习实验室
+
+
+
+---
 
 
 
