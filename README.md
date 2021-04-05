@@ -39,8 +39,8 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | 题目 | 描述 |
 | :--: | :--: |
 |[GrapAF](G_GraphAF.md)      | ICLR2020 GraphAF     |
-| [Glow](G_Flow-Glow阅读.md)     | 2018 OpenAI GLOW     |
-| [NICE](G_Flow-NICE阅读.md)     | ICLR2015 NICE     |
+| [Glow](G_Glow阅读.md)     | 2018 OpenAI GLOW     |
+| [NICE](G_NICE阅读.md)     | ICLR2015 NICE     |
 | [VAE](G_VAE.md)     | ICLR2014 VAE     |
 | [生成模式概述](G_生成模型概述.md)      |   生成模型概述   |
 |      |      |
