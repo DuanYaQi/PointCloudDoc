@@ -313,7 +313,7 @@ $$
 $$
 
 $$
-p\left(x^{\prime}\right)=\pi\left(z^{\prime}\right)\left|\frac{1}{\operatorname{det}\left(J_{f}\right)}\right|
+p\left(x^{\prime}\right)=\pi\left(z^{\prime}\right)\left|\frac{1}{\operatorname{det}\left(J_{f}\right)}\right|\\
 $$
 
 ​	利用**[Eq. 3](#eq3)**的性质转换:
@@ -322,7 +322,9 @@ $$
 \color{#FF3030}p\left(x^{\prime}\right)=\pi\left(z^{\prime}\right)\left|\operatorname{det}\left(J_{f^{-1}}\right)\right|
 $$
 
-​		
+​	其中 z 是输入，x 是输出，x = f(z)
+
+
 
 ---
 
