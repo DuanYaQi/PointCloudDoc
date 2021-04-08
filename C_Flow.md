@@ -322,7 +322,7 @@ $$
 \color{#FF3030}p\left(x^{\prime}\right)=\pi\left(z^{\prime}\right)\left|\operatorname{det}\left(J_{f^{-1}}\right)\right|
 $$
 
-​	其中 z 是输入，x 是输出，x = f(z)
+​	其中 z 是输入（潜在向量），x 是输出，x = f(z)
 
 
 
@@ -578,7 +578,7 @@ $$
 
 ![image-20201203105219189](assets/image-20201203105219189.png)
 
-​	输入我 $z$ ，输出为 $x$ 。 $W(3\times3)$ 乘以 3 个 **channel** 的值$(3\times1)$ 得到的结果填充到原来 **channel** 的位置 $(3\times1)$ 。
+​	输入为 $z$ ，输出为 $x$ 。 $W(3\times3)$ 乘以 3 个 **channel** 的值$(3\times1)$ 得到的结果填充到原来 **channel** 的位置 $(3\times1)$ 。
 
 ​	$W$ 是通过学习得到的转换矩阵。若学习到 $W = \begin{array}{|l|l|l|}\hline 0 & 0 & 1 \\\hline 1 & 0 & 0 \\\hline 0 & 1 & 0 \\
 \hline
