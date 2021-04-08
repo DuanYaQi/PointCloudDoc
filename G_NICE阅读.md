@@ -321,7 +321,6 @@ $$
 \text{Softplus}(x) = \frac{1}{\beta}  \log(1 + \exp(\beta  x))​
 $$
 
-
 ---
 
 ## pytorch版
@@ -489,7 +488,7 @@ $$
 
 ---
 
-#### 3.2.2.1. 加性耦合层 Additive
+##### 3.2.2.1. 加性耦合层 Additive
 
 ​	为简单起见，我们选择加性耦合定律 $g(a ; b)=a+b$ 作为耦合定律，以便通过取 $a=x_{I_{2}}$ 和 $ b=m\left(x_{I_{1}}\right)$：
 $$
@@ -502,11 +501,11 @@ $$
 
 ​	此外，由于 $\operatorname{det} \frac{\partial y_{I_{2}}}{\partial x_{I_{2}}}=1$，加性耦合层变换除了其普通逆外，还具有单位雅可比行列式。 
 
-#### 3.2.2.2. 乘性耦合层 multiplicative
+##### 3.2.2.2. 乘性耦合层 multiplicative
 
 ​	乘法耦合定律 $g(a ; b)=a \odot b, b \neq 0$ 
 
-#### 3.2.2.3. 仿射耦合层 affine
+##### 3.2.2.3. 仿射耦合层 affine
 
 ​	仿射耦合定律 $g(a ; b)=a \odot b_{1}+b_{2}, b_{1} \neq 0$，如果 $m: \mathbb{R}^{d} \rightarrow \mathbb{R}^{D-d} \times \mathbb{R}^{D-d}$。
 
