@@ -288,13 +288,47 @@ training error 到 bayes optimal error 的差距，告诉你 avoidable bias 问�
 
 #### 2.1 进行误差分析
 
+建立一个表格，表格的第一列对应你要评估的想法，比如狗的问题，猫科动物的问题，模糊图像的问题。扫过每一列，最后统计各列有多少百分比图像打了勾。
+
+通常来说，**比例越大**，影响越大，越应该花费时间和精力着重解决这一问题。这种 error analysis 让我们改进模型更加有针对性，从而提高效率。有人手时，可以不同小组处理不同问题。
+
 
 
 ---
 
 #### 2.2 清楚标注错误的数据
 
+深度学习算法对训练集的**随机误差**很健壮，但对**系统性的错误**就没那么健壮了。即可以有个别错误。 
 
+**针对验证集，则看整体验证集的错误率**
+
+​	Overall dev set error: 10%
+
+​	Errors due incorrect labels: 0.6%
+
+​	Errors due to other causes: 9.4%
+
+上面数据表明 Errors due incorrect labels 所占的比例仅为 0.6%，占 dev set error 的6%，而其它类型错误占 dev set error 的 94%。因此，这种情况下，可以忽略incorrectly labeled data，而去修复其他原因，造成的结果。
+
+**如果优化DL算法后，出现下面这种情况：**
+
+Overall dev set error: 2%
+
+Errors due incorrect labels: 0.6%
+
+Errors due to other causes: 1.4%
+
+上面数据表明 Errors due incorrect labels 所占的比例依然为0.6%，但是却占 dev set error的 30%，而其它类型错误占 dev set error 的70%。因此，这种情况下，incorrectly labeled data 不可忽略，需要手动修正。
+
+
+
+我们知道，**dev set 的主要作用是在不同算法之间进行比较，选择错误率最小的算法模型**。但是，如果有 incorrectly labeled data 的存在，当不同算法**错误率比较接近**的时候，我们无法仅仅根据 Overall dev set error 准确指出哪个算法模型更好，**必须修正** incorrectly labeled data。
+
+关于修正 incorrect dev/test set data，有几条建议：
+
+- 对验证和测试集应用相同的过程，以确保它们继续服从同一分布。
+- 考虑研究算法正确和错误的示例
+- 训练和验证/测试数据现在可能服从略有不同的分布
 
 
 
@@ -302,51 +336,92 @@ training error 到 bayes optimal error 的差距，告诉你 avoidable bias 问�
 
 #### 2.3 快速搭建你的第一个系统，并进行迭代
 
+- **快速**设置验证/测试集和指标，错了可以改
+
+- **快速**构建初始系统，并找到训练集，训练看效果，理解算法表现，及在验证集测试集上的评估指标上的表现。快速和粗糙的实现（**quick and dirty implementation**），
+- 使用偏差/方差分析和错误分析来**优先**确定后续步骤
+
 
 
 
 
 ---
 
-#### 2.4 在不同的划分上进行训练并测试
+#### 2.4 使用来自不同分布的数据，进行训练和测试Training and testing on different distributions
 
-
+以猫类识别为例，train set 来自于网络下载（webpages），图片比较清晰；dev/test set 来自用户手机拍摄（mobile app），图片比较模糊。假如 train set 的大小为200000，而 dev/test set 的大小为10000，显然 train set 要远远大于 dev/test set。
 
-
+![这里写图片描述](assets/20171122223431927)
 
-
-
-#### 2.5 不匹配数据划分的偏差和方差
-
-
-
-
+虽然 dev/test set 质量不高，但是**模型最终主要应用在对这些模糊的照片的处理上**。面对train set 与 dev/test set 分布不同的情况，有两种解决方法。
 
 
+
+× **第一种方法**是将train set和dev/test set**完全混合**，然后在**随机选择**一部分作为train set，另一部分作为dev/test set。例如，混合210000例样本，然后随机选择205000例样本作为train set，2500例作为dev set，2500例作为test set。这种做法的优点是实现train set和dev/test set**分布一致**，**缺点**是dev/test set中webpages图片所占的**比重**比mobile app图片大得多。例如dev set包含2500例样本，大约有2381例来自webpages，只有119例来自mobile app。这样，dev set的算法模型对比验证，仍然主要由webpages决定，实际应用的mobile app图片所占比重很小，**达不到验证效果**。因此，这种方法并不是很好。
+
+
+
+√ **第二种方法**是将原来的train set和一部分dev/test set组合当成train set，剩下的dev/test set分别作为dev set和test set。例如，200000例webpages图片和5000例mobile app图片组合成train set，剩下的2500例mobile app图片作为dev set，2500例mobile app图片作为test set。其关键在于dev/test set全部来自于mobile app。这样**保证了验证集最接近实际应用场合**。这种方法较为常用，而且性能表现比较好。
+
+
+
+
+
+---
+
+#### 2.5 数据分布不匹配时，偏差与方差的分析Bias and Variance with mismatched data distributions
+
+**随机打散训练集**，然后**分出一部分训练集**作为**训练-验证集**（training-dev），这是一个新的数据子集。就像验证集和测试集来自同一分布，训练集、训练-验证集也来自同一分布。但不同的地方是，现在只在**训练集**训练你的神经网络，**不会让神经网络在训练-验证集上跑后向传播**。
+
+
+
+有一个样本，训练集误差是1%，训练-验证集误差是9%，验证集误差是10%，和以前一样。算法**存在方差**问题，因为训练-验证集的错误率是在和训练集来自**同一分布**的数据中测得的。
+
+
+
+有一个样本，训练集误差为1%，训练-验证误差为1.5%，验证集误差为10%。算法**方差问题很小**，转到验证集时，错误率就大大上升了，所以这是**数据不匹配**的问题。因为你的学习算法没有直接在训练-验证集或者验证集训练过，但是这**两个数据集来自不同的分布**。
+
+
+
+有一个样本，训练集误差是10%，训练-验证误差是11%，验证集误差为12%，人类水平对贝叶斯错误率的估计大概是0%。则算法**存在偏差问题**。存在**可避免偏差**问题。
+
+
+
+有一个样本，训练集误差是10%，训练-验证误差为11%，验证集误差为20%，有两个问题。第一，**可避免偏差**相当**高**，因为你在训练集上都没有做得很好，而人类能做到接近0%错误率，但你的算法在训练集上错误率为10%。这里方差似乎很小，但存在**数据不匹配问题**。
+
+
+
+![](assets/equation-error.svg)
+
+
+
+
+
+---
 
 #### 2.6 定位数据不匹配
 
-
-
-
 
 
+
+
+---
 
 #### 2.7 迁移学习
 
-
-
-
 
 
+
+
+---
 
 #### 2.8 多任务学习
 
-
-
-
 
 
+
+
+---
 
 #### 2.9 什么是端到端的深度学习
 
