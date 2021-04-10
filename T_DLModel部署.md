@@ -1,10 +1,26 @@
 # 深度学习模型部署
 
+## 学习深度学习如何避免成为程序员？
+
+https://www.zhihu.com/question/348474416
+
+- 数据存储
+- 数据清洗
+- 架构设计
+- 组件开发
+- 单元与性能测试
+- 前端展示
+- 生产环境部署
 
 
 
 
-## [将深度学习模型部署为web应用有多难？答案自己找](http://www.lingchenliang.com/post/52329.html)
+
+
+
+## 将深度学习模型部署为web应用有多难？答案自己找
+
+http://www.lingchenliang.com/post/52329.html
 
 ​	传统来说，一般由数据科学家负责开发模型，而前端工程师负责把模型向外界展示。
 
@@ -18,7 +34,9 @@ localhost:50000
 
 
 
-## [深度学习模型在移动端部署方法](https://my.oschina.net/u/4391831/blog/3312371)
+## 深度学习模型在移动端部署方法
+
+https://my.oschina.net/u/4391831/blog/3312371
 
 ### 1. Keras 转 tflite
 
@@ -38,7 +56,9 @@ localhost:50000
 
 ---
 
-## [实践指南：如何在生产环境中高效部署深度学习模型](https://news.hexun.com/2019-10-16/198884354.html)
+## 实践指南：如何在生产环境中高效部署深度学习模型
+
+https://news.hexun.com/2019-10-16/198884354.html)
 
 地点：智东西公开课直播间
 
@@ -62,7 +82,9 @@ localhost:50000
 
 ---
 
-## [弹性部署您的AI/ML模型到生产环境中](https://www.autodeploy.ai/cn/)
+## 弹性部署您的AI/ML模型到生产环境中
+
+https://www.autodeploy.ai/cn/
 
 ![img](assets/daas-design.jpg)
 

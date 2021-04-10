@@ -70,7 +70,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | 题目 | 描述 |
 | :--: | :--: |
 | [NICE](E_NICE.md)     |  NICE实验文档    |
-|      |      |
+| [C++深度学习框架](E_CPPTMP4DL.md)     | C++实现深度学习框架     |
 |      |      |
 
 ## Tools
