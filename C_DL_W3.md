@@ -40,9 +40,7 @@ https://www.heywhale.com/mw/project/5e20243e2823a10036b542da
 
 ## Question
 
-- [ ] 改善深层神经网络-[1.11 权重初始化](#winit)，
-
-
+- [x] no question
 
 
 
