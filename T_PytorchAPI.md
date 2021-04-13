@@ -840,6 +840,26 @@ class torch.nn.LeakyReLU(negative_slope=0.01, inplace=False)
 
 ---
 
+#### nn.Softplus()-Softplus激活函数
+
+```python
+class torch.nn.Softplus(beta=1, threshold=20)
+
+
+- beta  – Softplus配方的β值。 默认值：1
+- threshold –高于此阈值的值将恢复为线性函数。 默认值：20
+```
+
+$$
+\text{Softplus} (x)=\frac{1}{\beta} * \log (1+\exp (\beta * x))
+$$
+
+![../_images/Softplus.png](assets/Softplus.png)
+
+
+
+---
+
 ### 2.4. Pooling layers-池化层
 
 #### nn.maxpool2d()-2维最大池化
@@ -898,6 +918,7 @@ Parameter是Tensor子类，与Module一起使用时具有非常特殊的属性
 
 ```python
 relu()-relu激活函数
+softplus()-Softplusji激活函数
 maxpool2d()-2维最大池化
 Linear()-线性转换
 ```
