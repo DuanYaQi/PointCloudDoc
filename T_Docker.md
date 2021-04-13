@@ -59,7 +59,11 @@ sudo apt-get update
 sudo apt-get install -y docker-ce
 ```
 
-## 查看状态
+
+
+## 维护
+
+### 查看状态
 
 ```
 systemctl status docker
@@ -74,7 +78,7 @@ sudo docker run hello-world
 
 
 
-## 设置docker权限
+### 设置docker权限
 
 ```
 sudo groupadd docker #添加docker用户组
@@ -86,7 +90,9 @@ newgrp docker #更新用户组
 
 
 
-## 编写dockerfile文件
+## DockerFile
+
+### 编写dockerfile文件
 
 ```dockerfile
 From nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
@@ -156,36 +162,9 @@ sudo ln -sf /usr/bin/pip3 /usr/bin/pip
 
 
 
-## 更换apt软件源
-
-```bash
-https://developer.aliyun.com/mirror/
-
-https://developer.aliyun.com/mirror/ubuntu?spm=a2c6h.13651102.0.0.3e221b11FlkJJ3
-
-echo "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
-
-deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse" > /etc/apt/sources.list
-
-rm -r /etc/apt/sources.list.d
-apt clean
-apt update
-```
 
 
-
-## 运行dockerfile编译并生成镜像
+### 运行dockerfile编译并生成镜像
 
 ```
 docker build -f Dockerfile -t myubunut:0.1 .
@@ -196,7 +175,7 @@ docker build -f Dockerfile -t myubunut:0.1 .
 
 
 
-###  Problem
+####  Problem
 
 1. 报错
 
@@ -222,7 +201,7 @@ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F60F4B3D7FA2AF80 && \
 
 
 
-### 查看镜像变更历史
+#### 查看镜像变更历史
 
 ```
 docker history myubunut:0.1
@@ -230,7 +209,7 @@ docker history myubunut:0.1
 
 
 
-### 查看修改镜像名
+#### 查看修改镜像名
 
 ```
 docker images
@@ -243,7 +222,7 @@ docker rmi myubunut:0.1
 
 
 
-### 运行docker容器
+#### 运行docker容器
 
 ```
 sudo docker run -it myubuntu:docker /bin/bash
@@ -251,7 +230,7 @@ sudo docker run -it myubuntu:docker /bin/bash
 
 
 
-### 查看/删除镜像
+#### 查看/删除镜像
 
 ```
 docker images
@@ -260,7 +239,7 @@ docker rmi fb93e677d775
 
 
 
-### 查看/删除运行容器
+#### 查看/删除运行容器
 
 ```
 docker ps
@@ -277,7 +256,7 @@ https://zixuephp.net/manual-docker-2139.html
 
 
 
-### 修改docker镜像路径-根目录容量不足/更新后镜像丢失
+#### 修改docker镜像路径-根目录容量不足/更新后镜像丢失
 
 https://www.cnblogs.com/bigberg/p/8057807.html
 
@@ -329,6 +308,8 @@ docker load -i PU-GAN.img
 
 ## Nvidia docker
 
+### 安装
+
 本机安装nividia显卡驱动
 
 https://zhuanlan.zhihu.com/p/59618999
@@ -338,6 +319,130 @@ https://zhuanlan.zhihu.com/p/59618999
 安装nvidia docker2
 
 https://www.cnblogs.com/answerThe/p/12238990.html
+
+
+
+#### 安装Docker
+
+更新`apt` 包的索引
+
+```shell
+sudo apt-get update
+```
+
+
+
+ 把Docker仓库加进到apt里，反斜杠\代表一行
+
+```shell
+sudo apt-get install \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg-agent \
+        software-properties-common
+```
+
+
+
+添加Docker的官方GPG key：
+
+```shell
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+```
+
+
+
+验证当前你所拥有的key的指纹是`9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88，方法是搜索指纹中的后八个字符。`
+
+```shell
+sudo apt-key fingerprint 0EBFCD88
+```
+
+
+
+建立稳定的仓库
+
+```shell
+sudo add-apt-repository \
+       "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+       $(lsb_release -cs) \
+       stable"
+```
+
+
+
+正式安装docker：
+
+```shell
+sudo apt-get update
+sudo apt-get install docker-ce
+```
+
+
+
+验证docker是否安装成功
+
+```shell
+sudo docker run hello-world
+
+输出 Hello from Docker!
+```
+
+
+
+#### **安装NVIDIA-Docker**
+
+添加包的地址
+
+```shell
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | \
+  sudo apt-key add -
+  
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+  
+sudo apt-get update
+```
+
+
+
+ 正式安装NVIDIA-Docker：
+
+```shell
+# Install nvidia-docker2 and reload the Docker daemon configuration
+sudo apt-get install -y nvidia-docker2
+sudo pkill -SIGHUP dockerd
+```
+
+
+
+用最新的CUDA镜像来测试一下nvidia-smi（检查是否安装成功，安装成功，则会显示关于GPU的信息）。
+
+```shell
+# Test nvidia-smi with the latest official CUDA image
+docker run --runtime=nvidia --rm nvidia/cuda:9.0-base nvidia-smi
+```
+
+
+
+
+
+验证docker是否安装成功
+
+```shell
+sudo docker run hello-world
+
+输出 Hello from Docker!
+```
+
+
+
+
+
+
 
 最后测试镜像cuda:10.2
 
@@ -449,6 +554,114 @@ sudo vi /etc/docker/daemon.json
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
+
+
+
+
+
+## 报错
+
+- docker version  Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+
+```shell
+vi /etc/docker/daemon.json
+
+{
+  "registry-mirrors": ["https://foqt1i8i.mirror.aliyuncs.com"]
+}
+```
+
+
+
+
+
+service docker start
+
+```shell
+su root # 先切换到root用户, 再执行以下命令
+systemctl enable docker # 开机自动启动docker
+
+systemctl start docker # 启动docker
+systemctl restart docker # 重启dokcer
+```
+
+
+
+
+
+## 更换apt软件源
+
+```bash
+https://developer.aliyun.com/mirror/
+
+https://developer.aliyun.com/mirror/ubuntu?spm=a2c6h.13651102.0.0.3e221b11FlkJJ3
+
+echo "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse" > /etc/apt/sources.list
+
+rm -r /etc/apt/sources.list.d
+apt clean
+apt update
+```
+
+
+
+## 卸载
+
+1. 删除某软件,及其安装时自动安装的所有包
+
+```shell
+sudo apt-get autoremove docker docker-ce docker-engine  docker.io  containerd runc
+```
+
+2. 删除docker其他没有没有卸载
+
+```shell
+dpkg -l | grep docker
+
+dpkg -l |grep ^rc|awk '{print $2}' |sudo xargs dpkg -P # 删除无用的相关的配置文件
+```
+
+
+
+ 3.卸载没有删除的docker相关插件(结合自己电脑的实际情况)
+
+```shell
+sudo apt-get autoremove docker-ce-*
+```
+
+
+
+4. 删除docker的相关配置&目录
+
+```shell
+sudo rm -rf /etc/systemd/system/docker.service.d
+sudo rm -rf /var/lib/docker
+```
+
+
+
+5. 确定docker卸载完毕
+
+```shell
+docker --version
+```
+
+ 
+
+
 
 
 
