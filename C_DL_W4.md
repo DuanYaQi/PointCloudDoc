@@ -26,7 +26,7 @@ https://www.bilibili.com/video/av66646276
 
 **note**
 
-https://redstonewill.blog.csdn.net/article/details/78651063
+https://redstonewill.blog.csdn.net/article/details/78769236
 
 https://www.zhihu.com/column/DeepLearningNotebook
 
@@ -203,6 +203,7 @@ $$
 $$
 
 
+
 ---
 
 #### 1.7 单层卷积网络
@@ -375,19 +376,69 @@ CNN有三种类型的layer：
 
 
 
+---
+
+#### 1.12 interview yann-lecun
+
+lenet
+
+Conditional Random Field 条件随机场
+
+给开源社区做贡献
+
+
+
 -----
 
 ### 第二周 深度卷积网络：实例探究
 
 #### 2.1 为什么要进行实例探究？
 
+典型的CNN模型包括：
 
+- **LeNet-5**-1998 LeCun
+- **AlexNet**-2012年ImageNet竞赛冠军获得者Hinton和他的学生Alex Krizhevsky设计
+- **VGG**-2014年ILSVRC竞赛的第二名，第一名是GoogLeNet。
+
+除了这些性能良好的CNN模型之外，Residual Network（ResNet）的特点是可以构建很深很深的神经网络（目前最深的好像有152层）。Inception Neural Network。
 
 
 
 ---
 
 #### 2.2 经典网络
+
+**LeNet-5**
+
+![这里写图片描述](assets/20171211150034018)
+
+5 层，6W 个参数，平均池化，sigmoid 和 tanh 函数，直接输出类别
+
+> Gradient-Based Learning Applied to Document Recognition
+
+
+
+**AlexNet**
+
+![这里写图片描述](assets/20171211155720094)
+
+60M 个参数，最大池化，relu 函数，局部响应归一化层 Local Response Normalization，softmax 输出各类别概率
+
+> ImageNet Classification with Deep Convolutional Neural Networks
+
+
+
+**VGG-16**
+
+![这里写图片描述](assets/20171211175203203)
+
+16 层，138M 个参数，只用 3x3 same 卷积，最大池化，专注于构建卷积层的简单网络，简化了神经网络架构
+
+随着网络的加深，**图像缩小的比例和通道数增加的比例是有规律的**。很吸引人。
+
+> very deep convolutional networks for large-scale image recognition
+>
+> Visual Geometry Group Network - 视觉几何群网络
 
 
 
@@ -397,7 +448,40 @@ CNN有三种类型的layer：
 
 #### 2.3 残差网络
 
+Residual Networks (ResNets)
 
+非常深的网络会出现梯度消失和梯度爆炸问题
+
+skip connection / short cut
+
+> Deep Residual Learning for Image Recognition
+
+**残差块**
+
+![这里写图片描述](assets/20171211204756960)
+
+上图中红色部分就是skip connection，直接建立 $a[l]$ 与 $a[l+2]$ 之间的隔层联系。相应的表达式如下：
+$$
+\begin{equation}
+z^{[l+1]}=W^{[l+1]} a^{[l]}+b^{[l+1]}\\
+a^{[l+1]}=g\left(z^{[l+1]}\right)\\
+z^{[l+2]}=W^{[l+2]}a^{[l+1]}+b^{[l+2]}\\
+a^{[l+2]}=g\left(z^{[l+2]}+a^{[l]}\right)
+\end{equation}
+$$
+
+
+$a[l]$ 直接隔层与下一层的线性输出相连，与 $z[l+2]$ 共同通过激活函数（ReLU）输出$a[l+2]$。
+
+![image-20210414155426103](assets/image-20210414155426103.png)
+
+由多个 Residual block 组成的神经网络就是 Residual Network。实验表明，这种模型结构对于训练非常深的神经网络，效果很好。Residual Network的结构如下图所示。
+
+![这里写图片描述](assets/20171211211417392)
+
+另外，为了便于区分，我们把非 Residual Networks 称为 Plain Network。与 Plain Network 相比，Residual Network 能够训练更深层的神经网络，有效避免发生发生梯度消失和梯度爆炸。从下面两张图的对比中可以看出，随着神经网络层数增加，Plain Network 实际性能会变差，training error 甚至会变大。然而，Residual Network 的训练效果却很好，training error 一直呈下降趋势。
+
+![这里写图片描述](assets/20171211213835572)
 
 
 
@@ -405,21 +489,86 @@ CNN有三种类型的layer：
 
 #### 2.4 残差网络为什么有用？
 
+网络在训练集上表现好，才能在验证集和测试集上表现好。
 
+![这里写图片描述](assets/20171211215418919)
+
+如上图所示，输入 $x$ 经过很多层神经网络后输出 $a^{[l]}$ ，$a^{[l]}$ 经过一个 Residual block 输出$a^{[l+2]}$。$a^{[l+2]}$ 的表达式为：
+
+$$
+\begin{equation}a^{[l+2]}=g\left(z^{[l+2]}+a^{[l]}\right)=g\left(W^{[l+2]} a^{[l+1]}+b^{[l+2]}+a^{[l]}\right)\end{equation}
+$$
+输入 $x$ 经过Big NN后，若 $W^{[l+2]}≈0$ ，$b^{[l+2]}≈0$，则有：
+$$
+\begin{equation}a^{[l+2]}=g\left(a^{[l]}\right)=\operatorname{ReL} U\left(a^{[l]}\right)=a^{[l]} \quad when \quad a^{[l]} \geq 0\end{equation}
+$$
+可以看出，即使发生了梯度消失，$W^{[l+2]}≈0$ ，$b^{[l+2]}≈0$，也能直接建立 $a^{[l+2]}$ 与 $a^{[l]}$ 的线性关系，且 $a^{[l+2]}=a^{[l]}$，这其实就是 Identity function。$a^{[l]}$ 直接连到 $a^{[l+2]}$，从效果来说，**相当于直接忽略了$a^{[l]}$之后的这两层神经层**。
+
+这样，看似很深的神经网络，其实由于许多 Residual blocks 的存在，**弱化削减了某些神经层之间的联系**，实现**隔层线性传递**，而**不是一味追求非线性关系**，模型本身也就能“容忍”更深层的神经网络了。而且从性能上来说，这两层额外的 Residual blocks 也不会降低 Big NN的性能。当然，如果 Residual blocks **确实能训练得到非线性关系**，那么也**会忽略 short cut**，跟 Plain Network 起到同样的效果。
+
+
+
+有一点需要注意的是，ResNet中使用了**same卷积**，使得$a^{[l]}$ 和 $a^{[l+2]}$ 的**维度相同**；但如果 Residual blocks 中 $a^{[l]}$ 和 $a^{[l+2]}$ 的**维度不同**，通常可以引入矩阵$W_s$，与 $a^{[l]}$ 相乘，使得 $W_s*a^{[l]}$ 的维度与 $a^{[l+2]}$ 一致。参数矩阵 $W_s$ 有来两种方法得到：一种是将 $W_s$ **作为学习参数**，通过模型训练得到；另一种是固定 $W_s$ 值（类似单位矩阵），不需要训练，$W_s$ 与 $a^{[l]}$ 的乘积仅仅使得 $a^{[l]}$ **截断或者补零**。这两种方法都可行。
+
+
+
+**ResNet 结构**![image-20210414163056395](assets/image-20210414163056395.png)
+
+上图为普通的网络，输入image，多个卷积层，最后输出一个Softmax。只需要添加 skip connection，就转换为 ResNet，如下图：
+
+![这里写图片描述](assets/20171212142205247)
+
+ResNets 同类型层之间，例如 CONV layers(实线)，大多使用 Same 类型，保持维度相同。如果是不同类型层之间的连接，例如 CONV layer 与 POOL layer 之间(虚线)，如果维度不同，则引入矩阵 $W_s$。
+
+
+
+
+
+> $W^{[l+2]}$, $b^{[l+2]}$ 就相当于一个开关，只要让这两个参数 w 和 b 为 0，就可以达到增加网络深度却不影响网络性能的目的。而**是否把这两个参数置为 0 就要看反向传播**，网络最终能够知道到底要不要skip。
+>
+> 
+>
+> 何凯明说过其实 AlexNet 是解决太深导致梯度消失，因为随着层数的增加计算出的梯度  会慢慢变小，可以映射到激活值会慢慢变小，之后他就想加一个 skip connection就可以保证无论中间多少层，最终两端激活值大体上不改变。
+>
+> 
+>
+> 当网络不断加深时，就算是选用学习恒等函数的参数都很困难，所以很多层最后的表现不但没有更好，反而更糟。
+>
+> 
+>
+> 这保证了深度的增加不会给模型带来负面影响，**至少不会比 Plain Network 差**。**残差块很容易学习恒等映射**
 
 
 
 ---
 
-#### 2.5 网络中的网络以及 1×1 卷积
+#### 2.5 Network in network 以及 1×1 卷积
+
+池化层可以压缩高度和宽度。1x1卷积可以压缩通道数。
+
+1x1卷积，处理多通道的数据。即不同通道的数据加权求和，然后通过非线性函数。
 
 
+
+对于单个 filter，1x1 的维度，意味着卷积操作等同于乘积操作。对于多个filters，1x1 Convolutions 的作用实际上**类似全连接层**的神经网络结构。效果等同于 Plain Network 中 $a^{[l]}$ 到 $a^{[l+1]}$ 的过程。
+
+![这里写图片描述](assets/20171212144647936)
+
+1x1 Convolutions 可以用来缩减输入图片的通道数目:
+
+![这里写图片描述](assets/20171212145859683)
+
+> Network in network, lin, 2013.
 
 
 
 ---
 
-#### 2.6 谷歌 Inception 网络简介
+#### 2.6 Inception network motivation
+
+构建卷积层时，你要决定过滤器的大小究竟是1×1，3×3 还是 5×5，或者要不要添加池化层。而Inception网络的作用就是**代替你来决定**，虽然网络架构因此变得更加复杂，但网络表现却非常好。
+
+​	
 
 
 
@@ -431,31 +580,49 @@ CNN有三种类型的layer：
 
 
 
-
-
 ---
 
-#### 2.8 使用开源的实现方案
+#### 2.8 Mobilenet
 
 
-
-
-
----
-
-#### 2.9 迁移学习
 
 
 
 ---
 
-#### 2.10 数据扩充
+#### 2.9 Mobilenet架构
 
 
 
 ---
 
-#### 2.11 计算机视觉现状
+#### 2.10 EfficientNet
+
+
+
+---
+
+#### 2.11 使用开源的实现方案
+
+
+
+
+
+---
+
+#### 2.12 迁移学习
+
+
+
+---
+
+#### 2.13 数据扩充
+
+
+
+---
+
+#### 2.14 计算机视觉现状
 
 
 

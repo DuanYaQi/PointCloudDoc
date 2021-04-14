@@ -109,17 +109,19 @@ CVPR2016 best paper Deep Residual Learning for Image Recognition
 
 ### Shortcut Connections. 
 
-Practices and theories that lead to shortcut connections[2,34,49] have been studied for a long time. An early practice of training multi-layer perceptrons (MLPs) is to add a linear layer connected from the network input to the output [34, 49]. In [44, 24], a few intermediate layers are directly connected to auxiliary classiﬁers for addressing vanishing/exploding gradients. The papers of [39, 38, 31, 47] propose methods for centering layer responses, gradients, and propagated errors, implemented by shortcut connections. In [44], an “inception” layer is composed of a shortcut branch and a few deeper branches. Concurrent with our work, “highway networks” [42, 43] present shortcut connections with gating functions [15]. shortcut 	connections[2,34,49]的实践和理论已经研究了很长时间。 训练多层感知器（MLP）的早期实践是添加从网络输入连接到输出的线性层[34，49]。 在[44，24]中，一些中间层直接连接到辅助分类器上，以解决消失/爆炸梯度。[39，38，31，47]的论文提出了一种通过 shortcut connections 实现居中层响应，梯度和传播误差居中的方法。在[44]中，“起始”层由一个快捷分支和一些更深的分支组成。 与我们的工作同时，“高速公路网络” [42、43]提供了具有选通功能[15]的 shortcut connections。 
+Practices and theories that lead to shortcut connections[2,34,49] have been studied for a long time. An early practice of training multi-layer perceptrons (MLPs) is to add a linear layer connected from the network input to the output [34, 49]. In [44, 24], a few intermediate layers are directly connected to auxiliary classiﬁers for addressing vanishing/exploding gradients. The papers of [39, 38, 31, 47] propose methods for centering layer responses, gradients, and propagated errors, implemented by shortcut connections. In [44], an “inception” layer is composed of a shortcut branch and a few deeper branches. Concurrent with our work, “highway networks” [42, 43] present shortcut connections with gating functions [15].         shortcut connections[2,34,49]的实践和理论已经研究了很长时间。 训练多层感知器（MLP）的早期实践是添加从网络输入连接到输出的线性层[34，49]。 在[44，24]中，一些中间层直接连接到辅助分类器上，以解决消失/爆炸梯度。[39，38，31，47]的论文提出了一种通过 shortcut connections 实现居中层响应，梯度和传播误差居中的方法。在[44]中，“起始”层由一个快捷分支和一些更深的分支组成。 与我们的工作同时，“高速公路网络” [42、43]提供了具有选通功能[15]的 shortcut connections。 
 
 ​	These gates are data-dependent and have parameters, in contrast to our **identity shortcuts** that are parameter-free. When a gated shortcut is “closed” (approaching zero), the layers in highway networks represent non-residual functions. On the contrary, our formulation always learns residual functions; our **identity shortcuts** are never closed, and all information is always passed through, with additional residual functions to be learned. In addition, high way networks have not demonstrated accuracy gains with extremely increased depth (e.g., over 100 layers). 
 
 与我们的不带参数的恒等 shortcuts 相反，这些门取决于数据并具有参数。 当封闭的快捷方式“关闭”（接近零）时，公路网中的图层表示非残留功能。 相反，我们的公式总是学习残差函数。 我们的恒等 shortcuts 永远不会关闭，所有信息始终都会通过传递，并需要学习其他残余功能。 另外，高速公路网络还没有显示出深度大大增加（例如超过100层）的准确性。
 
+
+
 ---
 
 ## 3. Deep Residual Learning
 
-#### 3.1. Residual Learning
+### 3.1. Residual Learning
 
 ​	Let us consider H(x) as an underlying mapping to be ﬁt by a few stacked layers (not necessarily the entire net), with x denoting the inputs to the ﬁrst of these layers. If one hypothesizes that multiple nonlinear layers can **asymptotically approximate complicated functions**, then it is **equivalent** to hypothesize that they can **asymptotically approximate the residual functions**, i.e., H(x)−x (assuming that the input and output are of the same dimensions). So rather than expect stacked layers to approximate H(x), we explicitly let these layers approximate a residual function F(x) := H(x) − x. The original function thus becomes F(x)+x. Although both forms should be able to asymptotically approximate the desired functions (as hypothesized), the ease of learning might be different. 
 
@@ -133,7 +135,9 @@ Practices and theories that lead to shortcut connections[2,34,49] have been stud
 
 ​	在实际情况下，**恒等映射**不太可能是最佳的，但是我们的重新制定可能有助于解决问题。如果最优函数比零映射更接近于一个恒等式，那么求解器应该比恒等式更容易找到参考恒等式的扰动，而不是学习一个新的函数。我们通过实验（图7）表明，学习到的残差函数通常具有较小的响应，这表明**恒等映射**提供了合理的预处理。
 
-#### 3.2. Identity Mapping by Shortcuts 
+
+
+### 3.2. Identity Mapping by Shortcuts 
 
 ​	We adopt residual learning to every few stacked layers. A building block is shown in Fig. 2. Formally, in this paper we consider a building block deﬁned as: 我们对每几个堆叠的层采用残差学习。 一个构建块如图2所示。在形式上，在本文中，我们考虑一个定义为的构建块：
 $$
@@ -163,7 +167,9 @@ We can also use a square matrix Ws in Eqn.(1). But we will show by experiments t
 
 ​	我们还注意到，尽管为简化起见，上述符号是关于全连接层的，但它们也适用于卷积层。 函数 $\mathcal{F}\left(\mathbf{x},\left\{W_{i}\right\}\right)$ 可以表示多个卷积层。在两个特征图上逐个通道执行逐元素加法。
 
-#### 3.3.Network Architectures 
+
+
+### 3.3.Network Architectures 
 
 ​	We have tested various plain/residual nets, and have observed consistent phenomena. To provide instances for discussion, we describe two models for ImageNet as follows. 
 
