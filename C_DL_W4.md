@@ -617,13 +617,85 @@ Inception Network在提升性能的同时，会带来计算量大的问题。例
 
 ---
 
-#### 2.8 Mobilenet
+#### 2.8 MobileNet
 
 可以在低计算环境下能够构建和部署正常工作的新网络。
 
-depthwise-separable convolutions 深度可分离卷积
+**正常卷积**
+
+![image-20210416002203682](assets/image-20210416002203682.png)
+
+计算代价 =  滤波器参数   x   输出像素size   x   滤波器个数
+
+   2160     =   3 x 3 x 3      x          4 x 4          x        5  
 
 
+
+**深度可分离卷积** Depthwise-separable convolutions 
+
+![image-20210416000353405](assets/image-20210416000353405.png)
+
+Depthwise convolution
+
+![image-20210416002825829](assets/image-20210416002825829.png)
+
+​          $n_{out} \times n_{out}\times n_{c}$                             $3 \times 3\times n_{c}$                               $n_{out} \times n_{out} \times n_{c}$
+
+输出的 channel 与输入 channel 和滤波器的 channel 一样，滤波器的每个 channel，对应输出的每个 channel，即**每个输入的 channel 只与滤波器的一个 channel 计算**。
+
+计算代价 =  滤波器参数   x   输出像素size   x   滤波器个数
+
+​     432     =        3 x 3       x          4 x 4          x        3  
+
+
+
+Pointwise convolution![image-20210416002713830](assets/image-20210416002713830.png)
+
+   $n_{out} \times n_{out}\times n_{c}$                          $n^{\prime} \times  1 \times 1\times n_{c}$                            $n_{out} \times n_{out} \times n^{\prime}$
+
+$n^{\prime}$ 为滤波器的个数
+
+计算代价 =  滤波器参数   x   输出像素size   x   滤波器个数
+
+​     240     =    1 x 1 x 3     x          4 x 4          x        5  
+
+
+
+
+
+深度可分离卷积与正常卷积的成本比率为：
+$$
+\frac{1}{n^{\prime}}+\frac{1}{f^2}
+$$
+$n^{\prime}$ 为滤波器的个数，一般很大为64，128，256，512等
+
+$f$ 为卷积核的尺寸，一般为 3
+
+上例子中结果为 $\frac{1}{n^{\prime}}+\frac{1}{f^2}=\frac{1}{5}+\frac{1}{9}=\frac{432+240}{2160}$
+
+
+
+**常规卷积**
+
+![img](assets/v2-617b082492f5c1c31bde1c6e2d994bc0_720w.jpg)
+
+**深度可分离卷积**
+
+- 逐通道卷积
+
+![img](assets/v2-a20824492e3e8778a959ca3731dfeea3_720w.jpg)
+
+**无法扩展** Feature map。而且这种运算对输入层的每个通道独立进行卷积运算，没有有效的利用**不同通道在相同空间位置**上的feature信息。
+
+- 逐点卷积
+
+![img](assets/v2-2cdae9b3ad2f1d07e2c738331dac6d8b_720w.jpg)
+
+将上一步的map在**深度方向上进行加权组合**，利用**不同通道在相同空间位置**上的feature信息，生成新的Feature map。
+
+因此，在参数量相同的前提下，采用Separable Convolution的神经网络层数可以做的更深。
+
+![img](assets/1503464-20191201220832846-1142021236.png)
 
 
 
@@ -631,13 +703,11 @@ depthwise-separable convolutions 深度可分离卷积
 
 
 
-
-
-
-
 ---
 
-#### 2.9 Mobilenet架构
+#### 2.9 MobileNet 架构
+
+
 
 
 
