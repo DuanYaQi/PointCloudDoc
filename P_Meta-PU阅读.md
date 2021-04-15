@@ -28,23 +28,23 @@ Conventional point cloud upsampling methods [1], [2], [3] are optimization-based
 
 
 
+![image-20210415213915980](assets/image-20210415213915980.png)
+
+**Fig. 1** : 任意比例模型 Meta-PU 与单比例模型比较，其中比例 R = 2.5 。 现有的单比例尺模型首先需要按比例放大到较大的整数比例（例如4x），然后使用**下采样算法**实现2.5x的非整数比例。
 
 
 
+To demonstrate the effectiveness and ﬂexibility of our method, we compare it with several strong baseline methods. The comparison shows that our method can even achieve SOTA performances for speciﬁc single scale factors while supporting arbitrary-scale upsampling for the ﬁrst time. In other words, our approach is both stronger and more ﬂexible than the SOTA approaches. To better understand the underlying working principle and broader applications, we further provide a comprehensive analysis from different perspectives. In summary, our contribution is three-fold: 
 
-
-
-
-
-To demonstrate the effectiveness and ﬂexibility of our method, we compare it with several strong baseline methods. The comparison shows that our method can even achieve SOTA performances for speciﬁc single scale factors while supporting arbitrary-scale upsampling for the ﬁrst time. In other words, our approach is both stronger and more ﬂexible than the SOTA approaches. To better understand the underlying working principle and broader applications, we further provide a comprehensive analysis from different perspectives. In summary, our contribution is three-fold: • We propose the ﬁrst point cloud upsampling network that supports arbitrary scale factors (including noninteger factors), via a meta-learning approach. • Weshowthatjointlytrainingmultiplescalefactorswithone model improves performance. Our arbitrary-scale model even achieves better results at each speciﬁc scale than the single-scale counterpart. • We evaluate our method on multiple benchmark datasets and demonstrate that Meta-PU advances state-of-the-art performance.
+- We propose the ﬁrst point cloud upsampling network that supports arbitrary scale factors (including noninteger factors), via a meta-learning approach. 
+- Weshowthatjointlytrainingmultiplescalefactorswithone model improves performance. Our arbitrary-scale model even achieves better results at each speciﬁc scale than the single-scale counterpart. 
+- We evaluate our method on multiple benchmark datasets and demonstrate that Meta-PU advances state-of-the-art performance.
 
 为了证明我们方法的有效性和灵活性，我们将其与几种强大的基线方法进行了比较。 比较表明，我们的方法甚至可以针对特定的单比例因子实现SOTA性能，同时首次支持任意比例的上采样。 换句话说，我们的方法比SOTA方法既强大又灵活。 为了更好地理解基本的工作原理和更广泛的应用，我们从不同的角度进一步提供了全面的分析。 总而言之，我们的贡献是三方面的：
 
-•我们提出了一种通过元学习方法支持任意规模因子（包括非整数因子）的第一点云上采样网络。  
-
-•我们证明，使用一个模型联合训练多个比例因子可以提高性能。 我们的任意尺度模型甚至在每个特定尺度上都比单尺度模型获得更好的结果。  
-
-•我们在多个基准数据集上评估了我们的方法，并证明了Meta-PU可以提高最先进的性能。
+- 我们提出了一种通过元学习方法支持任意规模因子（包括非整数因子）的第一点云上采样网络。  
+- 我们证明，使用一个模型联合训练多个比例因子可以提高性能。 我们的任意尺度模型甚至在每个特定尺度上都比单尺度模型获得更好的结果。  
+- 我们在多个基准数据集上评估了我们的方法，并证明了Meta-PU可以提高最先进的性能。
 
 
 
@@ -55,6 +55,8 @@ To demonstrate the effectiveness and ﬂexibility of our method, we compare it w
 ### 3.1 Arbitrary-scale Point Cloud Upsampling 
 
 ​	给定 $n$ 个点的稀疏无序点集 $ X=\left\{p_{i}\right\}_{i=1}^{n} $，并使用比例因子 $R$ ，任意尺度点云上采样的任务是生成一个密集点集 $ Y=\left\{p_{i}\right\}_{i=1}^{N} $ 的 $ N=\lfloor R \times n\rfloor $。 值得注意的是，$R$ 不一定是整数，理论上，$N$ 可以是大于 $n$ 的任何正整数。 输出 $Y$ 不一定包含 $X$ 中的点。$X$ 可能是不均匀分布。为了满足实际应用的需要，我们需要上采样的点云来满足以下两个约束。 首先， $Y$ 的每个点位于 $X$ 所描述的基础几何表面上。其次，对于任何比例因子 $R$ 或输入点数 $n$，输出点的分布应平滑且均匀。
+
+
 
 ### 3.2 Meta-PU 
 
@@ -90,9 +92,9 @@ f_{\text {out }}^{p}=\omega_{0} * f_{i n}^{p}+\omega_{1} * \Sigma_{q \in N(p)} f
 $$
 ​	其中 $f_{i n}^{p}$ 表示顶点 $p$ 的输入特征，$f_{\text {out }}^{p}$ 表示图卷积后顶点 $p$ 的输出特征，其中 $ω$ 是可学习的参数，而 $∗$ 表示逐点卷积运算。
 
-​	RGC块的核心思想是分别对中心点特征和邻居特征进行卷积运算，如图3b所示。对于邻居特征，它们与输入点云 $x$ 的 $k$ 个最近邻居分组，然后进行 $1×1$ 图卷积。 将中心点特征与相邻特征的通过卷积分开，然后与邻居的特征合并在一起。 此外，引入了残差连接来解决逐渐消失的梯度和缓慢收敛的问题。在我们的实现中，我们设置 $k = 8$，$c = 128$，并且总共使用了22个RGC块。 其中，第二个是特殊的meta-RGC块，下面将对其进行详细描述。
+​	RGC块的核心思想是分别对中心点特征和邻居特征进行卷积运算，如图3a所示。对于邻居特征，它们与输入点云 $x$ 的 $k$ 个最近邻居分组，然后进行 $1×1$ 图卷积。 将中心点特征与相邻特征的通过卷积分开，然后与邻居的特征合并在一起。 此外，引入了残差连接来解决逐渐消失的梯度和缓慢收敛的问题。在我们的实现中，我们设置 $k = 8$，$c = 128$，并且总共使用了22个RGC块。 其中，第二个是特殊的meta-RGC块，下面将对其进行详细描述。
 
-#### Meta-RGC Block and Meta-subnetwork
+#### Meta-RGC Block
 
 
 
@@ -112,7 +114,13 @@ f_{\text {out }}^{p}=\varphi\left(\widetilde{R} ; \theta_{0}\right) * f_{i n}^{p
 $$
 其中卷积权重是由 meta-subnetwork $ \varphi(.) $以比例矢量 $\widetilde{R}$ 作为输入来预测的。请注意，我们有两个元卷积分支，如图3b所示。一个分支用于提取中心点 $p$ 的特征，另一分支用于提取由邻接矩阵 $ε$ 定义的邻居的特征。由于没有针对点云的预先定义的邻接矩阵 $ε$，我们将其定义为 $N（p）$，即 $p$ 的 $k$ 个最近邻居。 这两个分支的卷积权重分别由两个具有参数 $θ_i$ 的元子网生成。
 
-​	每个用于meta-convolution的meta-subnetwork包括五个全连接（FC）层[27]和几个激活层，如图4所示。在forward pass中，第一个FC层将根据创建的比例矢量 $R$ 作为输入，并获得向量 $c_{hidden}$。通过激活函数后，第二个FC层将生成与输入大小相同的输出。继激活函数后，第三个FC层的输入是 $c_{hidden}-entry$ 编码，其输出的长度为 $c_{in}×c_{out}×l×l$ 。 接下来，第四个FC层输出具有与其输入相同形状的矢量 $w_0$。与前四个串联的层不同，最后一个FC层用作残差连接，可直接从 $2 * R_{max}$ 获得 $c_{in}×c_{out}×l×l$ 形状的输出$w_{skip}$。 将两个输出 $w_0$，$w_{skip}$ 相加，然后重整为$（c_{in}，c_{out}，l，l）$ 作为权重矩阵 $w$ ，以进行元卷积。 我们设置 $c_{out} = c_{in} = 128和c_{hidden} =128$ 。$l$ 表示卷积的内核大小，在我们的实现中设置为1。在backward pass中，我们不直接更新卷积的权重矩阵，而是相对于FC层的权重来计算元子网络的梯度。可以通过链式规则自然计算出元子网的梯度，以进行端到端的训练。
+
+
+---
+
+#### Meta-subnetwork
+
+​	每个用于 meta-convolution 的 meta-subnetwork 包括五个全连接（FC）层[27]和几个激活层，如图4所示。在forward pass中，第一个FC层将根据创建的比例矢量 $R$ 作为输入，并获得向量 $c_{hidden}$。通过激活函数后，第二个FC层将生成与输入大小相同的输出。继激活函数后，第三个FC层的输入是 $c_{hidden}-entry$ 编码，其输出的长度为 $c_{in}×c_{out}×l×l$ 。 接下来，第四个FC层输出具有与其输入相同形状的矢量 $w_0$。与前四个串联的层不同，最后一个FC层用作残差连接，可直接从 $2 * R_{max}$ 获得 $c_{in}×c_{out}×l×l$ 形状的输出$w_{skip}$。 将两个输出 $w_0$，$w_{skip}$ 相加，然后重整为$（c_{in}，c_{out}，l，l）$ 作为权重矩阵 $w$ ，以进行元卷积。 我们设置 $c_{out} = c_{in} = 128和c_{hidden} =128$ 。$l$ 表示卷积的内核大小，在我们的实现中设置为1。在backward pass中，我们不直接更新卷积的权重矩阵，而是相对于FC层的权重来计算元子网络的梯度。可以通过链式规则自然计算出元子网的梯度，以进行端到端的训练。
 
 ![1615297512875](assets/1615297512875.png)
 
@@ -122,9 +130,19 @@ $$
 
 ​	由元子网络预测的具有动态权重的meta-RGC块对于任意规模的上采样任务而言是必要的，因为上采样点云的第$iR$个至第$(i+1)R$个点是直接基于第 $i$ 个输入点及其最近的邻居通过RGC块提取。不同比例因子的输出中的点位置必须不同，以确保上采样点的均匀性可以覆盖下面的表面。因此，必须根据比例因子自适应调整嵌入特征。因此，必须根据比例因子对嵌入特征进行自适应调整。该调整比仅向上采样 $R_{max}$ 次然后执行向下采样要好得多。
 
+
+
+---
+
 #### The unpooling block 
 
 ​	unpooling 模块将点云 $X$ 和相应的特征 $F_{in}$ 用作输入。它是基于RGC的结构，而卷积层的输出通道设置为 $R_{max}×3$ 。具体来说，对于形状为 $n×c$ 的特征 $F_{in}$ ，将其变换为大小为 $n×(R_{max}×3)$ 的张量，然后将其重整为 $n×R_{max}×3$，表示为 $T_{out}$ 。 作为残差块，类似于RGC块中输入和输出要素的残差连接，我们引入了点之间的跳过连接。 因此，将张量 $T_{out}$ 逐点添加到 $X$，以生成形状为  $n×R_{max}×3$ 的输出 $Y_{max}^{'}$。请注意，“add”操作自然会以广播的方式将 $x$ 扩展为 $R_{max}$ 副本。
+
+![image-20210415223243835](assets/image-20210415223243835.png)
+
+**Fig. 3c** Unpooling block
+
+
 
 #### The farthest sampling block
 
@@ -134,13 +152,23 @@ $$
 
 
 
+## 5. CONCLUSION
+
+In this paper, we present Meta-PU, the first point cloud upsampling network that supports arbitrary scale factors (including non-integer factors). This method provides a more efficient and practical tool for 3D reconstruction, than the existing single-scale upsampling networks. The core part of Meta-PU is a novel meta-RGC block, whose weights are dynamically predicted by a meta-subnetwork, thus it can extract features tailored to the upsampling of different scales. 
+
+在这篇文章中，我们提出了Meta-PU，第一个支持任意比例因子(包括非整数因子)的点云上采样网络。与现有的单尺度上采样网络相比，该方法为三维重建提供了更有效和实用的工具。元处理器的核心部分是一个新的元RGC块，它的权值由一个元子网动态预测，因此它可以提取适合不同尺度上采样的特征。
 
 
 
+The comprehensive experiments reveal that the joint training of multiple scale factors with one model improves performance. Our arbitrary-scale model even achieves better results at each specific scale than those single-scale state-of-the-art. The application on  mesh reconstruction also demonstrates the superiority of our method in visual quality. 
+
+综合实验表明，多尺度因子与一个模型的联合训练提高了性能。我们的任意尺度模型甚至在每一个特定的尺度上获得了比单尺度模型更好的结果。在网格重建上的应用也证明了我们的方法在视觉质量上的优越性。
 
 
 
+Notably, similar to other upsampling methods, our method does not aim to fill holes, such that some large holes or missing parts still exist in the upsampled results.  Another limitation is that the maximum upscale factor supported by our network is not infinity, constrained by the model size and GPU memory. These are all future directions worth exploring.
 
+值得注意的是，类似于其他上采样方法，我们的方法并不旨在填补漏洞，例如一些上采样的结果中仍然存在大孔或缺失零件。另一个限制是，我们的网络支持的最大高档因子不是无穷大，受到型号大小和GPU内存的限制。这些都是未来值得探索的方向。
 
 
 
