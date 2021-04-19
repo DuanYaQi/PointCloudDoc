@@ -10,8 +10,6 @@ https://poloclub.github.io/cnn-explainer/
 
 
 
-
-
 deeplearning.ai
 
 https://www.coursera.org/learn/neural-networks-deep-learning?action=enroll
@@ -22,15 +20,13 @@ https://www.bilibili.com/video/av66646276
 
 
 
-
-
 **note**
 
-https://redstonewill.blog.csdn.net/article/details/79028058
-
-https://www.zhihu.com/column/DeepLearningNotebook
+https://redstonewill.blog.csdn.net/article/details/79055467
 
 http://www.ai-start.com/dl2017/
+
+https://www.zhihu.com/column/DeepLearningNotebook
 
 
 
@@ -977,6 +973,8 @@ Convolutional implementation of sliding windows
 滑动窗算法需要反复进行CNN正向计算，例如16 x 16 x 3的图片需进行4次，28 x 28 x3的图片需进行64次。而利用卷积操作代替滑动窗算法，则不管原始图片有多大，只需要进行一次CNN正向计算，因为其中**共享了很多重复计算部分**，这大大节约了运算成本。**窗口步进长度与选择的MAX POOL大小有关**。如果需要步进长度为4，只需设置MAX POOL为4 x 4即可。
 
 
+
+
 > OverFeat: Integrated recognition, localization and detection using convolutional networks. Sermanet et al, 2014.
 
 
@@ -985,7 +983,7 @@ Convolutional implementation of sliding windows
 
 #### 3.5 Bounding Box 预测
 
-相当于3.5 = 3.1+ 3.4
+相当于小节 3.5 = 3.1+ 3.4
 
 上一小节，提高了速度，但是不能输出最精准的bounding box。YOLO（You Only Look Once）算法可以解决这类问题，生成更加准确的目标区域（如上图红色窗口）。
 
@@ -1008,7 +1006,7 @@ c3
 \end{matrix}
 \right ]
 $$
-如果目标中心坐标 $(b_x,b_y)$ 不在当前网格内，则当前网格 $Pc=0$；相反，则当前网格 $Pc=1$（即只看中心坐标是否在当前网格内）。判断有目标的网格中，$b_x,b_y,b_h,b_w$ 限定了目标区域。值得注意的是，当前网格左上角坐标设定为 $(0, 0)$，右下角坐标设定为 $(1, 1)$，$(b_x,b_y)$ 范围限定在 $[0,1]$ 之间，但是 $b_h,b_w$ 可以大于1。因为目标可能超出该网格，横跨多个区域。目标占几个网格没有关系，目标中心坐标必然在一个网格之内。
+如果目标中心坐标 $(b_x,b_y)$ 不在当前网格内，则当前网格 $P_c=0$；相反，则当前网格 $P_c=1$（即只看中心坐标是否在当前网格内）。判断有目标的网格中，$b_x,b_y,b_h,b_w$ 限定了目标区域。值得注意的是，当前网格左上角坐标设定为 $(0, 0)$，右下角坐标设定为 $(1, 1)$，$(b_x,b_y)$ 范围限定在 $[0,1]$ 之间，但是 $b_h,b_w$ 可以大于1。因为目标可能超出该网格，横跨多个区域。目标占几个网格没有关系，目标中心坐标必然在一个网格之内。
 
 ![anchor boxes 如何起作用](assets/v2-edbde717a2b81750e550f2ddb04ad81e_1440w.jpg)
 
@@ -1052,7 +1050,7 @@ YOLO算法中，可能会出现多个网格都检测出到同一目标的情况�
 
 上图中，三个绿色网格和三个红色网格分别检测的都是同一目标。那如何判断哪个网格最为准确呢？方法是使用非最大值抑制算法。
 
-图示中每个网格的 $Pc$ 值可以求出，$Pc$ 值反映了该网格包含目标中心坐标的可信度。首先选取  $Pc$  最大值对应的网格和区域，然后计算该区域与所有其它区域的IoU，剔除掉IoU大于阈值（例如0.5）的所有网格及区域。这样就能保证同一目标只有一个网格与之对应，且该网格Pc最大，最可信。接着，再从剩下的网格中选取 $Pc$ 最大的网格，重复上一步的操作。最后，就能使得每个目标都仅由一个网格和区域对应。如下图所示：
+图示中每个网格的 $P_c$ 值可以求出，$P_c$ 值反映了该网格包含目标中心坐标的可信度。首先选取  $P_c$  最大值对应的网格和区域，然后计算该区域与所有其它区域的IoU，剔除掉IoU大于阈值（例如0.5）的所有网格及区域。这样就能保证同一目标只有一个网格与之对应，且该网格Pc最大，最可信。接着，再从剩下的网格中选取 $P_c$ 最大的网格，重复上一步的操作。最后，就能使得每个目标都仅由一个网格和区域对应。如下图所示：
 
 ![这里写图片描述](assets/20180112164507109)
 
@@ -1081,26 +1079,26 @@ YOLO算法中，可能会出现多个网格都检测出到同一目标的情况�
 如下图所示，同一网格出现了两个目标：人和车。为了同时检测两个目标，我们可以设置两个Anchor Boxes，Anchor box 1检测人，Anchor box 2检测车。也就是说，每个网格多加了一层输出。原来的输出维度是 3 x 3 x 8，现在是3 x 3 x 2 x 8（也可以写成3 x 3 x 16的形式）。这里的2表示有两个Anchor Boxes，用来在一个网格中同时检测多个目标。每个Anchor box都有一个Pc值，若两个Pc值均大于某阈值，则检测到了两个目标。
 ![image-20210419202712681](assets/image-20210419202712681.png)
 
-现在**每个对象都和之前一样分配到同一个格子中**，即对象中心所在的格子。同时也需要**分配到和目标形状IoU最高的Anchor Box**。例如有两个 Anchor Box 而单元格中只剩一个对象，则选取IoU高的，另一个的输出 $Pc$ 则为0
+现在**每个对象都和之前一样分配到同一个格子中**，即对象中心所在的格子。同时也需要**分配到和目标形状 IoU 最高的 Anchor Box**。例如有两个 Anchor Box 而单元格中只剩一个对象，则选取IoU高的，另一个的输出 $P_c$ 则为0。与第一个box的IoU高，则把信息填在向量前半部分：
 $$
 y=\left [
 \begin{matrix}
-Pc \quad
-bx \quad
-by \quad
-bh \quad
-bw \quad
-c1 \quad
-c2 \quad
-c3 \quad
-Pc \quad
-bx \quad
-by \quad
-bh \quad
-bw \quad
-c1 \quad
-c2 \quad
-c3
+P_c \quad
+b_x \quad
+b_y \quad
+b_h \quad
+b_w \quad
+c_1 \quad
+c_2 \quad
+c_3 \quad
+P_c \quad
+b_x \quad
+b_y \quad
+b_h \quad
+b_w \quad
+c_1 \quad
+c_2 \quad
+c_3
 \end{matrix}
 \right ]^T
 $$
@@ -1113,8 +1111,6 @@ $$
 - 人为经验选取
 - k-means聚类
 - 作为超参数进行学习
-
-
 
 
 
@@ -1132,39 +1128,249 @@ $$
 
 #### 3.9 YOLO 算法
 
+![这里写图片描述](assets/20180112174544272)
 
+输入图片，通过网络预测，得到一个张量。得到所有 $p_c$ 不为 0 的bounding box。如下图：
+
+![image-20210419214233973](assets/image-20210419214233973.png)
+
+通过非极大值抑制。
+
+- **1. 剔除Pc值小于某阈值（例如0.6）的所有网格；**（下图左→下图中）
+- **2. 选取Pc值最大的网格，利用网格中的bounding box信息计算IoU，摒弃与该网格交叠较大的网格；**（下图中→下图右，就是把概率最大的邻居bounding box删除掉）
+- **3. 对剩下的网格，重复步骤2。**
+
+![image-20210419214403342](assets/image-20210419214403342.png)
 
 
 
 ---
 
-#### 3.10 （选修）RPN 网络
+#### 3.10 R-CNN
+
+之前的算法在显然没有任何目标的区域仍进行计算。因此提出 Region proposals 候选区域。具体做法是先对原始图片进行**分割**算法处理，然后对分割后的图片中的块进行目标检测。
+
+![这里写图片描述](assets/20180112203741567)
+
+R-CNN（Regions with Convolutional Neural Network Features）。Region Proposals 共有三种方法：
+
+- R-CNN:  求候选区域，然后运行分类网络。输入区域-输出标签和bounding box（anchor-free）。
+- Fast R-CNN: 利用卷积实现滑动窗算法，类似3.4小节。
+- Faster R-CNN: 利用**卷积**对图片进行**分割**（segmentation）RPN，进一步提高运行速度。
+
+比较而言，Faster R-CNN的运行速度还是比YOLO慢一些。首先得到候选区域，然后再分类。
 
 
+
+候选区域/框 + 深度学习分类：通过提取候选区域，并对相应区域进行以深度学习方法为主的分类的方案：
+
+R-CNN（Selective Search + CNN + SVM）
+
+Fast R-CNN（Selective Search + CNN + ROI）
+
+Faster R-CNN（RPN + CNN + ROI）
+
+基于深度学习的回归方法：YOLO/SSD/DenseBox 等方法
+
+
+
+> Selective Search > 根据颜色，边缘，纹理找可能存在的目标候选框。
+>
+> ROI Pooling > 将proposal抠出来的过程，然后resize到统一的大小。
+>
+> RPN > Region Proposal Network
+>
+> SPPNet > 空间金字塔池化实现任意大小图像输入。
+
+
+
+> Rich feature hierarchies for accurate object detection and semantic segmentation. Girshik et al, 2013.
+>
+> Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition. Kaiming He.
+
+
+
+---
+
+#### 3.11 语义分割U-Net
+
+语义分割，目的是绘制在检测到的物体周围绘制详细的轮廓，以便您确切地知道哪个像素属于目标，哪些像素不属于目标。
+
+
+
+什么是语义分割？
+
+如果您想让学习算法找出这张图片中的每个像素是什么，那么您可以使用语义分割算法其目标是输出最右图。
+
+![image-20210419231140171](assets/image-20210419231140171.png)
+
+通过语义分割，算法尝试标记道路的每个像素，都以深绿色表示。自动驾驶团队使用它来准确找出哪些像素可以安全行驶。
+
+让我们看看其他一些应用程序。在左图的胸部 X 光检查图像中，使用不同的颜色分割出肺部，心脏和锁骨。右图脑MRI扫描自动分割出肿瘤。
+
+![image-20210419231437782](assets/image-20210419231437782.png)
+
+为了简单起见，让我们使用以下示例从某些背景中细分出一辆汽车。在此图像中 1 代表汽车，2 代表建筑物，3 代表道路。
+
+![image-20210419231923288](assets/image-20210419231923288.png)
+
+传统分类问题
+
+![image-20210419233112899](assets/image-20210419233112899.png)
+
+转变为语义分割问题
+
+![image-20210419233152297](assets/image-20210419233152297.png)
+
+语义分割的一个关键步骤是将**越来越小**的图像尺寸**逐渐放大**回完整的输入图像尺寸。
+
+![image-20210419233239505](assets/image-20210419233239505.png)
+
+随着深度增加，变小的 size 将变大，而增大的通道数将减少，最终得到了猫的分割图。
+
+
+
+---
+
+#### 3.12 转置卷积
+
+transpose convolution
+
+从信息论的角度看，卷积是**不可逆的**。所以这里说的并不是从 output 矩阵和 kernel 矩阵计算出原始的 input 矩阵。而是计算出一个**保持了位置性关系**的矩阵。
+
+![img](assets/854641-20180816102917864-126549672.png)
+
+重叠的部分相加。转置卷积，它所进行的操作本质上就是先对输入进行 padding，然后再进行卷积得到输出。
+
+input 为 2x2，filter 为 3x3，result 为 5x5。padding = 1，stride = 2
+
+![img](assets/20180109202649694)
+
+
+
+转换为矩阵的形式是由卷积的结果得到的，矩阵形式本身是不能直接获得的。要注意这个因果关系，转换为矩阵形式是为了便于理解，以及推导转置卷积。
+
+kernel_size = 2, stride = 1, padding = 0
+
+![img](assets/1908255-20201029213626867-500143807.png)
+
+
+
+kernel_size = 2, stride = 1, padding = 1
+
+![img](assets/1908255-20201029222848628-1109349561.png)
+
+与上一张图的主要不同之处在于转置卷积将卷积结果的最外层去掉，这是因为padding=1，也正符合与卷积相反的操作。也就是说，padding越大，转置卷积就会去掉越多的外层，输出就会越小。
+
+kernel_size = 3, stride = 1, padding = 1
+
+![img](assets/1908255-20201029223524056-20868724.png)
+
+
+
+kernel_size = 2, stride = 2, padding = 1
+
+![img](assets/1908255-20201029224539185-1232935316.png)
+
+
+
+> 直接理解转置卷积（Transposed convolution）的各种情况 https://www.cnblogs.com/qizhou/p/13895967.html
+
+
+
+---
+
+#### 3.13 U-Net架构直觉
+
+正卷积用于网络的前半部分，对图像进行压缩。图片尺寸变小，深度很大，丢失了很多空间信息。后半部分使用转置卷积放大到原始输入图像的 size（低分辨率和高水平的特征信息）。因此通过skip-connection使神经网络获取（高分辨率和低水平的特征信息)
+
+
+
+---
+
+#### 3.14 U-Net架构
+
+![image-20210420010905023](assets/image-20210420010905023.png)
+
+输入为 h x w x 3，conv 增加 channel，maxpool 减小size。trans conv 增加 size，减少 channel （浅蓝色为转置卷积输出）。注意每次转置卷积后，与 skip-connection 拼接后**要过几次正向卷积**。输出为 h x w x nc（nc为分类数目）。采用argmax，将每个像素分类为其中一个类别。
+
+**损失函数**用了 pixel-wise softmax，就是每个像素对应的输出单独做 softmax，也就是做了 h * w 个 softmax。其中，x 可以看作是某一个像素点， $l(x)$ 表示 x 这个点对应的类别 label，$p_k(x)$ 表示在 x 这个点的输出在类别 k 的 softmax 的值，$p_{l(x)}(x)$ 代表点 x 在对应的 label 给出的那个类别的输出的值。
+
+
+
+![img](assets/edc4cabd5b84b3f4928743ce2673ab5d.webp)
+
+
+
+> Ｕ-Net: Convolutional Networks for Biomedical Image Segmentation. Ronneberger et al, 2015.
+
+
+
+---
+
+### 第四周 特殊应用：人脸识别和神经风格转换
+
+#### 4.1 什么是人脸识别？
+
+
+
+---
+
+#### 4.2 One-Shot 学习
 
 
 
 
 
-#### 3.11 语义分割U-Net
+#### 4.3 Siamese 网络
 
+
 
+
 
-#### 3.12 转置卷积
+#### 4.4 Triplet 损失
 
+
 
+
 
-#### 3.13 U-Net架构直觉
+#### 4.5 面部验证与二分类
 
+
 
+
 
-#### 3.14 U-Net架构
+#### 4.6 什么是神经风格转换？
 
+
 
+
 
+#### 4.7 深度卷积网络在学什么？
 
+
 
+
 
+#### 4.8 代价函数
+
+
+
+
+
+#### 4.9 内容代价函数
+
+
+
+
+
+#### 4.10 风格损失函数
+
+
+
+
+
+#### 4.11 一维到三维推广
 
 
 
