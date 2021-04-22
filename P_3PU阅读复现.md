@@ -162,7 +162,7 @@ Modern deep convolutional neural networks (CNN) [29] process multiscale informat
 
 ​	This per-layer and per-point **computation** is rather **expensive**, prohibiting 阻止 a naive implementation of a multi-step upsampling network to reach large upsampling ratios and dense outputs. Therefore, it is necessary to optimize the network architecture, such that it is scalable 可调整尺度的 to a high-resolution point set. 
 
-​	理想情况下，点集采样网络应针对各种尺度的细节自适应地跨越接收域，以从多个尺度学习几何信息。 但是，由于实际限制，在密集的不规则点集上应用多光谱接收场是一项挑战。 与图像相比，点集没有规则的结构，点的邻域也不是固定集。 邻居信息必须通过例如k近邻（kNN）搜索来收集。 这种每层和每点的计算是相当昂贵的，从而阻止了天真的实现多步上采样网络来达到大的上采样率和密集的输出。 因此，有必要优化网络架构，以使其可扩展至高分辨率点集。
+​	理想情况下，点集采样网络应针对各种尺度的细节自适应地跨越感受野，以从多个尺度学习几何信息。 但是，由于实际限制，在密集的不规则点集上应用多范围感受野是一项挑战。 与图像相比，点集没有规则的结构，点的邻域也不是固定集。 邻居信息必须通过例如k近邻（kNN）搜索来收集。 这种每层和每点的计算是相当昂贵的，从而阻止了天真的实现多步上采样网络来达到大的上采样率和密集的输出。 因此，有必要优化网络架构，以使其可扩展至高分辨率点集。
 
 
 
@@ -176,11 +176,15 @@ Modern deep convolutional neural networks (CNN) [29] process multiscale informat
 
 ​	As shown in Figure 2, our network recursively upsamples a point set while at the same time **reduces its spatial span**减小其空间跨度. This multi-step patch-based supervision technique allows for a **signiﬁcant upsampling ratio**.
 
-​	我们的关键思想是使用基于多步补丁的网络，补丁的大小应在当前步骤适应接收域的范围。 注意，在神经点处理中，接受域的范围通常由特征提取层中使用的kNN大小定义。 因此，如果固定邻域大小，则随着点集变得越来越密集，接收场将变窄。 该观察结果表明，当接收域相对狭窄时，网络不必处理所有点。 如图2所示，我们的网络递归地对一个点集进行升采样，同时减小其空间跨度。 这种基于补丁的多步骤监督技术可实现显着的上采样率。
+​	我们的关键思想是使用基于多步patch的网络，patch的大小应在当前步骤适应感受野的范围。 注意，在神经点处理中，感受野的范围通常由特征提取层中使用的kNN大小定义。 因此，如果固定邻域大小，则随着点集变得越来越密集，感受野将变窄。 该观察结果表明，当感受野相对狭窄时，网络不必处理所有点。 如图2所示，我们的网络递归地对一个点集进行上采样，同时减小其空间跨度。 这种基于patch的多步骤监督技术可实现显着的上采样率。
 
 ---
 
 ####	Multi-step end-to-end training.
+
+![1614599768055](assets/1614599768055.png)
+
+
 
 ​	Our network takes $L$ steps to upsample a set of points by a factor of $2^L$  . For $L$ levels of detail, we train a set of subnet units $ {U_1,U_2,...,U_L}$. We train such a sequence of upsampling units by progressively activating the training of units; it has been used in many multiscale neural image processing works [25,51]. 	我们的网络采取$L$步将一组点升采样$2^L$倍。 对于$L$个级别的细节，我们训练了一组子网单元 $ {U_1,U_2,...,U_L}$。我们通过逐步激活单位的训练来训练这样一系列的上采样单位；它已被用于许多多尺度神经图像处理工作。
 
@@ -287,7 +291,7 @@ Modern deep convolutional neural networks (CNN) [29] process multiscale informat
 $$
 \tilde{f}_{i}=\frac{\sum_{i^{\prime} \in \mathcal{N}_{i}^{\prime}} \theta\left(p_{i}, p_{i^{\prime}}\right) \psi\left(f_{i}, f_{i^{\prime}}\right) f_{i^{\prime}}}{\sum_{i^{\prime} \in \mathcal{N}^{\prime}} \theta\left(p_{i}, p_{i^{\prime}}\right) \psi\left(f_{i}, f_{i^{\prime}}\right)}
 $$
-​	其中联合加权函数为： $\quad \theta\left(p_{1}, p_{2}\right)=$ $e^{-\left(\frac{\left\|p_{1}-p_{2}\right\|}{r}\right)^{2}}, \psi\left(f_{1}, f_{2}\right)=e^{-\left(\frac{\left\|f_{1}-f_{2}\right\|}{h}\right)^{2}}$. 宽度参数r和h是使用到最近邻居的平均距离来计算的。
+​	其中联合加权函数为： $ \theta\left(p_{1}, p_{2}\right)=$ $e^{-\left(\frac{\left\|p_{1}-p_{2}\right\|}{r}\right)^{2}}, \psi\left(f_{1}, f_{2}\right)=e^{-\left(\frac{\left\|f_{1}-f_{2}\right\|}{h}\right)^{2}}$. 宽度参数r和h是使用到最近邻居的平均距离来计算的。
 
 ​	One way to implement the inter-level connection is to **interpolate and concatenate** ˜ fi from all previous layers, i.e., use dense links the same as those within the feature extraction units. However, doing so would result in a very wide network, with ℓC features in level ℓ (typically C = 216), causing scalability issues and optimization difﬁculties [51]. 	实现残差连接的一种方法是从所有先前的层进行插值和级联，即 $\hat{ f_i}$，使用与特征提取单元内的那些相同的密集连接。 但是，这样做将导致网络非常宽泛，并在级别 $ℓ$ 中具有 $ℓC$ 特征（通常为C = 216），从而导致可伸缩性问题和优化难题[51]。
 
