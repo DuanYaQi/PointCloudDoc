@@ -88,9 +88,13 @@ Remote：远程仓库
 
 ​	若需要回复b.txt文件，`git checkout -- b.txt`
 
-------
 
 
+
+
+
+
+---
 
 ## 仓库操作
 
@@ -200,6 +204,10 @@ ssh-keygen -t rsa –C “youremail@example.com”
 
 
 
+
+
+---
+
 ## 多人协作
 
 ​	当你从远程库克隆时候，实际上Git自动把本地的master分支和远程的master分支对应起来了，并且远程库的默认名称是origin。
@@ -250,8 +258,6 @@ ssh-keygen -t rsa –C “youremail@example.com”
 
 
 
-
-
 因此：多人协作工作模式一般是这样的：
 
 ​	首先，可以试图用git push origin branch-name推送自己的修改.
@@ -260,17 +266,17 @@ ssh-keygen -t rsa –C “youremail@example.com”
 
 
 
-
-
-参考文章
-
-Git使用教程：最详细、最傻瓜、最浅显、真正手把手教！（又一篇万字长文）
+参考文章: Git使用教程：最详细、最傻瓜、最浅显、真正手把手教！（又一篇万字长文）
 
 https://mp.weixin.qq.com/s?__biz=MzIwNTc4NTEwOQ==&mid=2247487611&idx=2&sn=67022b1b6bf75927bc77b6b09f4369f6&chksm=972ac101a05d4817988b050809674f7965be2fd197019927ea78cf73e8ff5262826bb709c15f&mpshare=1&scene=1&srcid=&sharer_sharetime=1575827298777&sharer_shareid=69c2dc2b0fd2e402d2771218812300dc&key=2c4881e20dc9fe0fdd3dc66efae2c29fb7f73cce2c4a71f9bab65cd7d7118d806e9e726f909354bfc0c5e8f6e337f2cdf47f993983544f21d1f0e32f9bc9e53eb23dcaadcda91f84e426f02eb5275c28&ascene=1&uin=Nzg1Mzk1MTg0&devicetype=Windows+10&version=62080079&lang=zh_CN&exportkey=AY59imMjuDalEq%2B2FAmFklg%3D&pass_ticket=QCK5Q2BnABxVpCO5L0EUmesGL3sGiHOXgOGT1%2B6DCaa6KDpnGSQT19URVzskJdq7
 
 
 
 
+
+
+
+---
 
 ## 冲突实战
 
@@ -377,17 +383,6 @@ cat ~/.ssh/id_rsa.pub
 
 
 
-## ! [rejected]       master -> master (fetch first/non-fast-forward)
-
-```
-git pull --rebase origin master
-git push -u origin master
-```
-
-https://blog.csdn.net/downanddusk/article/details/88344389
-
-
-
 ## upstream/master
 
 ```shell
@@ -420,31 +415,130 @@ git checkout master
 
 
 
-------
 
-## References
 
-git Key is already in use
+---
+
+# Error
+
+## If you wish to set tracking information for this branch you can do so with:
+
+```shell
+git branch --set-upstream-to=origin/master master
+```
+
+
+
+
+
+## fatal: branch 'master' does not exist
+
+```shell
+git checkout master
+```
+
+
+
+
+
+## ! [rejected]       master -> master (fetch first/non-fast-forward)
+
+```
+git pull --rebase origin master
+git push -u origin master
+```
+
+https://blog.csdn.net/downanddusk/article/details/88344389
+
+
+
+
+
+## git Key is already in use
+
+**该key被其他用户使用或被其他仓库使用**
 
 https://blog.csdn.net/m0_38072683/article/details/82939535
 
 
 
-Couldn't find remote ref master
+
+
+## Couldn't find remote ref master
 
 https://www.jianshu.com/p/f08efd596773
 
+1.检查本地GIT的配置
+
+```shell
+git config user.name/git config --global user.name
+git config user.email/git config --gloabl user.email
+```
+
+使用以上命令来检查本地的用户名和邮箱是否填写正确
+
+2.检查远程仓库配置
+
+```shell
+git remote -v
+```
+
+如果远程仓库信息有误，则删除本地仓库配置，并且设置相关地址
+
+```shell
+git remote rm origin
+git remote add origin XXXX
+```
+
+3.还是不行的话可以找到文件路径下 git 文件所在，打开 config 文件，删除[remote "origin"] 下信息。重复1，2步骤。
 
 
 
 
-Updates were rejected because the tip of your current branch is behind
 
-
+## Updates were rejected because the tip of your current branch is behind
 
 ```bash
 git push -u origin master -f 
 ```
 
 
+
+
+
+##  socket5 read timeout
+
+```shell
+git config --global http.proxy 127.0.0.1:1080
+//然后开全局代理push/pull
+```
+
+
+
+```shell
+// 查看当前代理设置
+git config --global http.proxy
+git config --global https.proxy
+
+// 设置当前代理为 http://127.0.0.1:1080 或 socket5://127.0.0.1:1080
+git config --global http.proxy 'http://127.0.0.1:1080'
+git config --global https.proxy 'http://127.0.0.1:1080'
+
+git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+
+// 删除 proxy
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+
+
+
+
+
+## **SSL certificate problem: self signed certificate**
+
+```shell
+ git config --global http.sslVerify false
+```
 
