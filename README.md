@@ -109,6 +109,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [吴恩达-改善深层神经网络-II](C_DL_W2.md)     | 改善深层神经网络 专题笔记     |
 | [吴恩达-改善深层神经网络-III](C_DL_W3.md)     | 结构化机器学习项目 专题笔记      |
 | [吴恩达-卷积神经网络-IV](C_DL_W4.md)     |  卷积神经网络 专题笔记    |
+| [吴恩达-序列模型-V](C_DL_W4.md)     |  序列模型 专题笔记    |
 | [深度学习全栈训练营](C_DLFullStack.md)     |  全栈深度学习训练营    |
 | [李宏毅Flow-based Model](C_Flow.md)     | 李宏毅深度学习   |
 | [深蓝学院概率图模型](C_PGM.md)     | 概率图模型    |
@@ -123,5 +124,5 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | :--: | :--: |
 | [C++ Primer Plus](B_CppPrimerPlus.md)     |   C++ Primer Plus 读书笔记   |
 | [CUDA C编程权威指南](B_CUDA_C.md)     |  CUDA C编程权威指南 (高性能计算技术丛书)读书笔记    |
-|      |      |
+| [C++元模板编程:深度学习框架](B_Cpp4DL.md)     |C++元模板编程:深度学习框架      |
 |      |      |
