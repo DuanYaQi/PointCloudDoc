@@ -40,6 +40,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | :--: | :--: |
 |[GrapAF](G_GraphAF.md)      | ICLR2020 GraphAF     |
 | [Glow](G_Glow阅读.md)     | 2018 OpenAI GLOW     |
+| [RealNVP](G_RealNVP阅读.md)     | ICLR2017  RealNVP    |
 | [NICE](G_NICE阅读.md)     | ICLR2015 NICE     |
 | [VAE](G_VAE.md)     | ICLR2014 VAE     |
 | [生成模式概述](G_生成模型概述.md)      |   生成模型概述   |
@@ -70,7 +71,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | 题目 | 描述 |
 | :--: | :--: |
 | [NICE](E_NICE.md)     |  NICE实验文档    |
-| [C++深度学习框架](E_CPPTMP4DL.md)     | C++实现深度学习框架     |
+| [C++深度学习框架](E_Cpp4DL.md)     | C++实现深度学习框架     |
 |      |      |
 
 ## Tools
@@ -111,8 +112,9 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [深度学习全栈训练营](C_DLFullStack.md)     |  全栈深度学习训练营    |
 | [李宏毅Flow-based Model](C_Flow.md)     | 李宏毅深度学习   |
 | [深蓝学院概率图模型](C_PGM.md)     | 概率图模型    |
+| [从0搭建深度学习框架](C_3DL.md)     | 从0搭建深度学习框架     |
+| [深蓝学院概率论](C_ProbabilityTheory.md)     | 概率图模型    |
 |      |      |
-
 
 
 ## Book Notes
