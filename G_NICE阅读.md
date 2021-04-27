@@ -467,14 +467,14 @@ p_{H}(h)=\prod_{d} p_{H_{d}}\left(h_{d}\right)
 $$
 该训练准则借鉴对数似然法。更具体地说，我们考虑变量变化函数 $h=f(x)$ ，其中假设 $f$ 是**可逆**的，并且 $h$ 的维数与 $x$ 的**维数相同**，以确定分布 $ p_H$。变量变化规则给出了：
 $$
-p_{X}(x)=p_{H}(f(x)) \left| \operatorname{det} \frac{\partial f(x)}{\partial x}\right|
+p_{X}(x)=p_{H}(f(x)) \left| \operatorname{det} \frac{\partial f(x)}{\partial x}\right|\tag{1}
 $$
 其中 $\frac{\partial f(x)}{\partial x}$ 是函数 $f$ 在 $x$ 处的雅可比矩阵。本文选择 $f$，使计算雅可比的行列式变得容易。此外，它的逆 $f^{−1}$也可以很容易地得到，这使得我们可以很容易地从 $p_{X}(x)$ 中取样，如下所示：
 $$
 \begin{array}{l}
 h \sim p_{H}(h) \\
 x=f^{-1}(h)
-\end{array}
+\end{array}\tag{2}
 $$
 那么显而易见，我们可以 $h \sim p_{H}(h)$ 采样得到 $h$ ,而后通过 $x=f^{-1}(h)$ 得到数据 $x$ 。也就是说，对于数据 $x$ 的分布，可以通过 $p_{H}(h)$ 和 $f(x)$ 得到。由于 $p_{H}(h)$ 是由我们选取的，满足因式分解的特性，所以通常会从标准分布族里选取，如高斯分布或者Logistic分布，是易处理的，进而数据 $x$ 的分布对模型来说也是简单易处理的，而问题的重点在于如何构建得到 $f(x)$ ,使其本身可逆并且雅可比行列式易计算。
 
@@ -485,14 +485,14 @@ $$
 \begin{array}{l}
 y_{1}=x_{1} \\
 y_{2}=x_{2}+m\left(x_{1}\right)
-\end{array}
+\end{array}\tag{3}
 $$
 ​	其中 $m$ 是一个任意（arbitrarily）复杂函数（在我们的实验中是一个 ReLU MLP）。此构造块对所有 $m$ 都有一个单位雅可比行列式，并且是容易求逆的，因为：
 $$
 \begin{array}{l}
 x_{1}=y_{1} \\
 x_{2}=y_{2}-m\left(y_{1}\right)
-\end{array}
+\end{array}\tag{4}
 $$
 ​	详细内容、周围讨论和实验结果如下。
 
@@ -509,14 +509,14 @@ $$
 \log \left(p_{X}(x)\right)=\log \left(p_{H}(f(x))\right)+\log \left(\left|\operatorname{det}\left(\frac{\partial f(x)}{\partial x}\right)\right|\right) \tag{Eq. 1}
 $$
 
-其中**先验分布** $p_H(h)$ ，为预定义密度函数，例如标准的各向同性高斯分布。如果先验分布是阶乘分布（即具有独立维度），则我们得到以下非线性独立分量估计（NICE）准则，在我们的数据生成模型下作为阶乘分布（factorial distribution）的定性变换（deterministic transform）是简易最大似然：
+其中**先验分布** $p_H(h)$ ，为预定义密度函数，例如标准的各向同性高斯分布。如果先验分布是阶乘分布（即具有**独立维度**），则我们得到以下非线性独立分量估计（NICE）准则，在我们的数据生成模型下作为**阶乘**分布（factorial distribution）的**定性变换**（deterministic transform）是简易最大似然：
 $$
-\log \left(p_{X}(x)\right)=\sum_{d=1}^{D} \log \left(p_{H_{d}}\left(f_{d}(x)\right)\right)+\log \left(\left|\operatorname{det}\left(\frac{\partial f(x)}{\partial x}\right)\right|\right) \tag{Eq. 2}
+\log \left(p_{X}(x)\right)=\sum_{d=1}^{D} \log\left[ \left(p_{H_{d}}\left(f_{d}(x)\right)\right)+\log \left(\left|\operatorname{det}\left(\frac{\partial f(x)}{\partial x}\right)\right|\right)\right] \tag{Eq. 2}
 $$
 
 其中 $f(x)=\left(f_{d}(x)\right)_{d \leq D}$ .
 
-我们可以把 NICE 看作是学习数据集的可逆预处理转换。可逆预处理可以通过压缩数据来简单地增加似然（likelihood arbitrarily）。我们使用变数变换公式（**Eq. 1**）来精确地抵消（exactly counteract）这种现象，并使用先验 $p_H$ 的分解结构来鼓励模型在数据集中发现有意义的结构。在**Eq. 1**中，经过 $f$ 变换后的雅可比矩阵的行列式收缩并根据需要鼓励在高密度区域（在数据点处）扩展。 如Bengio等人所述，表示学习倾向于扩大与输入的更多“有趣”区域（例如，在无监督学习情况下的高密度区域）相关的表示空间的数量。
+可以把 NICE 看作是学习数据集的**可逆预处理转换**。可逆预处理可以通过压缩数据来简单地增加似然（likelihood arbitrarily）。我们使用变数变换公式（**Eq. 1**）来精确地抵消（exactly counteract）这种现象，并使用先验 $p_H$ 的分解结构来鼓励模型在数据集中发现有意义的结构。在**Eq. 1**中，经过 $f$ 变换后的雅可比矩阵的行列式收缩并根据需要鼓励在高密度区域（在数据点处）扩展。 如Bengio等人所述，表示学习倾向于扩大与输入的更多“有趣”区域（例如，在无监督学习情况下的高密度区域）相关的表示空间的数量。
 
 与以前使用自动编码器，尤其是变分（variationa）自动编码器的工作一致，我们将 $f$ 称为编码器、它的逆 $f^{-1}$ 称为解码器。在给定 $f^{-1}$ 的情况下，通过在有向图模型 $H \rightarrow X$ 中进行原始取样（ancestral sampling）即可轻松地从模型进行采样，即如 **Eq. 2** 所述。
 
@@ -588,8 +588,11 @@ x_{I_{2}}=y_{I_{2}}-m\left(y_{I_{1}}\right)
 $$
 因此计算此转换的逆运算仅与计算转换自身一样耗资源。 我们强调，对耦合函数 $m$ 的选择没有限制（但必须满足具有合适的域和共域）。 例如，$m$ 可以是具有 $d$ 个输入单元和 $D-d$ 个输出单元的神经网络。 
 
-此外，由于 $\operatorname{det} \frac{\partial y_{I_{2}}}{\partial x_{I_{2}}}=1$，加性耦合层变换除了其普通逆外，还具有单位雅可比行列式。 **因为是加性耦合，使用行列式为 1.**
+此外，由于 $\operatorname{det} \frac{\partial y_{I_{2}}}{\partial x_{I_{2}}}=1$，加性耦合层变换除了其普通逆外，还具有单位雅可比行列式。 因为是**加性耦合**，使用**行列式为 1**. 则 Eq.2 转变为 Eq.3
 
+$$
+\log \left(p_{X}(x)\right)=\sum_{d=1}^{D} \log \left(p_{H_{d}}\left(f_{d}(x)\right)\right) \tag{Eq. 3}
+$$
 
 
 ##### 3.2.2.2. 乘性耦合层 multiplicative
@@ -612,7 +615,27 @@ $$
 
 #### 3.2.3. 合并耦合层Combining
 
-​	可以组成几个耦合层以获得更复杂的分层转换。 由于耦合层保持其输入的一部分不变，因此我们需要在交替层（alternating layers）中交换分区中两个子集的角色，以便两个耦合层的组成可以修改每个维度。 通过分析雅可比行列式，观察到**至少需要三个耦合层才能使所有尺寸相互影响**。我们通常使用四个。
+可以组成几个耦合层以获得更复杂的分层转换。 由于耦合层保持其输入的一部分不变，因此我们需要在交替层（alternating layers）中交换分区中两个子集的角色，以便两个耦合层的组成可以修改每个维度。 通过分析雅可比行列式，观察到**至少需要三个耦合层才能使所有尺寸相互影响**。我们通常使用四个。
+
+即
+$$
+\begin{equation}
+ f=f_{L} \circ \ldots \circ f_{2} \circ f_{1} 
+\end{equation}
+$$
+堆叠后的雅克比行列式为
+$$
+\begin{equation}
+ \left|\operatorname{det} \frac{\partial y}{\partial x}\right|=\left|\operatorname{det} \frac{\partial f_{L}(x)}{\partial f_{L-1}(x)}\right| \cdot\left|\operatorname{det} \frac{\partial f_{L-1}(x)}{\partial f_{L-2}(x)}\right| \cdots\left|\operatorname{det} \frac{\partial f_{2}(x)}{\partial f_{1}(x)}\right| 
+\end{equation}
+$$
+在加性耦合层中，行列式的绝对值为 1.
+
+
+
+还需要交叉耦合，充分混合信息
+
+![NICE通过交叉耦合，充分混合信息](assets/691863720.png)
 
 
 
@@ -620,43 +643,39 @@ $$
 
 ### 3.3. ALLOWING RESCALING 尺度变化
 
-​	由于每个附加耦合层都具有单位雅可比的行列式（即体积保持），因此它们的组成部分也必定也具有单位雅可比行列式。 为了解决这个问题，我们在**顶层**包含了一个**对角线缩放**（diagonal scaling）矩阵 $S$，该矩阵将第 $i$ 个输出值乘以 $S_{ii}:\left(x_{i}\right)_{i \leq D} \rightarrow\left(S_{i i} x_{i}\right)_{i \leq D}$。 这允许学习者在某些尺寸上给予更多的权重（对模型进行更多的变化），而在其他尺寸上给予更少的权重。
+由于每个附加耦合层都具有单位雅可比的行列式（因为每个行列式的绝对值都是1，即体积保持，为了消除这个限制），因此它们的组成部分也必定也具有单位雅可比行列式。 为了解决这个问题，我们在**顶层**包含了一个**对角线缩放**（diagonal scaling）矩阵 $S$，该矩阵将第 $i$ 个输出值乘以 $S_{ii}:\left(x_{i}\right)_{i \leq D} \rightarrow\left(S_{i i} x_{i}\right)_{i \leq D}$。 这允许学习者在某些尺寸上给予更多的权重（对模型进行更多的变化），而在其他尺寸上给予更少的权重。
 
-​	在 $S_{ii}$ 对于某些 $i$ 变为 $+∞$ 的极限中，数据的有效维数已减小 1。只要 $f$ 在数据点附近保持可逆，这是可能的。对于这样一个按比例缩放的对角最后阶段以及其余部分的下三角或上三角阶段（对角线相同），**NICE** 准则具有以下形式：
+在 $S_{ii}$ 对于某些 $i$ 变为 $+∞$ 的极限中，数据的有效维数已减小 1。只要 $f$ 在数据点附近保持可逆，这是可能的。对于这样一个按比例缩放的对角最后阶段以及其余部分的下三角或上三角阶段（对角线相同），**NICE** 准则具有以下形式：
 $$
-\log \left(p_{X}(x)\right)=\sum_{i=1}^{D}\left[\log \left(p_{H_{i}}\left(f_{i}(x)\right)\right)+\log \left(\left|S_{i i}\right|\right)\right]\\
-
-=\sum_{i=1}^{D}\left[-\frac{1}{2}(h_d^2+\log(2\pi))+\log \left(\left|S_{i i}\right|\right)\right]
+\log \left(p_{X}(x)\right)=\sum_{i=1}^{D}\left[\log \left(p_{H_{i}}\left(f_{i}(x)\right)\right)+\log \left(\left|S_{i i}\right|\right)\right]
 $$
-​	我们可以将这些比例因子与**PCA**的本征谱相关联，以显示潜在维度存在多少变化（ $S_{ii}$ 越大，$i$ 的重要性就越小）。 频谱的重要维度可以看作是算法学习到的多种形式。前一项鼓励 $S_{ii}$ 变小，而行列式项 $\log S_{ii}$ 阻止 $S_{ii}$ 达到 0。
+可以将这些比例因子与**PCA**的本征谱相关联，以显示潜在维度存在多少变化（$S_{ii}$ 越大，$i$ 的重要性就越小）。 频谱的重要维度可以看作是算法学习到的多种形式。前一项鼓励 $S_{ii}$ 变小，而行列式项 $\log S_{ii}$ 阻止 $S_{ii}$ 达到 0。
 
 
 
 
 
-NICE 是基于可逆函数来实现的，所以当模型训练完，我们会得到一个生成模型和一个编码模型，但此时的随机变量 $z$ 和样本 $x$ 的大小是相同的。$x$ 虽然是 $D$ 维，但是 $x$ 未必就能遍布整个 $D$ 维空间，所以存在着维度浪费的情况.比如MNIST图像虽然有784个像素，但有些像素不管在训练集还是测试集，都一直保持为0，这说明它远远没有784维那么大。同理，VAE 中的潜在向量维度很低。
-
-它对**最后编码出来**的每个维度的**特征**都做了个尺度变换，也就是 $\boldsymbol{z} = \boldsymbol{s}\otimes \boldsymbol{h}^{(n)}$ 这样的形式，其中 $\boldsymbol{s} = (\boldsymbol{s}_1,\boldsymbol{s}_2,\dots,\boldsymbol{s}_D)$ 也是一个要优化的参数向量（各个元素非负）。这个 $s$ 向量能识别该维度的重要程度（越小越重要，越大说明这个维度越不重要，接近可以忽略），起到**压缩流形**的作用。注意这个尺度变换层的雅可比行列式就不再是 1 了，可以算得它的雅可比矩阵为对角阵
-$$
-\left[\frac{\partial \boldsymbol{z}}{\partial \boldsymbol{h}^{(n)}}\right] = \text{diag}\, (\boldsymbol{s})\tag{14}
-$$
-所以它的行列式为 $\prod_i \boldsymbol{s}_i$。于是根据[(6)式](#eq6)，我们有对数似然
-$$
-\log q(\boldsymbol{x}) \sim  -\frac{1}{2}\big\Vert \boldsymbol{s}\otimes \boldsymbol{f} (\boldsymbol{x})\big\Vert^2 + \sum_i \log \boldsymbol{s}_i\tag{15}
-$$
-为什么这个尺度变换能识别**特征的重要程度**呢？其实这个尺度变换层可以换一种更加清晰的方式描述：我们开始设 $h$ 的先验分布为标准正态分布，也就是各个方差都为 1。**事实上，我们可以将先验分布的方差也作为训练参数，这样训练完成后方差有大有小，方差越小，说明该特征的“弥散”越小，如果方差为 0，那么该特征就恒为均值 0，该维度的分布坍缩为一个点，于是这意味着流形减少了一维。**
-
-不同于(4)式，我们写出带方差的正态分布：
-$$
-q(\boldsymbol{h}) = \frac{1}{(2\pi)^{D/2}\prod\limits_{i=1}^D \boldsymbol{\sigma}_i}\exp\left(-\frac{1}{2}\sum_{i=1}^D \frac{\boldsymbol{h}_i^2}{\boldsymbol{\sigma}_i^2}\right)\tag{16}
-$$
-将流模型 $h=f(x)$ 代入上式，然后取对数，类似(6)式，我们得到
-$$
-\log q(\boldsymbol{x}) \sim -\frac{1}{2}\sum_{i=1}^D \frac{\boldsymbol{f}_i^2(\boldsymbol{x})}{\boldsymbol{\sigma}_i^2} - \sum_{i=1}^D \log \boldsymbol{\sigma}_i\tag{17}
-$$
-对比(15)式，得 $\boldsymbol{s}_i=1/\boldsymbol{\sigma}_i$.  所以**尺度变换层**等价于**将先验分布的方差（标准差）也作为训练参数**，如果方差足够小，$s_i$足够大，就可以认为该维度所表示的流形坍缩为一个点，从而总体流形的维度减 1，暗含了降维的可能。
-
-
+> NICE 是基于可逆函数来实现的，所以当模型训练完，我们会得到一个生成模型和一个编码模型，但此时的随机变量 $z$ 和样本 $x$ 的大小是相同的。$x$ 虽然是 $D$ 维，但是 $x$ 未必就能遍布整个 $D$ 维空间，所以存在着维度浪费的情况.比如 MNIST 图像虽然有 784 个像素，但有些像素不管在训练集还是测试集，都一直保持为 0，这说明它远远没有 784 维那么大。同理，VAE 中的潜在向量维度很低。
+>
+> 它对**最后编码出来**的每个维度的**特征**都做了个尺度变换，也就是 $\boldsymbol{z} = \boldsymbol{s}\otimes \boldsymbol{h}^{(n)}$ 这样的形式，其中 $\boldsymbol{s} = (\boldsymbol{s}_1,\boldsymbol{s}_2,\dots,\boldsymbol{s}_D)$ 也是一个要优化的参数向量（各个元素非负）。这个 $s$ 向量能识别该维度的重要程度（越小越重要，越大说明这个维度越不重要，接近可以忽略），起到**压缩流形**的作用。注意这个尺度变换层的雅可比行列式就不再是 1 了，可以算得它的雅可比矩阵为对角阵
+> $$
+> \left[\frac{\partial \boldsymbol{z}}{\partial \boldsymbol{h}^{(n)}}\right] = \text{diag}\, (\boldsymbol{s})\tag{14}
+> $$
+> 所以它的行列式为 $\prod_i \boldsymbol{s}_i$。于是根据[(6)式](#eq6)，我们有对数似然
+> $$
+> \log q(\boldsymbol{x}) \sim  -\frac{1}{2}\big\Vert \boldsymbol{s}\otimes \boldsymbol{f} (\boldsymbol{x})\big\Vert^2 + \sum_i \log \boldsymbol{s}_i\tag{15}
+> $$
+> 为什么这个尺度变换能识别**特征的重要程度**呢？其实这个尺度变换层可以换一种更加清晰的方式描述：我们开始设 $h$ 的先验分布为标准正态分布，也就是各个方差都为 1。**事实上，我们可以将先验分布的方差也作为训练参数，这样训练完成后方差有大有小，方差越小，说明该特征的“弥散”越小，如果方差为 0，那么该特征就恒为均值 0，该维度的分布坍缩为一个点，于是这意味着流形减少了一维。**
+>
+> 不同于(4)式，我们写出带方差的正态分布：
+> $$
+> q(\boldsymbol{h}) = \frac{1}{(2\pi)^{D/2}\prod\limits_{i=1}^D \boldsymbol{\sigma}_i}\exp\left(-\frac{1}{2}\sum_{i=1}^D \frac{\boldsymbol{h}_i^2}{\boldsymbol{\sigma}_i^2}\right)\tag{16}
+> $$
+> 将流模型 $h=f(x)$ 代入上式，然后取对数，类似(6)式，我们得到
+> $$
+> \log q(\boldsymbol{x}) \sim -\frac{1}{2}\sum_{i=1}^D \frac{\boldsymbol{f}_i^2(\boldsymbol{x})}{\boldsymbol{\sigma}_i^2} - \sum_{i=1}^D \log \boldsymbol{\sigma}_i\tag{17}
+> $$
+> 对比(15)式，得 $\boldsymbol{s}_i=1/\boldsymbol{\sigma}_i$.  所以**尺度变换层**等价于**将先验分布的方差（标准差）也作为训练参数**，如果方差足够小，$s_i$ 足够大，就可以认为该维度所表示的流形坍缩为一个点，从而总体流形的维度减 1，暗含了降维的可能。
 
 
 
@@ -664,35 +683,37 @@ $$
 
 ### 3.4. 先验分布
 
-​	如前所述，我们选择先验分布为阶乘形式，即：
+如前所述，我们选择先验分布为阶乘形式，即：
 $$
 p_{I I}(h)=\prod_{d=1}^{D} p_{H_{d}}\left(h_{d}\right)
 $$
-​	我们通常会在标准分布系列中选择此分布，例如，gaussian分布：
+我们通常会在标准分布系列中选择此分布，例如，gaussian分布：
 $$
 \log \left(p_{H_{d}}\right)=-\frac{1}{2}\left(h_{d}^{2}+\log (2 \pi)\right)
 $$
-​	或logistic分布： 
+则有代入总 loss 如下：
+$$
+\log \left(p_{X}(x)\right)=\sum_{i=1}^{D}\left[\log \left(p_{H_{i}}\left(f_{i}(x)\right)\right)+\log \left(\left|S_{i i}\right|\right)\right]\\
+
+=\sum_{i=1}^{D}\left[-\frac{1}{2}(h_d^2+\log(2\pi))+\log \left(\left|S_{i i}\right|\right)\right]
+$$
+或logistic分布： 
 $$
 \log \left(p_{H_{d}}\right)=-\log \left(1+\exp \left(h_{d}\right)\right)-\log \left(1+\exp \left(-h_{d}\right)\right)
 $$
-​	我们倾向于使用logistic分布，因为它可以提供更好的行为梯度。
+我们倾向于使用logistic分布，因为它可以提供更好的行为梯度。
 
 
 
-
-
-当我们将先验分布选为各分量独立的高斯分布时，除了采样上的方便，还能带来什么好处呢？
-
-在 flow 模型中，$f^{−1}$ 是生成模型，可以用来随机生成样本，那么 $f$ 就是编码器。但是不同于普通神经网络中的自编码器“强迫低维重建高维来提取有效信息”的做法，flow 模型是完全可逆的，那么就不存在信息损失的问题，那么这个编码器还有什么价值呢？
-
-这就涉及到了“什么是好的特征”的问题了。在现实生活中，我们经常抽象出一些维度来描述事物，比如“高矮”、“肥瘦”、“美丑”、“贫富”等，这些维度的特点是：“当我们说一个人高时，他不是必然会肥或会瘦，也不是必然会有钱或没钱”，也就是说**这些特征之间没有多少必然联系，不然这些特征就有冗余了**。所以，一个好的特征，理想情况下各个维度之间应该是**相互独立**的，这样实现了**特征的解耦**，使得**每个维度都有自己独立的含义**。
-
-这样，我们就能理解“**先验分布为各分量独立的高斯分布**”的好处了，由于各分量的独立性，我们有理由说当我们用$f$ 对原始特征进行编码时，输出的编码特征 $z=f(x)$ 的各个维度是解耦的。NICE的全称Non-linear Independent Components Estimation，翻译为“非线性独立分量估计”，就是这个含义。反过来，由于 $z$ 的每个维度的独立性，理论上我们**控制改变单个维度**时，就可以看出生成图像是如何随着该维度的改变而改变，**从而发现该维度的含义**。
-
-类似地，我们也可以对两幅图像的编码进行插值（加权平均），得到过渡自然的生成样本，这些在后面发展起来的glow模型中体现得很充分。
-
-
+> 当我们将先验分布选为各分量独立的高斯分布时，除了采样上的方便，还能带来什么好处呢？
+>
+> 在 flow 模型中，$f^{−1}$ 是生成模型，可以用来随机生成样本，那么 $f$ 就是编码器。但是不同于普通神经网络中的自编码器“强迫低维重建高维来提取有效信息”的做法，flow 模型是完全可逆的，那么就不存在信息损失的问题，那么这个编码器还有什么价值呢？
+>
+> 这就涉及到了“什么是好的特征”的问题了。在现实生活中，我们经常抽象出一些维度来描述事物，比如“高矮”、“肥瘦”、“美丑”、“贫富”等，这些维度的特点是：“当我们说一个人高时，他不是必然会肥或会瘦，也不是必然会有钱或没钱”，也就是说**这些特征之间没有多少必然联系，不然这些特征就有冗余了**。所以，一个好的特征，理想情况下各个维度之间应该是**相互独立**的，这样实现了**特征的解耦**，使得**每个维度都有自己独立的含义**。
+>
+> 这样，我们就能理解“**先验分布为各分量独立的高斯分布**”的好处了，由于各分量的独立性，我们有理由说当我们用$f$ 对原始特征进行编码时，输出的编码特征 $z=f(x)$ 的各个维度是解耦的。NICE的全称Non-linear Independent Components Estimation，翻译为“非线性独立分量估计”，就是这个含义。反过来，由于 $z$ 的每个维度的独立性，理论上我们**控制改变单个维度**时，就可以看出生成图像是如何随着该维度的改变而改变，**从而发现该维度的含义**。
+>
+> 类似地，我们也可以对两幅图像的编码进行插值（加权平均），得到过渡自然的生成样本，这些在后面发展起来的glow模型中体现得很充分。
 
 
 
