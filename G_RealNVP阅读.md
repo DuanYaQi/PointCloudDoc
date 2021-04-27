@@ -308,7 +308,6 @@ $$
 \end{equation}\tag{12}
 $$
 
-
 ---
 
 ### 3.6. Multi-scale architecture
@@ -331,9 +330,7 @@ The channel-wise masking is chosen so that the resulting partitioning is not red
 
 
 
-Propagating a D dimensional vector through all the coupling layers would be cumbersome, in terms
-of computational and memory cost, and in terms of the number of parameters that would need to be
-trained. 
+Propagating a D dimensional vector through all the coupling layers would be cumbersome, in terms of computational and memory cost, and in terms of the number of parameters that would need to be trained. 
 
 For this reason we follow the design choice of [ 57 ] and factor out half of the dimensions at
 regular intervals (see Equation 14). We can define this operation recursively (see Figure 4(b)),
