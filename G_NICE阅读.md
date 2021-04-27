@@ -204,6 +204,71 @@ class LogisticDistribution(Distribution):
 
 ### summary
 
+#### loss
+
+```c++
+mean_likelihood += loss
+Epoch 0 completed. Log Likelihood: 1069.2490234375
+Epoch 1 completed. Log Likelihood: 875.5616455078125
+Epoch 2 completed. Log Likelihood: 693.6912231445312
+Epoch 3 completed. Log Likelihood: 516.442626953125
+Epoch 4 completed. Log Likelihood: 343.7688293457031
+Epoch 5 completed. Log Likelihood: 176.48223876953125
+Epoch 6 completed. Log Likelihood: 14.09976863861084
+Epoch 7 completed. Log Likelihood: -142.422119140625
+Epoch 8 completed. Log Likelihood: -291.8680114746094
+Epoch 9 completed. Log Likelihood: -435.7591552734375
+Epoch 10 completed. Log Likelihood: -570.625732421875
+Epoch 11 completed. Log Likelihood: -699.3106689453125
+Epoch 12 completed. Log Likelihood: -820.137451171875
+Epoch 13 completed. Log Likelihood: -933.022705078125
+Epoch 14 completed. Log Likelihood: -1037.8096923828125
+Epoch 15 completed. Log Likelihood: -1134.4124755859375
+Epoch 16 completed. Log Likelihood: -1224.7327880859375
+Epoch 17 completed. Log Likelihood: -1308.2054443359375
+Epoch 18 completed. Log Likelihood: -1383.8170166015625
+Epoch 19 completed. Log Likelihood: -1452.4930419921875
+Epoch 20 completed. Log Likelihood: -1514.5015869140625
+
+```
+
+
+
+```c++
+mean_likelihood -= loss
+Epoch 0 completed. Log Likelihood: -1004.8004150390625
+Epoch 1 completed. Log Likelihood: -811.5093994140625
+Epoch 2 completed. Log Likelihood: -630.5050048828125
+Epoch 3 completed. Log Likelihood: -453.9095458984375
+Epoch 4 completed. Log Likelihood: -281.93292236328125
+Epoch 5 completed. Log Likelihood: -115.24681091308594
+Epoch 6 completed. Log Likelihood: 46.15541076660156
+Epoch 7 completed. Log Likelihood: 201.43521118164062
+Epoch 8 completed. Log Likelihood: 350.24468994140625
+Epoch 9 completed. Log Likelihood: 491.6296081542969
+Epoch 10 completed. Log Likelihood: 625.107666015625
+Epoch 11 completed. Log Likelihood: 750.865478515625
+Epoch 12 completed. Log Likelihood: 869.2603149414062
+Epoch 13 completed. Log Likelihood: 979.216064453125
+Epoch 14 completed. Log Likelihood: 1081.2431640625
+Epoch 15 completed. Log Likelihood: 1175.327392578125
+Epoch 16 completed. Log Likelihood: 1262.353759765625
+Epoch 17 completed. Log Likelihood: 1343.372314453125
+Epoch 18 completed. Log Likelihood: 1415.202880859375
+Epoch 19 completed. Log Likelihood: 1481.62158203125
+Epoch 20 completed. Log Likelihood: 1542.6529541015625
+Epoch 21 completed. Log Likelihood: 1594.5867919921875
+Epoch 22 completed. Log Likelihood: 1643.70361328125
+Epoch 23 completed. Log Likelihood: 1685.8271484375
+Epoch 24 completed. Log Likelihood: 1722.939453125
+Epoch 25 completed. Log Likelihood: 1754.936767578125
+Epoch 26 completed. Log Likelihood: 1783.35546875
+Epoch 27 completed. Log Likelihood: 1807.744873046875
+2000
+```
+
+
+
 #### coupling layer
 
 ```python
@@ -700,6 +765,12 @@ $$
 或logistic分布： 
 $$
 \log \left(p_{H_{d}}\right)=-\log \left(1+\exp \left(h_{d}\right)\right)-\log \left(1+\exp \left(-h_{d}\right)\right)
+$$
+则有代入总 loss 如下：
+$$
+\log \left(p_{X}(x)\right)=\sum_{i=1}^{D}\left[\log \left(p_{H_{i}}\left(f_{i}(x)\right)\right)+\log \left(\left|S_{i i}\right|\right)\right]\\
+
+=\sum_{i=1}^{D}\left[-\log \left(1+\exp \left(h_{d}\right)\right)-\log \left(1+\exp \left(-h_{d}\right)\right)+\log \left(\left|S_{i i}\right|\right)\right]
 $$
 我们倾向于使用logistic分布，因为它可以提供更好的行为梯度。
 

@@ -1,3 +1,27 @@
+# 可视化
+
+pytorch使用 tensorboard 可视化
+
+https://zhuanlan.zhihu.com/p/60753993
+
+https://www.jianshu.com/p/46eb3004beca
+
+https://zhuanlan.zhihu.com/p/54947519
+
+https://www.jb51.net/article/181152.htm
+
+https://www.pianshen.com/article/3479170564/
+
+https://www.cnblogs.com/yongjieShi/p/9437970.html
+
+https://pytorch.org/tutorials/intermediate/tensorboard_tutorial.html
+
+https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html
+
+
+
+
+
 # Debug
 
 ### 1. bool value of Tensor with more than one value is ambiguous
