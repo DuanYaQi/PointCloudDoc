@@ -12,6 +12,8 @@ https://practical.kaikeba.com/
 
 https://www.zhihu.com/question/344962955/answer/817000024
 
+老师请问如果换个loss函数或者激活函数就要针对性的重写一个子类么
+
 
 
 
