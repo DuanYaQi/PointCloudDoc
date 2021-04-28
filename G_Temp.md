@@ -1,3 +1,27 @@
+**综述-标准化流(Normalizing Flow)**
+
+https://www.zhihu.com/question/376122890
+
+
+
+Normalizing Flows
+
+
+
+**Spring 2021 - Thu 3:10-6:00 PM, Peking University**
+
+https://deep-generative-models.github.io/
+
+
+
+https://github.com/thu-ml/implicit-normalizing-flows
+
+
+
+
+
+---
+
 **生成模型三大任务**
 
 * inference: 计算 $z=f(x)$

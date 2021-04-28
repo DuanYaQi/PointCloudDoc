@@ -6,9 +6,13 @@
 
 ## 1. Abstract
 
-Thereconstructionofreal-worldsurfacesisonhighdemandinvariousapplications. Mostexistingreconstruction approaches apply 3D scanners for creating point clouds which are generally sparse and of low density. These points clouds will be triangulated and used for visualization in combination with surface normals estimated by geometrical approaches. However, the quality of the reconstruction depends on the density of the point cloud and the estimation of the surface normals. In this paper, we present a novel deep learning architecture for point cloud upsampling that enables subsequent stable and smooth surface reconstruction. A noisy point cloud of low density with corresponding point normals is used to estimate a point cloud with higher density and appendant point normals. To this end, we propose a compound loss function that encourages the network to estimate points that lie on a surface including normals accurately predicting the orientation of the surface. Our results show the beneﬁt of estimating normals together with point positions. The resulting point cloud is smoother, more complete, and the ﬁnal surface reconstruction is much closer to ground truth.
+Thereconstructionofreal-worldsurfacesisonhighdemandinvariousapplications. Mostexistingreconstruction approaches apply 3D scanners for creating point clouds which are generally sparse and of low density. These points clouds will be triangulated and used for visualization in combination with surface normals estimated by geometrical approaches. However, the quality of the reconstruction depends on the density of the point cloud and the estimation of the surface normals. In this paper, we present a novel deep learning architecture for point cloud upsampling that enables subsequent stable and smooth surface reconstruction. 
 
-现实世界中表面构造的高要求的各种应用。 大多数现有的重建方法都使用3D扫描仪来创建通常稀疏且密度较低的点云。 这些点云将被三角剖分，并与通过几何方法估算的表面法线结合起来用于可视化。但是，重建的质量取决于点云的密度和表面法线的估计。在本文中，我们提出了一种新颖的深度学习架构，用于点云上采样，可以实现随后的稳定且平滑的表面重构。具有相应点法线的低密度噪声点云用于估计具有更高密度和附加点法线的点云。为此，我们提出了一种复合损失函数，该函数鼓励网络估算包括准确预测表面方向的法线在内的表面上的点。我们的结果显示了估计法线以及点位置的好处。由此产生的点云更平滑，更完整，并且最终的表面重建更接近于G.T.情况。
+A noisy point cloud of low density with corresponding point normals is used to estimate a point cloud with higher density and appendant point normals. To this end, we propose a compound loss function that encourages the network to estimate points that lie on a surface including normals accurately predicting the orientation of the surface. Our results show the beneﬁt of estimating normals together with point positions. The resulting point cloud is smoother, more complete, and the ﬁnal surface reconstruction is much closer to ground truth.
+
+现实世界中表面构造的高要求的各种应用。 大多数现有的重建方法都使用3D扫描仪来创建通常稀疏且密度较低的点云。 这些点云将被三角剖分，并与通过几何方法估算的表面法线结合起来用于可视化。但是，重建的质量取决于点云的密度和表面法线的估计。在本文中，我们提出了一种新颖的深度学习架构，用于点云上采样，可以实现随后的稳定且平滑的表面重构。
+
+具有相应点法线的低密度噪声点云用于估计具有更高密度和附加点法线的点云。为此，我们提出了一种复合损失函数，该函数鼓励网络估算包括准确预测表面方向的法线在内的表面上的点。我们的结果显示了估计法线以及点位置的好处。由此产生的点云更平滑，更完整，并且最终的表面重建更接近于G.T.情况。
 
 
 

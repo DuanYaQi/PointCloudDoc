@@ -4,6 +4,14 @@
 
 
 
+## 加内存
+
+https://colab.research.google.com/drive/155S_bb3viIoL0wAwkIyr1r8XQu4ARwA9?usp=sharing
+
+
+
+
+
 ## 挂载云盘
 
 ```python
@@ -42,4 +50,8 @@ cd latent_3d_points_Pytorch
 ```python
 drive.flush_and_unmount()
 ```
+
+
+
+
 

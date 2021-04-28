@@ -27,7 +27,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [PCUandNE](P_PCUandNE.md) |VISIGRAPP2021 UP Normal|
 | [Meta-PU](P_Meta-PU阅读.md) |arXiv2021 US |
 | [MAPU-Net](P_MAPU-Net.md)    | arXiv2020 UP    |
-| [SPU-Net](P_SPU-Net.md) |arXiv2020 UP|
+| [SPU-Net](P_SPU-Net阅读.md) |arXiv2020 UP|
 | [PU-GCN](P_PU-GCN阅读.md) | arXiv2019 UP GCN |
 |      |      |
 
