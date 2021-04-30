@@ -1,6 +1,6 @@
 # Docker
 
-## 管理
+## 1. 管理
 
 | tag                                  |                             网络                             |                             配置                             |
 | :----------------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: |
@@ -40,7 +40,7 @@ python -m visdom.server # 开启visdom服务  开启时加参数 -p 127.0.0.2:80
 
 
 
-## 安装
+## 2. 安装
 
 ```
 //由于apt官方库里的docker版本可能比较旧，所以先卸载可能存在的旧版本：
@@ -61,7 +61,7 @@ sudo apt-get install -y docker-ce
 
 
 
-## 维护
+## 3. 维护
 
 ### 查看状态
 
@@ -90,9 +90,9 @@ newgrp docker #更新用户组
 
 
 
-## DockerFile
+## 4. DockerFile
 
-### 编写dockerfile文件
+### 4.1. 编写dockerfile
 
 ```dockerfile
 From nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
@@ -164,7 +164,9 @@ sudo ln -sf /usr/bin/pip3 /usr/bin/pip
 
 
 
-### 运行dockerfile编译并生成镜像
+---
+
+### 4.2. 编译生成镜像
 
 ```
 docker build -f Dockerfile -t myubunut:0.1 .
@@ -196,8 +198,6 @@ ADD sources.list /etc/apt/
 解决
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F60F4B3D7FA2AF80 && \
 ```
-
-
 
 
 
@@ -256,7 +256,25 @@ https://zixuephp.net/manual-docker-2139.html
 
 
 
-#### 修改docker镜像路径-根目录容量不足/更新后镜像丢失
+### 4.3. 导入镜像
+
+```bash
+docker load -i PU-GAN.img
+```
+
+
+
+
+
+---
+
+## 5. 修改docker镜像路径
+
+**目录容量不足/更新后镜像丢失**
+
+
+
+**第一次迁移**
 
 https://www.cnblogs.com/bigberg/p/8057807.html
 
@@ -290,14 +308,104 @@ https://www.it1352.com/647824.html
 
 
 
+**第二次迁移**
+
+```shell
+# duan @ duan-Lenovo-ideapad-Y700-15ISK in ~/windows/Workspace [12:57:50] 
+$ sudo rsync -avz /home/duan/workspace/docker .
+```
 
 
 
+放入home中，又占据了home大部分容量，进行二次迁移至另外的位置。
 
-### 导入镜像
+```shell
+服务器磁盘目录快不够用了。通过
+du -h --max-depth=1 /
+逐级目录排查
 
-```bash
-docker load -i PU-GAN.img
+du -hs /var/lib/docker
+```
+
+
+
+首先了解默认的容器数据保存位置
+
+```shell
+# docker info | grep "Docker Root Dir"
+Docker Root Dir: /var/lib/docker
+```
+
+
+
+如果你确定你的镜像都已经妥善保存好、或者用的都是公开的镜像，容器实例中没有存储特别的东西，可以考虑先执行 `docker system prune` 给 docker 数据目录先减个肥，再进行迁移。
+
+要进行数据迁移，需要先暂停 docker 服务。
+
+```shell
+systemctl stop docker.service
+#或service docker stop
+```
+
+
+
+创建迁移目录（用来放新数据的目录），我个人习惯将可备份的用户数据存放于应用分区 `/data` 下。
+
+```shell
+mkdir -p /data/docker/
+```
+
+然后使用万能的 `rsync` 对数据进行迁移。
+
+```shell
+rsync -avz /var/lib/docker/ /data/docker
+#或cp -R /var/lib/docker/ /home/_varlibdockerfiles
+```
+
+在长长的屏幕日志滚动之后，你将会看到类似下面的输出：
+
+```shell
+docker/tmp/
+docker/trust/
+docker/volumes/
+docker/volumes/metadata.db
+
+sent 1,514,095,568 bytes  received 3,096,373 bytes  4,998,984.98 bytes/sec
+total size is 3,955,563,885  speedup is 2.61
+```
+
+数据就这样迁移完毕了，完整性由 `rsync` 保证。接下来要修改 docker 的配置，让 docker 从新的位置进行数据加载和存储。
+
+编辑 `/etc/docker/daemon.json` 配置文件，如果没有这个文件，那么需要自己创建一个，根据上面的迁移目录，基础配置如下：
+
+```shell
+{
+    "data-root": "/data/docker"
+}
+```
+
+如果你之前修改过 docker mirror （其他同理），那么你的配置需要修改为这个样子：
+
+```shell
+{
+    "data-root": "/data/docker",
+    "registry-mirrors": [
+        "http://YOUR_MIRROR_LINK"
+    ]
+}
+```
+
+将容器服务启动起来。
+
+```shell
+service docker start
+```
+
+使用文章开头的命令再次验证下 docker 数据存储设置，可以看到配置已经生效。
+
+```shell
+# docker info | grep "Docker Root Dir"
+Docker Root Dir: /data/docker
 ```
 
 
@@ -306,7 +414,7 @@ docker load -i PU-GAN.img
 
 ---
 
-## Nvidia docker
+## 6. Nvidia docker
 
 ### 安装
 
@@ -531,7 +639,7 @@ docker commit -a "duan" -m "mkdir test" -p 401ad1da19e4 unknownue/pu-flow:latest
 
 
 
-## docker pull速度问题
+## 7. docker pull速度问题
 
 阿里云公开镜像找
 
@@ -559,7 +667,7 @@ sudo systemctl restart docker
 
 
 
-## 报错
+## 8. 报错
 
 - docker version  Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
 
@@ -570,8 +678,6 @@ vi /etc/docker/daemon.json
   "registry-mirrors": ["https://foqt1i8i.mirror.aliyuncs.com"]
 }
 ```
-
-
 
 
 
@@ -589,7 +695,7 @@ systemctl restart docker # 重启dokcer
 
 
 
-## 更换apt软件源
+## 9. 更换apt软件源
 
 ```bash
 https://developer.aliyun.com/mirror/
@@ -618,7 +724,7 @@ apt update
 
 
 
-## 卸载
+## 10. 卸载
 
 1. 删除某软件,及其安装时自动安装的所有包
 
