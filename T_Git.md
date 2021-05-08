@@ -417,11 +417,23 @@ git checkout master
 
 
 
+
+
 ---
 
 # Error
 
-## If you wish to set tracking information for this branch you can do so with:
+## 1. refusing to merge unrelated histories
+
+```shell
+git pull origin master --allow-unrelated-histories
+```
+
+
+
+
+
+## 2. If you wish to set tracking information for this branch you can do so with:
 
 ```shell
 git branch --set-upstream-to=origin/master master
@@ -431,7 +443,7 @@ git branch --set-upstream-to=origin/master master
 
 
 
-## fatal: branch 'master' does not exist
+## 3. fatal: branch 'master' does not exist
 
 ```shell
 git checkout master
@@ -441,7 +453,7 @@ git checkout master
 
 
 
-## ! [rejected]       master -> master (fetch first/non-fast-forward)
+## 4. ! [rejected]       master -> master (fetch first/non-fast-forward)
 
 ```
 git pull --rebase origin master
@@ -454,7 +466,7 @@ https://blog.csdn.net/downanddusk/article/details/88344389
 
 
 
-## git Key is already in use
+## 5. git Key is already in use
 
 **该key被其他用户使用或被其他仓库使用**
 
@@ -464,7 +476,7 @@ https://blog.csdn.net/m0_38072683/article/details/82939535
 
 
 
-## Couldn't find remote ref master
+## 6. Couldn't find remote ref master
 
 https://www.jianshu.com/p/f08efd596773
 
@@ -494,9 +506,7 @@ git remote add origin XXXX
 
 
 
-
-
-## Updates were rejected because the tip of your current branch is behind
+## 7. Updates were rejected because the tip of your current branch is behind
 
 ```bash
 git push -u origin master -f 
@@ -506,7 +516,7 @@ git push -u origin master -f
 
 
 
-##  socket5 read timeout
+##  8. socket5 read timeout
 
 ```shell
 git config --global http.proxy 127.0.0.1:1080
@@ -536,7 +546,7 @@ git config --global --unset https.proxy
 
 
 
-## **SSL certificate problem: self signed certificate**
+## 9. SSL certificate problem: self signed certificate
 
 ```shell
  git config --global http.sslVerify false
