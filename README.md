@@ -4,26 +4,19 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 
 
 
+---
 ## PointCloud Paper
+> UP 代表 UpSamping，Gen代表Generation，Com 代表 Completion，GNN 代表图神经网络，AE 代表auto-endcoder
+
+### PointCloud Upsampling
 
 | 题目 | 描述 |
 | :--: | :-- |
-| [Cycle4Completion](P_Cycle4Completion.md)     | CVPR2021 Com     |
-| [Diffusion Probabilistic Models for 3D Point Cloud Generation](P_diffusionPC阅读.md)    | CVPR2021 Gen     |
 | [SampleNet](P_SampleNet阅读.md) |CVPR2020 B |
-| [SA-NET](P_SA-Net阅读.md) | CVPR2020 Com|
 | [3PU](P_3PU阅读复现.md)  | CVPR2019 UP     |
 | [PU-NET](P_PU-NET阅读复现.md) |CVPR2018 B UP|
-| [FoldingNet](P_FoldingNet阅读.md)    |CVPR2018 Gen     |
-|  [PointNet](P_PointNet阅读复现.md)    | CVPR2017 B |
 | [PU-GAN](P_PU-GAN阅读复现.md) | ICCV2019 UP GAN|
 | [PU-Geo](P_PUGeo阅读复现.md) | ECCV2020 UP CG|
-| [EC-NET](P_EC-NET阅读复现.md)    | ECCV2018 Gen    |
-| [MSN](P_MSN阅读复现.md) | AAAI2020 Com |
-| [Latent_3D_Points](P_latent_3d_points阅读复现改写.md)  |ICLR-W2018  AE  |
-| [DGCNN](P_DGCNN.md)     |  TOG2019 B、GNN  |
-| [PointCNN](P_PointCNN阅读复现.md) | NIPS2018 B|
-| [PointNet++](P_PointNet++阅读.md)     |NIPS2017  B    |
 | [PCUandNE](P_PCUandNE.md) |VISIGRAPP2021 UP Normal|
 | [Meta-PU](P_Meta-PU阅读.md) |arXiv2021 US |
 | [MAPU-Net](P_MAPU-Net.md)    | arXiv2020 UP    |
@@ -31,8 +24,36 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [PU-GCN](P_PU-GCN阅读.md) | arXiv2019 UP GCN |
 |      |      |
 
-> UP 代表 UpSamping，Gen代表Generation，Com 代表 Completion，GNN 代表图神经网络，AE 代表auto-endcoder
 
+### PointCloud Completion
+| 题目 | 描述 |
+| :--: | :-- |
+| [Cycle4Completion](P_G_Cycle4Completion.md)     | CVPR2021 Com     |
+| [SA-NET](P_C_SA-Net阅读.md) | CVPR2020 Com|
+| [EC-NET](P_C_EC-NET阅读复现.md)    | ECCV2018 Com    |
+| [MSN](P_C_MSN阅读复现.md) | AAAI2020 Com |
+|      |      |
+
+
+### PointCloud Generation
+| 题目 | 描述 |
+| :--: | :-- |
+| [Diffusion Probabilistic Models for 3D Point Cloud Generation](P_C_diffusionPC阅读.md)    | CVPR2021 Gen     |
+| [FoldingNet](P_G_FoldingNet阅读.md)    |CVPR2018 Gen     |
+| [Latent_3D_Points](P_G_latent_3d_points阅读复现改写.md)  |ICLR-W2018  AE  |
+|      |      |
+
+
+### PointCloud Learning Representation
+| 题目 | 描述 |
+| :--: | :-- |
+|  [PointNet](P_LR_PointNet阅读复现.md)    | CVPR2017 B |
+| [DGCNN](P_LR_DGCNN.md)     |  TOG2019 B、GNN  |
+| [PointCNN](P_LR_PointCNN阅读复现.md) | NIPS2018 B|
+| [PointNet++](P_LR_PointNet++阅读.md)     |NIPS2017  B    |
+|      |      |
+
+---
 
 ## Generative Paper
 
@@ -48,6 +69,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 |      |      |
 
 
+---
 ## DeepLearning Paper
 | 题目 | 描述 |
 | :--: | :--: |
@@ -56,6 +78,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [Inception](Pre_Inception.md)     |      |
 
 
+---
 ## Notes
 
 | 题目 | 描述 |
@@ -66,6 +89,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 |      |      |
 |      |      |
 
+---
 ## Experimental Doc
 
 | 题目 | 描述 |
@@ -74,6 +98,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | [C++深度学习框架](E_Cpp4DL.md)     | C++实现深度学习框架     |
 |      |      |
 
+---
 ## Tools
 
 | 题目 | 描述 |
@@ -101,6 +126,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 |      |      |
 |      |      |
 
+---
 ## Class Notes
 
 | 题目 | 描述 |
@@ -118,6 +144,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 |      |      |
 
 
+---
 ## Book Notes
 
 | 题目 | 描述 |

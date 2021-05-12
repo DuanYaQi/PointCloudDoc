@@ -16,6 +16,8 @@ EC-Net: an Edge-aware Point set Consolidation Network
 
 ​	Also, we trained our network on virtual scanned point clouds, demonstrated the performance of our method on both synthetic and real point clouds, presented various surface reconstruction results, and showed how our method outperforms the state-of-the-arts. 此外，我们在虚拟扫描点云上训练了我们的网络，展示了我们的方法在合成点云和真实点云上的性能，展示了各种曲面重建结果，并展示了我们的方法如何胜过最新技术。
 
+
+
 ---
 
 ## 1. Introduction
@@ -41,6 +43,8 @@ EC-Net: an Edge-aware Point set Consolidation Network
 ​	More importantly, we design a novel edge-aware joint loss function that can be eﬃciently computed for directly comparison between the output points and ground truth 3D meshes. Our loss function encourages the output points to be located close to the underlying surface and to the edges, as well as distributed more evenly on surface.  更重要的是，我们设计了一种新颖的边缘感知联合损失函数，可以对其进行有效计算，以直接比较输出点和地面真实3D网格。 我们的损失函数鼓励输出点位于下层表面和边缘附近，并在表面上更均匀地分布。
 
 ​	Then in the inference phase, the network can generate and ﬁnd output points close to the edges. Since it is diﬃcult to annotate edges directly in real scanned point clouds, we train our network on synthesized virtual scanned point clouds, and show the performance of our method on both real and virtual scanned point clouds. By using our trained network, we show through various experiments that we can improve not only the point cloud consolidation results (see Figures 1(b) & (c)), but also the surface reconstruction quality, compared to various state-of-the-art methods. All the code is available at the project webpage.然后，在推理阶段，网络可以生成并找到靠近边缘的输出点。 由于很难在真实扫描点云中直接注释边缘，因此我们在合成的虚拟扫描点云上训练我们的网络，并在真实和虚拟扫描点云上展示我们方法的性能。 通过使用我们训练有素的网络，我们通过各种实验表明，与各种状况相比，我们不仅可以改善点云合并结果（参见图1（b）和（c）），而且还可以改善表面重建质量。 艺术方法。 所有代码都可以在项目网页1上找到。
+
+
 
 ---
 
