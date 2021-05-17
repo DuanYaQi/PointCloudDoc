@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Copyright 2017 mathsisfun.com -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="297.2" height="166.7" version="1.1">
+<defs>
+<marker id="id5" style="overflow:visible;" orient="auto">
+<path transform="scale(0.4) rotate(180) translate(10,0)" style="fill:#07a6ff; stroke:#07a6ff; stroke-width:1pt;" d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z "/>
+</marker>
+<marker id="id4" style="overflow:visible;" orient="auto">
+<path transform="scale(0.4) rotate(180) translate(10,0)" style="fill:#07a6ff; stroke:#07a6ff; stroke-width:1pt;" d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z "/>
+</marker>
+<marker id="id6" style="overflow:visible;" orient="auto">
+<path transform="scale(0.4) translate(10,0)" style="fill:#ff9900; stroke:#ff9900; stroke-width:1pt;" d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z "/>
+</marker>
+<marker id="id7" style="overflow:visible;" orient="auto">
+<path transform="scale(0.4) rotate(180) translate(10,0)" style="fill:#ff9900; stroke:#ff9900; stroke-width:1pt;" d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z "/>
+</marker>
+<linearGradient id="id1">
+<stop offset="0" style="stop-color:white; stop-opacity:1;"/>
+<stop offset="1" style="stop-color:#edd400; stop-opacity:1;"/>
+</linearGradient>
+<linearGradient id="id2">
+<stop offset="0" style="stop-color:white; stop-opacity:1;"/>
+<stop offset="1" style="stop-color:#07a6ff; stop-opacity:1;"/>
+</linearGradient>
+<marker id="id3" style="overflow:visible;" orient="auto">
+<path transform="matrix(-0.4,0,0,-0.4,-4,0)" style="stroke:black; stroke-width:1pt;" d="M 0,0 5,-5 -12.5,0 5,5 0,0 Z"/>
+</marker>
+</defs>
+<linearGradient gradientTransform="scale(4.560702,0.219265)" x1="0" y1="114" x2="228" y2="114" gradientUnits="userSpaceOnUse">
+<stop offset="0" style="stop-color:indigo;"/>
+<stop offset="25%" style="stop-color:blue;"/>
+<stop offset="100%" style="stop-color:white;"/>
+</linearGradient>
+<filter>
+<feGaussianBlur stdDeviation="5"/>
+</filter>
+<path style="marker-end:url(#id3); fill:#2e3436; fill-opacity:0.75; stroke:#2e3436; stroke-width:1.22;" d="m 53.9,140.5 240.9,0"/>
+<path style="marker-end:url(#id3); fill:#2e3436; fill-opacity:0.75; stroke:#2e3436; stroke-width:1.22;" d="m 54.3,140.4 0,-138"/>
+<g style="fill:none; fill-opacity:0.75; stroke:#d8dadc; stroke-width:0.82; stroke-dasharray:6.5, 0.8;">
+<g>
+<path d="m 53.9,110 225.8,0"/>
+<path d="m 53.9,79.5 225.8,0"/>
+<path d="m 53.9,49 225.8,0"/>
+<path d="m 53.9,18.4 225.8,0"/>
+<path d="m 99.2,140.4 0,-121.4"/>
+<path d="m 144.1,140.4 0,-121.4"/>
+<path d="m 189,140.4 0,-121.4"/>
+<path d="m 233.9,140.4 0,-121.4"/>
+<path d="m 278.8,140.4 0,-121.4"/>
+</g>
+</g>
+<path style="fill:none; fill-opacity:0.75; stroke:black; stroke-width:0.41px;" d="M 145.6,44.7 V 165.9"/>
+<path style="fill:none; fill-opacity:0.75; stroke:black; stroke-width:0.41px;" d="M 217.2,95.7 V 166.7"/>
+<path style="fill:none; fill-opacity:0.75; stroke:black; stroke-width:0.41px;" d="M 206.6,91.9 H 15.8"/>
+<path style="fill:none; fill-opacity:0.75; stroke:black; stroke-width:0.41px;" d="M 132,40.6 H 14.8"/>
+<path style="marker-end:url(#id4); fill:none; fill-opacity:0.75; stroke:#07a6ff; stroke-width:1.18;" d="M 21.2,72 V 89.1"/>
+<path style="marker-end:url(#id5); fill:none; fill-opacity:0.75; stroke:#07a6ff; stroke-width:1.18;" d="M 21.2,57.3 V 43"/>
+<path style="marker-start:url(#id6); marker-end:url(#id7); fill:none; fill-opacity:0.75; stroke:#ff9900; stroke-width:1.18;" d="m 214.8,162 h -66.1"/>
+<text x="152.7" y="156" style="font-family:'Comic Sans MS'; font-size:16.3px; color:black; overflow:visible; fill:#ff9900; stroke-width:1px;">Domain</text>
+<text x="0.9" y="69.3" style="font-family:'Comic Sans MS'; font-size:16.3px; color:black; overflow:visible; fill:#07a6ff; stroke-width:1px;">Range</text>
+<text x="278.6" y="158.5" style="font-family:'Times New Roman'; font-weight:bold; font-size:22.9px; font-style:italic; color:black; overflow:visible; fill:black; stroke-width:1px;">x</text>
+<text x="10.7" y="17.3" style="font-family:'Times New Roman'; font-weight:bold; font-size:22.9px; font-style:italic; color:black; overflow:visible; fill:black; stroke-width:1px;">f(x)</text>
+<path style="fill:none; fill-opacity:0.75; stroke:#cccccc; stroke-width:2.16;" d="m 103.3,103.1 c 0,0 20.4,-62.5 42.7,-62 22.4,0.5 51,50.2 72.3,50 21.3,-0.2 38.9,-38.8 38.9,-38.8"/>
+<path style="fill:none; fill-opacity:0.75; stroke:#3465a4; stroke-width:2.16;" d="m 145.5,41.1 c 0.2,0 0.3,0 0.5,0 22.4,0.5 51,50.2 72.3,50 0,-4e-4 0,0 0.1,0"/>
+</svg>

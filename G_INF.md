@@ -40,8 +40,7 @@ $$
 
 
 
-最近，出现了一些**自由形式** (free-form) 的 **Jacobian 方法**，例如残差流（ResFlows）（Invertible residual networks，ICML2019; Residual flows for invertible generative modeling，NIPS2019）。他们通过利用**对数行列式**的**随机估计器**（stochastic estimator）来放宽**三角形雅可比约束**，从而**丰富了模型族**。但是，每个**转换块**（transformation block）的Lipschitz **常数**均受**可逆性约束**。通常，这不是可取的，因为将简单的**先验分布**映射到潜在的**复杂数据分布**可能需要具有**非常大**的**Lipschitz常数的转换**（见**Fig. 3**）。此外，所有上述方法（aforementioned methods）都假定存在一个明确的（explicit）前向映射 $ \mathbf{z}=f(\mathbf{x}) $ 。具有显式正向映射的双射仅覆盖了第一个要求所建议的**广义可逆函数的一小部分**（a fraction of the broad class of
-invertible functions），这可能会限制模型的容量。
+最近，出现了一些**自由形式** (free-form) 的 **Jacobian 方法**，例如残差流（ResFlows）（Invertible residual networks，ICML2019; Residual flows for invertible generative modeling，NIPS2019）。他们通过利用**对数行列式**的**随机估计器**（stochastic estimator）来放宽**三角形雅可比约束**，从而**丰富了模型族**。但是，每个**转换块**（transformation block）的Lipschitz **常数**均受**可逆性约束**。通常，这不是可取的，因为将简单的**先验分布**映射到潜在的**复杂数据分布**可能需要具有**非常大**的**Lipschitz常数的转换**（见**Fig. 3**）。此外，所有上述方法（aforementioned methods）都假定存在一个明确的（explicit）前向映射 $ \mathbf{z}=f(\mathbf{x}) $ 。具有显式正向映射的双射仅覆盖了第一个要求所建议的**广义可逆函数的一小部分**（a fraction of the broad class of invertible functions），这可能会限制模型的容量。
 
 ![1621156780419](assets/1621156780419.png)
 
@@ -49,7 +48,7 @@ invertible functions），这可能会限制模型的容量。
 
 
 
-在本文中，我们提出了 implicitflows（ImpFlows）来**泛化**NFs，**允许转换被** $ F(\mathbf{z}, \mathbf{x})=0 $ **隐式定义**。给定 $x$（或$z$），可以通过隐式的根查找过程（root-finding procedure） $ \mathbf{z}=\operatorname{RootFind}(F(\cdot, \mathbf{x})) $ 来计算另一个变量。可以将先前 NFs 中使用的显式映射 $z = f(x)$ 视为 **ImpFlow 的特殊情况**，形式为 $F(z，x)= f(x)− z =0$. 
+在本文中，我们提出了 implicit flows（ImpFlows）来**泛化**NFs，**允许转换被** $ F(\mathbf{z}, \mathbf{x})=0 $ **隐式定义**。给定 $x$（或$z$），可以通过隐式的根查找过程（root-finding procedure） $ \mathbf{z}=\operatorname{RootFind}(F(\cdot, \mathbf{x})) $ 来计算另一个变量。可以将先前 NFs 中使用的显式映射 $z = f(x)$ 视为 **ImpFlow 的特殊情况**，形式为 $F(z，x)= f(x)− z =0$. 
 
 为了在**表达性和可处理性**之间取得平衡，我们从 ImpFlows 中提出了一个特殊的定义，其中每个 block 是由 **ResFlow block 和另一个ResFlow block的逆**来组成。我们从理论上研究**函数空间中** ResFlows 和 ImpFlows 的**模型容量**。 通过**放宽 Lipschitz 约束**，我们证明了 single-block ImpFlow 的**函数族**比 two-block ResFlow的函数族**严格丰富**。此外，对于任何具有固定块数的ResFlow，都存在某些可逆函数，使 ResFlow 具有**不可忽略的近似误差**，但是ImpFlow可以精确建模。
 

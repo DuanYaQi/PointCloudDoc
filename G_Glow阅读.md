@@ -1,6 +1,8 @@
 
 ## Glow: Generative Flow with Invertible 1×1 Convolutions
 
+NIPS2018
+
 ​	目前，生成对抗网络 GAN 被认为是在**图像生成**等任务上最为有效的方法，越来越多的学者正朝着这一方向努力：在计算机视觉顶会 CVPR 2018 上甚至有 8% 的论文标题中包含 GAN。近日来自 OpenAI 的研究科学家 Diederik Kingma 与 Prafulla Dhariwal 却另辟蹊径，提出了基于**流**的生成模型 Glow。据介绍，该模型不同于 GAN 与 VAE，而在生成图像任务上也达到了令人惊艳的效果。
 
 

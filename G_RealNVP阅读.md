@@ -132,7 +132,7 @@ Also, this flexibility helps us leverage recent advances in batch normalization 
 
 ### 3.1. Change of variable formula
 
-给定一个观测数据变量 $x\in X$，一个潜在变量 $z\in Z$ ，服从一个简单先验概率分布 $p_Z$ 以及一个双映 $ f: X \rightarrow Z $（ $g = f^{-1}:Z\rightarrow X$），变量公式的变化定义了一个模型分布在 $X$ 上
+给定一个观测数据变量 $x\in X$，一个潜在变量 $z\in Z$ ，服从一个简单先验概率分布 $p_Z$ 以及一个双射 $ f: X \rightarrow Z $（ $g = f^{-1}:Z\rightarrow X$），变量公式的变化定义了一个模型分布在 $X$ 上
 
 双射 $Z = f(X)$，$Z = g(X)$，$f = g^{-1}$<span id="eq2"></span>
 $$

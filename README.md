@@ -61,7 +61,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 | :--: | :--: |
 | [Implicit Normalizing Flows](G_INF.md)     | ICLR2021_Spot INF |
 |[GrapAF](G_GraphAF.md)      | ICLR2020 GraphAF     |
-| [Glow](G_Glow阅读.md)     | 2018 OpenAI GLOW     |
+| [Glow](G_Glow阅读.md)     | NIPS2018 GLOW     |
 | [RealNVP](G_RealNVP阅读.md)     | ICLR2017  RealNVP    |
 | [NICE](G_NICE阅读.md)     | ICLR2015 NICE     |
 | [VAE](G_VAE.md)     | ICLR2014 VAE     |
