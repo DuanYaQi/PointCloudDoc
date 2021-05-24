@@ -74,6 +74,7 @@ My own research notes. ( e.g. Point Cloud、Deep Learning、Generative Network�
 ## DeepLearning Paper
 | 题目 | 描述 |
 | :--: | :--: |
+| [Stable architectures for deep neural networks](Pre_StableArch4DNN.md)| 2018Inverse Problems, Stable architectures for deep neural networks |
 | [ResNet](Pre_ResNet.md)     |CVPR2016 BestPaper ResNet 残差+恒等连接      |
 | [DenseNet](Pre_DenseNet.md)     |CVPR2017 BestPaper DenseNet 密集连接     |
 | [Inception](Pre_Inception.md)     |      |
