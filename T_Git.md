@@ -552,3 +552,19 @@ git config --global --unset https.proxy
  git config --global http.sslVerify false
 ```
 
+
+
+## 10. OpenSSL SSL_read: Connection was aborted, errno 10053
+
+```
+git config --global http.sslVerify false
+```
+
+
+
+## 11. Failed to connect to github.com port 443: Timed out
+
+```
+取消代理 + git push
+```
+

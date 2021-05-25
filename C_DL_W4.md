@@ -338,7 +338,7 @@ CNN有三种类型的layer：
 
 ![在这里插入图片描述](assets/20200208104004691.png)
 
-`CONV1` 参数$ = 6 \times （5\times5\times3+1）$
+`CONV1` 参数$ = 6 \times （5\times5\times3+1）$    //+1为bias
 
 `CONV2` 参数$ = 16 \times （5\times5\times6+1）$
 
