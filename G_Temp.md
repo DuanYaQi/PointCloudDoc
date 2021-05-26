@@ -1,3 +1,9 @@
+**天生一对，硬核微分方程与深度学习的「联姻」之路**
+
+https://baijiahao.baidu.com/s?id=1633757800193751167&wfr=spider&for=pc
+
+
+
 **综述-标准化流(Normalizing Flow)**
 
 https://www.zhihu.com/question/376122890
