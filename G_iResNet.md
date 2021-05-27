@@ -6,7 +6,7 @@ ICML2019
 
 
 
-
+---
 
 ## Abstract
 
@@ -335,7 +335,6 @@ $$
 
 
 
-
 ---
 
 ### Theorem 4
@@ -423,7 +422,7 @@ Table 1.  Non-volume preserving 是指允许收缩和膨胀（contraction and ex
 
 
 
-NICE，i-RevNet，Real-NVP 和 Glow 中使用的维分解方法可以进行正向和逆向映射分析。但是，此限制要求在Glow 中引入其他步骤，例如可逆 1×1 卷积（Kingma，2018）。 这些 1×1 卷积需要在数值上进行求逆，从而使Glow 完全不可解析地求逆。 相比之下，i-ResNet 可以看作是一种中间方法，其中前向映射是通过分析给出的，而逆向可以通过**定点迭代**来计算。
+NICE，i-RevNet，Real-NVP 和 Glow 中使用的维度分解方法可以进行正向和逆向映射分析。但是，此限制要求在Glow 中引入其他步骤，例如可逆 1×1 卷积（Kingma，2018）。 这些 1×1 卷积需要在数值上进行求逆，从而使Glow 完全不可解析地求逆。 相比之下，i-ResNet 可以看作是一种中间方法，其中前向映射是通过分析给出的，而逆向可以通过**定点迭代**来计算。
 
 此外，i-ResNet 块具有正向和逆向的 Lipschitz 边界（ [Lemma2](#lem2) ），而其他方法在设计上不具有此属性。 因此，对于诸如逆向问题（Ardizzone，2019）或基于不变性的对抗性漏洞（Jacobsen，2019）等对稳定性至关重要的应用而言，i-ResNets 可能是一个有趣的途径。
 
@@ -513,17 +512,17 @@ CIFAR 和 MNIST 模型的模型分别具有 `54` 和 `21` 个残差块，我们�
 
 
 
-基线预激活 ResNet-164 的分类和重建结果，ResNet-164是具有类似 iResNets 的架构，没有Lipschitz 约束的ResNet（表示为 vanilla）[Table. 2](#tab2) 中显示了五个具有不同光谱归一化系数的可逆ResNet。结果说明，对于较大的分层Lipschitz常数c设置，我们提出的可逆ResNet在分类性能方面与基线具有竞争性，而可证明是可逆的 。 当应用非常保守的归一化（小c）时，所有测试的数据集的分类误差都会更高。
+基线预激活 ResNet-164 的分类和重建结果，ResNet-164是具有类似 iResNets 的架构，没有Lipschitz 约束的ResNet（表示为 vanilla）[Table. 2](#tab2) 中显示了五个具有不同光谱归一化系数的可逆ResNet。结果说明，对于较大的分层Lipschitz常数c设置，我们提出的可逆ResNet在分类性能方面与基线具有竞争性，而可证明是可逆的 。当应用非常保守的归一化（小c）时，所有测试的数据集的分类误差都会更高。
 
 
 
 ![image-20210526192710447](assets/image-20210526192710447.png)
 
-**Table. 2** 通过系数 c 将i-ResNet与具有不同Lipschitz约束的类似深度和宽度的 ResNet-164 基线架构进行比较。Vanilla 与 i-ResNet 共享相同的体系结构，没有Lipschitz约束。
+**Table. 2** 通过系数 c 将 i-ResNet 与具有不同 Lipschitz 约束的类似深度和宽度的 ResNet-164 基线架构进行比较。Vanilla 与 i-ResNet 共享相同的体系结构，没有 Lipschitz 约束。
 
 
 
-为了证明我们的归一化方案是有效的并且标准的ResNet通常不是可逆的，我们使用 [Algorithm 1](#algo1) 从每个模型的特征重构输入。有趣的是，我们的分析还揭示了在 MNIST 上训练后不受约束的ResNet是可逆的（[Fig 7.](#fig7) in Appendix B），而在 `CIFAR10/100` 上则不是。此外，我们发现在使用 `CIFAR10` 进行训练后，带有和不带有BatchNorm 的ResNet都是不可逆的，这也可以从（[Fig 6.](#fig6) in Appendix B）中的奇异值图看出。4个具有1个谱标准化迭代的 GeForce GTX 1080 GPU的运行时间为 0.5 秒，用于具有128个样本的批处理的正向和反向传递，而在不进行频谱归一化的情况下则为 0.2 秒。有关运行时的详细信息，请参见C.1节（附录）。
+为了证明我们的归一化方案是有效的并且标准的 ResNet 通常不是可逆的，我们使用 [Algorithm 1](#algo1) 从每个模型的特征重构输入。有趣的是，我们的分析还揭示了在 MNIST 上训练后不受约束的 ResNet 是可逆的（[Fig 7.](#fig7) in Appendix B），而在 `CIFAR10/100` 上则不是。此外，我们发现在使用 `CIFAR10` 进行训练后，带有和不带有BatchNorm 的 ResNet 都是不可逆的，这也可以从（[Fig 6.](#fig6) in Appendix B）中的奇异值图看出。4个具有1个谱标准化迭代的 GeForce GTX 1080 GPU 的运行时间为 0.5 秒，用于具有128个样本的批处理的正向和反向传递，而在不进行频谱归一化的情况下则为 0.2 秒。有关运行时的详细信息，请参见C.1节（附录）。
 
 
 
@@ -545,7 +544,7 @@ CIFAR 和 MNIST 模型的模型分别具有 `54` 和 `21` 个残差块，我们�
 
 在本节中，我们将 i-ResNet 分类器与 state-of-the-art  invertible flow-based 模型 Glow 进行比较。我们采用（Kingma，2018）的实现并对其进行修改以对 `CIFAR10` 图像进行分类（不包含生成模型组件）。 我们创建了一个 i-ResNet，其结构与 CIFAR10 上的默认 Glow 模型（表示为 i-ResNet Glow 样式）尽可能接近，并将其与 Glow 的两个变体进行比较，其中一个变体使用了学习的（1×1卷积） 和 affine block 结构，另一个变体使用逆向排序（Real-NVP）和 additive block 结构。
 
-该实验的结果可以在 [Table 3.](#tab3) 中找到。我们可以看到 i-ResNets 在此区分性任务上的性能优于Glow 基础的所有版本，即使使网络深度和宽度适应 Glow 的情况也是如此。 这表明，与 Glow相比，i-ResNets 在其块结构中对于区分性任务具有**更合适的感应偏差**(suitable inductive bias)。
+该实验的结果可以在 [Table 3.](#tab3) 中找到。我们可以看到 i-ResNets 在此区分性任务上的性能优于 Glow 基础的所有版本，即使使网络深度和宽度适应 Glow 的情况也是如此。 这表明，与 Glow 相比，i-ResNets 在其块结构中对于区分性任务具有**更合适的感应偏差**(suitable inductive bias)。
 
 ![image-20210526231642665](assets/image-20210526231642665.png)
 
@@ -663,7 +662,6 @@ $$
  \left|P S\left(J_{g}, n\right)-\operatorname{tr} \ln \left(J_{g}\right)\right| \leq-d\left(\ln (1-\operatorname{Lip}(g))+\sum_{k=1}^{n} \frac{\operatorname{Lip}(g)^{k}}{k}\right) 
 \end{equation}
 $$
-
 
 
 
