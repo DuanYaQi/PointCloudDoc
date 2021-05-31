@@ -8,7 +8,9 @@
 
 本文为 Invertible Residual Networks 论文的个人阅读总结报告。不同于现有的基于流模型的网络架构，这篇论文提出了一种基于 ResNet 全新的可逆网络，该可逆网络在保留流模型易于处理的密度估计和非体积保持的优良特性的同时，消除了流模型对维度划分和网络体系结构的限制。iResNet 通过一个 Lipschitz 约束巧妙的同时解决了关于满足网络可逆性，网络逆函数计算，对数行列式逼近三个问题，其设计不可谓不巧妙。该可逆网络不仅在生成任务上表现良好，在判别任务上也展示了不可小觑的潜力。
 
- 
+
+
+
 
 ----
 
@@ -16,7 +18,11 @@
 
 本文为ICML 2019年接受的文章Invertible Residual Networks 隶属于Deep Learning Architectures体系，其作者为来自德国不来梅大学Universität Bremen和加拿大多伦多大学向量研究所的 Jens Behrmann、Will Grathwohl、Ricky T.Q. Chen、David Duvenaud、Jörn-Henrik Jacobsen。其中Ricky T.Q和David Duvenaud也是NeurIPS 2018最佳论文（Neural Ordinary Differential Equations）的作者。其中加拿大多伦多大学向量研究所是由2018年图灵奖获得者神经网络之父 Geoffrey Hiton 所创建。
 
- 
+其可逆性保证了其强大的表征能力，有利于判别模型；并且iResNet还给出对数似然的计算逼近，故其属于模式识别领域内的创新。原文中缺乏对一些关键公式的解释，本文则进行了额外的公式推导，如有错误，欢迎矫正。
+
+The reversibility give network the powerful presentation, which is conducive to the discriminative model; and iResNet also propose the method that the log-likelihood approximation, so it belongs to the innovation in the field of pattern recognition. The original text lacks explanations of some important formulas. This article has carried out additional formula derivation. If there are errors, welcome to contact me.
+
+
 
 In International Conference on Machine Learning, pp. 573-582, 2019.
 
@@ -98,7 +104,6 @@ $$
 \quad \text{and} \quad 
 \text{Lip}(Wx+b)<1\tag{7}
 $$
-
 
 ---
 
@@ -348,7 +353,6 @@ $$
 $$
 \begin{equation}\ln\det(\boldsymbol{B}) = \text{Tr}(\ln (\boldsymbol{B}))\end{equation}
 $$
-
 
 
 
