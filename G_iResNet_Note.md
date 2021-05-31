@@ -11,7 +11,6 @@
 
 
 
-
 ----
 
 # 1. Information
@@ -28,13 +27,21 @@ In International Conference on Machine Learning, pp. 573-582, 2019.
 
  
 
+This article is accepted by International Conference on Machine Learning, 2019. Invertible Residual Networks is part of the innovation of Deep Learning Architectures system. The authors are Jens Behrmann*, Will Grathwohl*, Ricky T. Q. Chen, David Duvenaud, Jörn-Henrik Jacobsen from Universität Bremen, Germany, and Vector Institute, University of Toronto, Canada. By the way, Ricky T. Q. Chen, David Duvenaud are the authors of NeuraIPS 2018 Best Paper-Neural Ordinary Differential Equations. And the Vector Institute is created by Geoffrey Hiton, received the 2018 Turing Award, together with Yoshua Bengio and Yann LeCun, for their work on deep learning.They are sometimes referred to as the "Godfathers of AI" and "Godfathers of Deep Learning".
+
+
+
 # 2. Background
 
 首先提出一个问题，为什么我们要追求可逆模型？因为一个可逆模型意味着它是信息无损的，意味着它可以用来做更好的分类网络，意味着可以直接用最大似然来做生成模型。而本文所做的工作基于能力十分强大的 ResNet，意味着它可能有着比之前的 Glow 模型更好的表现。
 
 总而言之，如果一个模型是可逆的，其可逆的成本不高而且拟合能力强，那么它就有很广的用途，例如判别任务、密度估计和生成任务等等。
 
- 
+First think about a question. Why do we need a invertible  model? The answer is a invertible model means information lossless, and the model can be used to make a better classification network, we can also use the maximum likelihood directly as a generative model. The work done in this article is based on the very powerful ResNet, which means that it may have better performance than the previous flow-based model Glow[2] .
+
+All in all, if a model is invertible , with low cost of reversibility and the strong ability of transform, then it can be used in discriminant tasks, density estimation, generation tasks and so on.
+
+
 
 ## 2.1. 可逆网络架构
 
@@ -42,13 +49,23 @@ In International Conference on Machine Learning, pp. 573-582, 2019.
 
 state-of-the-art flow-based 模型 Glow，每一层只有一半的变量被变换；所以为了保证充分的拟合能力，对模型深度有较高的要求（比如针对 256 维度的人脸生成任务，Glow 模型使用了大概600个卷积层，参数量为两亿），计算量非常大。而 iResNet 模型却不要求较深的网络层数，却仍然能保持足够充分变换（transform）能力。
 
+Existing invertible network architectures, such as NICE, RealNvp, and Glow, achieve the reversibility of the model through clever dimensional decomposition of network architecture design. And by constraining the Jacobian matrix to be a triangular matrix to ensure the calculation cost of the determinant calculation, to further calculate the exactly log-likelihood. Though these model are elegant and beautiful in theory, there is a serious problem: because of the simple inverse transformation process, and the constraint of the Jacobian determinant, it will lead to weak nonlinear transformation capabilities in each layer.
+
+The state-of-the-art flow-based model like Glow, only transform a half of the variables in each layer. In order to ensure sufficient fitting capabilities, Glow are higher requirements for the depth of the model (for example, for 256-dimensional face generation tasks, the Glow model uses about 600 convolutional layers, with a parameter amount of 200 M), and the calculation of this part is very large. However, invertible ResNet doesn't require the deep number of network layers, it can still maintain sufficient transform capabilities with its architecture.
+
 
 
 ## 2.2. 神经常微分方程
 
 将深度网络视为随时间变化的动态的观点提供了两种基本的学习方法。其中一种直接使用离散体系结构直接学习动力学（Haber，2018; Ruthotto，2018; Lu，2017; Ciccone，2018）；而另一种（Chen，2018b; Grathwohl，2019; Chen，2018a）则使用神经网络对常微分方程进行参数化来间接学习动力学。他们通常将可逆变换视为一个动力系统，该动力系统由常微分方程（ODE）求解器近似模拟。
 
+The view of deep networks as dynamic over time provides two basic learning methods. One of them use discrete architecture to directly learn dynamics (Haber, 2018; Ruthotto, 2018; Lu, 2017; Ciccone, 2018); the other (Chen, 2018b; Grathwohl, 2019; Chen, 2018a) use neural network parameterizes ordinary differential equations to indirectly learn dynamics. They usually regard the reversible transformation as a dynamic system that is approximated by an ordinary differential equation (ODE) solver.
+
+
+
 state-of-the-art NFs 模型 Continuous Normalizing Flows（Chen，2018b）方法使用雅可比迹来代替雅可比行列式，其具体做法是将线性变换过程通过一个常微分方程进行参数化。但是与 i-ResNet 相比，它没有固定的计算预算。如下图所示，阐述了线性内插 iResNet 的连续动力学与标准ResNet的连续动力学的区别。可逆ResNets 沿着连续路径是**双射**的，而常规的 ResNets 可能会导致**交叉或合并**路径。
+
+The state-of-the-art NFs model Continuous  Normalizing Flows method (Chen, 2018b)  use the Jacobian trace instead of the Jacobian determinant. The specific method is to parameterize the linear transformation process through an ordinary differential equation. But compared with invertible ResNet, it does not have a fixed calculation budget. As shown in the [Figure 1], the difference between the continuous dynamics of linearly  invertible ResNet and the continuous dynamics of standard ResNet is explained. Invertible ResNets are bijective along continuous paths, while regular ResNets may result in crossing and collapsing paths.
 
  ![1621241932669](assets/1621241932669.png)
 
@@ -66,15 +83,23 @@ $$
 $$
 其中 $x$ 为输入特征，即恒等映射部分，$g(x)$ 为特征变换，即残差部分，$y$ 为输出特征 ，我们称为上式1为一个 ResNet Block。ResNet Block 其将神经网络需拟合的原函数 $y$ 变为 $y-x$，其中 $x,y$ 都是向量（张量）。该操作可以保证网络的深度尽可能的大，但又不必担心梯度弥散的问题。广义上的 ResNet，是允许通过 $1\times 1$ 卷积改变维度的，但这里的 ResNet 指的是不改变维度的 ResNet，即输入输出维度相同，which is 双射函数的充要条件。
 
+where $x$ is the input feature, which is the identity mapping part, $g(x)$ is the feature transform, which is the residual part, and $y$ is the output feature. We call the Equation \ref{eq1} a ResNet Block. ResNet Block changes the original function $y$ into $y-x$, which the neural network needs to fit, and the $x,y$ are all vectors (tensors). This operation can ensure that the depth of the network is as large as possible, but there is no need to worry about the gradient dispersion. In a broad sense, ResNet allows the dimensionality to be changed by $1\times 1$ convolution, but here the ResNet does not change the dimensionality, means the input and output dimensions are the same, which is a necessary and sufficient condition for the bijective function.
+
+
+
 如果我们只关心做分类问题，那么我们只需保证网络模型可逆，从而实现信息无损即可；see Sec 3.1
 
 如果我们还关心目标的重建，我们就还需要计算网络模型的逆函数，以进行采样推理；Sec 3.2
 
 如果我们需要使用像 nice，realnvp，glow 这样的 flow-based model 用最大似然（生成问题的本质）来训练生成模型，那么我们还需要解决网络中雅可比行列式的计算损耗问题。Sec 3.3
 
+If we only care about the classification problem, then we only need to ensure that the network model is reversible, so as to achieve information lossless, see Section 3.1. If we are still concerned about the reconstruction of the target, we also need to calculate the inverse function of the network model for sampling and inference, see Section 3.2. If we need to use maximum likelihood (the essence of the generation problem) models like flow-based model (e.g. nice, realnvp, and glow) to train the generative model, then we also need to solve the problem of the calculation loss of the Jacobian in the network, see Section 3.3.
+
 
 
 ## 3.1. 可逆条件
+
+Equation \ref{eq1} is the basic module of ResNet, it is only necessary to ensure that each module is invertible . The sufficient condition for reversibility of Equation \ref{eq1} is
 
 因为 式1 是 ResNet 的基本模块，所以只需要保证每个模块可逆即可。式1 可逆的充分条件为
 $$
