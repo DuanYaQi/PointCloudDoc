@@ -237,6 +237,16 @@ $$
 
 ​	为了将点放置在的物体下表面上，以评估预测点云与参考G.T.点云之间的相似性
 
+$ S_{p} \subseteq \mathbb{R}^{3} $  $ S_{gt} \subseteq \mathbb{R}^{3} $
+$$
+\begin{equation}
+ L_{r e c}=d_{E M D}\left(S_{p}, S_{g t}\right)=\min _{\phi: S_{p} \rightarrow S_{g t}} \sum_{x_{i} \in S_{p}}\left\|x_{i}-\phi\left(x_{i}\right)\right\|_{2} 
+\end{equation}
+$$
+其中 $ \phi: S_{p} \rightarrow S_{g t} $ 为双射映射
+
+
+
 ​	EMD  Earth Mover’s distance 
 
 ​	Actually, Chamfer Distance (CD) is another candidate for evaluating the similarity between two point sets. However,comparedwithCD,EMDcanbettercapturetheshape (see [8] for more details) to encourage the output points to be located close to the underlying object surfaces. Hence, we choose to use EMD in our reconstruction loss. 实际上，倒角距离（CD）是评估两个点集之间相似度的另一个候选方法。 但是，EMD可以更好地捕获形状（有关更多详细信息，请参见[8]），以鼓励将输出点放置在靠近基础对象表面的位置。 因此，我们选择在重建损失中使用EMD。
@@ -246,6 +256,15 @@ $$
 #### Replusion loss
 
 ​	尽管使用重建损失进行训练可以在下面的对象表面上生成点，但是生成的点倾向于位于原始点附近。 为了更均匀地分布生成的点，我们设计了斥力损耗
+
+$$
+\begin{equation}
+ L_{r e p}=\sum_{i=0}^{N} \sum_{i^{\prime} \in K(i)} \eta\left(\left\|x_{i^{\prime}}-x_{i}\right\|\right) w\left(\left\|x_{i^{\prime}}-x_{i}\right\|\right) 
+\end{equation}
+$$
+其中 $ \hat{N}=r N $ 是输出点的数量，$ K(i) $ 是点 $ x_{i} $ 的 KNN 的索引集，$ \|\cdot\| $ 是L2 范数。$ \eta(r)=-r $ 称为排斥项，如果 $x_i$ 也位于其中，则是惩罚 $x_i$ 的递减函数靠近 $K(i)$ 中的其他点。只有当它是时才惩罚 $x_i$ 太靠近它的相邻点，我们添加两个限制：(i) 我们只考虑  KNN 中的点 $ x_{i^{'}} $ 的罩子； (ii) 我们使用快速衰减的权重函数排斥力损失中的 w(r)； 也就是说，我们遵循 [24, 14] 到设置 w(r) = e -r2 /小时 2在我们的实验中。
+
+
 
 
 
