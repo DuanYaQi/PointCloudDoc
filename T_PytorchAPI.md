@@ -290,6 +290,30 @@ dim (int, optional) – 如果给出，则仅在该维度上压缩输入
 
 
 
+##### torch.unsqueeze()-增加维度
+
+```python
+torch.unsqueeze(input, dim) → Tensor
+'''
+返回一个新的张量，对输入的制定位置插入维度 1
+注意： 返回张量与输入张量共享内存，所以改变其中一个的内容会改变另一个。
+
+input(Tensor) – 输入张量。
+dim (int) – 插入单例维度的索引
+'''
+
+>>> x = torch.tensor([1, 2, 3, 4])
+>>> torch.unsqueeze(x, 0)
+tensor([[ 1,  2,  3,  4]])
+>>> torch.unsqueeze(x, 1)
+tensor([[ 1],
+        [ 2],
+        [ 3],
+        [ 4]])
+```
+
+
+
 ##### torch.where()-根据判断条件批量更新值
 
 ```python
@@ -328,6 +352,60 @@ tensor([[ 1.0779,  0.0383],
 >>> torch.where(x > 0, x, 0.)
 tensor([[1.0779, 0.0383],
         [0.0000, 0.0000]], dtype=torch.float64)
+```
+
+
+
+#### 1.1.3. Tensor定义
+
+##### Tensor.repeat-重复张量
+
+```python
+Tensor.repeat(*sizes) → Tensor
+
+'''
+沿指定的维度重复此张量。
+与expand()不同，此函数复制张量的数据。
+
+sizes (torch.Size or int...) – 沿每个维度重复此张量的次数
+'''
+
+
+>>> x = torch.tensor([1, 2, 3])
+>>> x.repeat(4, 2)
+tensor([[ 1,  2,  3,  1,  2,  3],
+        [ 1,  2,  3,  1,  2,  3],
+        [ 1,  2,  3,  1,  2,  3],
+        [ 1,  2,  3,  1,  2,  3]])
+>>> x.repeat(4, 2, 1).size()
+torch.Size([4, 2, 3])
+```
+
+
+
+##### Tensor.expand-张量扩展
+
+```python
+Tensor.expand(*sizes) → Tensor
+
+'''
+返回self张量的新view，单例维度扩展到更大的尺寸。
+传递 -1 作为维度的大小意味着不更改该维度的大小。
+
+sizes (torch.Size or int...) – 所需的扩展尺寸
+'''
+
+>>> x = torch.tensor([[1], [2], [3]])
+>>> x.size()
+torch.Size([3, 1])
+>>> x.expand(3, 4)
+tensor([[ 1,  1,  1,  1],
+        [ 2,  2,  2,  2],
+        [ 3,  3,  3,  3]])
+>>> x.expand(-1, 4)   # -1 means not changing the size of that dimension
+tensor([[ 1,  1,  1,  1],
+        [ 2,  2,  2,  2],
+        [ 3,  3,  3,  3]])
 ```
 
 
@@ -391,6 +469,12 @@ torch.mm(input, mat2, *, out=None) → Tensor
 
 ​	对矩阵 `input` 和 `mat2` 执行矩阵乘法。
 ​    如果输入是（`n * m`）张量，则mat2是（`m * p`）张量，out将是（`n * p`）张量。
+
+
+
+##### torch.slogdet()
+
+计算方阵行列式绝对值的符号和自然对数
 
 
 
@@ -490,6 +574,27 @@ tensor([[ 0.0000,  0.0000, 0.0000, 0.0000, 0.0000]
 ```
 
 
+
+##### torch.einsum()-爱因斯坦求和约定
+
+基于爱因斯坦求和约定的符号指定的维度对输入元素的乘积求和。
+
+例如，可以使用 einsum 作为 `torch.einsum(“ij,jk->ik”, A, B)` 计算矩阵乘法。这里，j 是求和下标，i 和 k 是输出下标（有关原因的更多详细信息，请参见下面的部分）。
+
+```python
+# batch matrix multiplication
+>>> As = torch.randn(3,2,5)
+>>> Bs = torch.randn(3,5,4)
+>>> torch.einsum('bij,bjk->bik', As, Bs)
+tensor([[[-1.0564, -1.5904,  3.2023,  3.1271],
+        [-1.6706, -0.8097, -0.8025, -2.1183]],
+
+        [[ 4.2239,  0.3107, -0.5756, -0.2354],
+        [-1.4558, -0.3460,  1.5087, -0.8530]],
+
+        [[ 2.8153,  1.8787, -4.3839, -1.2112],
+        [ 0.3728, -2.1131,  0.0921,  0.8305]]])
+```
 
 
 

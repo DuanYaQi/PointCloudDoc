@@ -1,5 +1,9 @@
 # SA-Net: Point Cloud Completion by Skip-attention Network with Hierarchical Folding
 
+CVPR2020
+
+
+
 ## Abstract
 
 ​	Point cloud completion aims to infer the complete geometries for missing regions of 3D objects from incomplete ones. Previous methods usually predict the complete point cloud based on the global shape representation extracted from the incomplete input. However, the global representation often suffers from the information loss of structure details on local regions of incomplete point cloud. To address this problem, we propose Skip-Attention Network(SA-Net) for 3D point cloud completion. 点云补全的目的是从不完整的对象中推断出3D对象缺失区域的完整对象。 先前的方法通常基于从不完整输入中提取的全局形状表示来预测完整点云。 但是，全局表示通常会遭受不完整点云局部区域上结构细节的信息丢失。 为了解决这个问题，我们提出了跳过注意力网络（SA-Net）来完成3D点云。

@@ -568,3 +568,11 @@ git config --global http.sslVerify false
 取消代理 + git push
 ```
 
+
+
+## 12. SSL_ERROR_SYSCALL in connection to github.com:443 
+
+```
+
+```
+
