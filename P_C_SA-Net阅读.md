@@ -12,26 +12,64 @@
 
 
 
-
 $$
 \begin{equation}
  a_{j, k}=\frac{\exp \left(\mathrm{M}\left(\boldsymbol{p}_{j}^{i} \mid \theta_{h}\right)^{\mathrm{T}} \cdot \mathrm{M}\left(\boldsymbol{p}_{k}^{i} \mid \theta_{l}\right)\right)}{\sum_{n=1}^{N_{i}} \exp \left(\mathrm{M}\left(\boldsymbol{p}^{i} \mid \theta_{h}\right)^{\mathrm{T}} \cdot \mathrm{M}\left(\boldsymbol{p}^{i} \mid \theta_{1}\right)\right)} 
-\end{equation}
+\end{equation}\tag{1}
 $$
 
 $$
 \begin{equation}
  \boldsymbol{p}_{j}^{i} \leftarrow \boldsymbol{p}_{j}^{i}+\sum_{k=1}^{N_{i}^{D}} a_{j, k} \cdot \mathrm{M}\left(\boldsymbol{p}_{k}^{i} \mid \theta_{g}\right) 
-\end{equation}
+\end{equation}\tag{2}
 $$
 
+
+
+
+
+
+
+## 3.4. skip-attention
+
+![image-20210729001215827](assets/image-20210729001215827.png)
+
+**Fig. 4** Illustration of the skip-attention. skip-attention 计算完整点云的局部区域（Pred 中的红色点，由红色特征生成）与不完整点云的局部区域之间的模式相似度。不完整点云中的相似局部区域被选择性地融合到具有注意力加权和的解码器中。
+
+
+
+skip-attention 作为管道将编码器提取的局部区域特征与解码器生成的点特征进行通信。 它还解释了网络如何使用来自不完整形状的信息来完成形状。  skip-attention 有两个目的。
+
+首先，当生成位于不完整输入的现有区域中的点时，skip-attention 应该将来自编码器的同一区域的特征融合到解码器中，并引导解码器在该区域重建更一致的结构细节。
+
+其次，当生成位于输入缺失区域的点时，skip-attention 应该**在原始输入点云中搜索可参考的相似区域**，并引导解码器将这些相似区域的形状作为推断形状的参考缺失的区域。
+
+上述两个目的都是通过注意力机制实现的，如 Fig. 4 所示，其中解码器中的点特征与编码器中的局部区域特征之间的**语义相关性**通过注意力得分来衡量，得分越高表示模式相似性越显着（飞机的机翼）。 然后将局部区域特征通过加权求和融合成点特征，最后用于预测完整点云中的相关区域（也就是平面的翅膀）。
+
+
+
+
+
+有多种可能的方法来计算跳过注意力管道的注意力。 在本文中，我们不会探索整个空间，而是通常选择两个直接实施，在 SA-Net 中运行良好。 skip-attention 中的第一个是直接采用 up-module 中描述的**可学习注意力机制**。 第二个是计算**余弦相似度**作为特征之间的注意力度量。
+
+与可学习注意力相比，未平滑（无 softmax 激活）余弦注意力从之前的编码器网络中引入了更多信息，可以在解码器中的点特征和编码器中的局部区域特征之间建立强连接。 
+
+另一方面，平滑的可学习注意力可以从原始点特征中保留更多信息。 对于可学习的注意力，第 $i$ 个分辨率级别的注意力分数是在来自解码器的点特征 $ \boldsymbol{p}_{j}^{i} $ 和来自编码器的所有局部区域特征 $ \left\{\boldsymbol{r}_{k}^{i} \mid k=1,2, \ldots, N_{i}^{E}\right\} $ 之间计算的，给出
 
 
 $$
 \begin{equation}
- a_{j, k}^{\mathrm{C}}=\frac{\left(\boldsymbol{r}_{k}^{i}\right)^{\mathrm{T}} \boldsymbol{p}_{j}^{i}}{\left\|\boldsymbol{r}_{k}^{i}\right\|_{2}\left\|\boldsymbol{p}_{j}^{i}\right\|_{2}} 
-\end{equation}
+ a_{j, k}^{\mathrm{L}}=\frac{\exp \left(\mathrm{M}\left(\boldsymbol{p}_{j}^{i} \mid \theta_{h}^{\mathrm{L}}\right)^{\mathrm{T}} \cdot \mathrm{M}\left(\boldsymbol{r}_{k}^{i} \mid \theta_{l}^{\mathrm{L}}\right)\right)}{\sum_{n=1}^{N_{i}} \exp \left(\mathrm{M}\left(\boldsymbol{p}_{j}^{i} \mid \theta_{h}^{\mathrm{L}}\right)^{\mathrm{T}} \cdot \mathrm{M}\left(\boldsymbol{r}_{n}^{i} \mid \theta_{l}^{\mathrm{L}}\right)\right)} 
+\end{equation}\tag{3}
 $$
+其中上标 $L$ 表示可学习。 对于余弦距离，注意力得分为
+$$
+\begin{equation}
+ a_{j, k}^{\mathrm{C}}=\frac{\left(\boldsymbol{r}_{k}^{i}\right)^{\mathrm{T}} \boldsymbol{p}_{j}^{i}}{\left\|\boldsymbol{r}_{k}^{i}\right\|_{2}\left\|\boldsymbol{p}_{j}^{i}\right\|_{2}} 
+\end{equation}\tag{4}
+$$
+其中上标 $C$ 表示单词 cosine。 与 up-module 中的 self attention 相同，我们使用元素级加法将局部区域特征 $ \left\{\boldsymbol{r}_{k}^{i}\right\} $ 的加权和融合到点特征 $ \boldsymbol{p}_{j}^{i} $  中，这与 Eq.2 相同。在消融研究（第 4.2 节）中，我们将定量比较这两种注意力的表现。
+
 
 
 
