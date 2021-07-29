@@ -24,7 +24,8 @@ docker commit -p 432e298f0214 nvidia/cudagl:10.2-devel-ubuntu18.04
 
 tensorboard --logdir ./runs/lightning_logs
 
-python -m visdom.server # 开启visdom服务  开启时加参数 -p 127.0.0.2:8097:8097 http://127.0.0.2:8097/
+python -m visdom.server # 开启visdom服务  http://127.0.0.2:8097/
+#开启容器时加参数 -p 127.0.0.2:8097:8097 
 
 # /usr/local/cuda						   cuda
 # /usr/local/lib/python2.7/dist-packages/  tensorflow/torch/torchvision
@@ -690,6 +691,12 @@ systemctl enable docker # 开机自动启动docker
 systemctl start docker # 启动docker
 systemctl restart docker # 重启dokcer
 ```
+
+
+
+docker: Error response from daemon: OCI runtime create failed: container_linux.go:367: starting container process caused: process_linux.go:495: container init caused: Running hook #1:: error running hook: exit status 1, stdout: , stderr: nvidia-container-cli: detection error: open failed: /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.450.119.03: no such file or directory: unknown.
+
+
 
 
 
