@@ -10,7 +10,6 @@
 
 
 
-
 ----
 
 # 1. Information
@@ -242,13 +241,13 @@ $$
 $$
 通过实级数的对数展开式将 $\ln (I+J_g)$ 展开为：
 $$
-\begin{equation}\ln (I + J_g) = \sum_{n=1}^{\infty}(-1)^{n-1}\frac{J_g^n}{n}\label{eq:duishujishu}\end{equation}\tag{20}
+\begin{equation}\ln (I + J_g) = \sum_{n=1}^{\infty}(-1)^{n-1}\frac{J_g^n}{n}\end{equation}\tag{20}
 $$
 该级数收敛的条件是 $\Vert J_g\Vert_2 < 1$，即 $\text{Lip}(g) < 1$，而这正是 iResNet 的约束。
 
 现在 $\ln (I + J_g)$ 为一个无穷级数，如果截断 $n$ 项，那么误差也正比于 $\text{Lip}(g)^n$，所以 iResNet 根据 $\text{Lip}(g)$ 来决定截断的数目。可以进一步写出：
 $$
-\begin{equation}\text{Tr}(\ln (I + J_g)) = \sum_{n=1}^{N}(-1)^{n-1}\frac{\text{Tr}(J_g^n)}{n}+\mathscr{O}\left(\text{Lip}(g)^N\right)\label{eq:det2tr}\end{equation}\tag{21}
+\begin{equation}\text{Tr}(\ln (I + J_g)) = \sum_{n=1}^{N}(-1)^{n-1}\frac{\text{Tr}(J_g^n)}{n}+\mathscr{O}\left(\text{Lip}(g)^N\right)\end{equation}\tag{21}
 $$
 上式需要去计算 $J_g^n$，注意 $J_g$ 是一个矩阵，计算矩阵的 $n$ 次方资源损耗太过巨大。因此 iResNet 假设对于任意的矩阵 $A$，有
 $$
@@ -256,7 +255,7 @@ $$
 $$
 其中 $p(u)$ 是一个多元概率分布，其均值为0、协方差为单位矩阵。iResNet 对于每次迭代，从 $p(u)$ 中随机选一个向量 $u$ 出来，然后认为 $u^{\top}Au$ 就是 $\text{Tr}(A)$，即将式 21 转变为式 22
 $$
-\begin{equation}\text{Tr}(\ln (I + J_g)) \approx \sum_{n=1}^{N}(-1)^{n-1}\frac{u^{\top} J_g^n u}{n},\quad u\sim p(u)\label{eq:tr-caiyang}\end{equation}\tag{22}
+\begin{equation}\text{Tr}(\ln (I + J_g)) \approx \sum_{n=1}^{N}(-1)^{n-1}\frac{u^{\top} J_g^n u}{n},\quad u\sim p(u)\end{equation}\tag{22}
 $$
 其中 
 $$
@@ -266,7 +265,7 @@ $$
 
 即 iResNet 将首先雅可比矩阵做对数级数展开[20](#eq20)，然后将行列式计算转化为迹的计算[21](#eq21)，并且利用概率采样的方式 [22](#eq22)，就可以最高效地计算雅可比行列式。
 
- 
+
 
 ---
 

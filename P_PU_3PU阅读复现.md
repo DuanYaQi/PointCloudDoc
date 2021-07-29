@@ -307,8 +307,6 @@ $$
 
 ​	在每个训练步骤中，目标分辨率 $\hat{L}$ 被固定。$P_{\hat{L}}$和 $Q_{\hat{L}}$ 表示 $\hat{L}$ 中的预测和参考patch，而$T_{\hat{L}}$表示此分辨率下的整个参考形状。 我们根据一系列中间预测和参考迭代地计算$P_{\hat{L}}$和 $Q_{\hat{L}}$ ，记为 $P_{\ell}$ 和 $\tilde{Q}_{\ell}$，其中$\ell=1 \ldots \hat{L}-1$
 
-More speciﬁcally, the input to level ℓ is obtained using kNN (k = N) around a random point p∗ ℓ−1 in Pℓ−1. ˜ Qℓ should matche the spatial extent of Pℓ but has a higher resolution, hence it can be extracted by kNN search in ˜ Qℓ−1 using the same query point p∗ ℓ−1, whereas k = 2ˆ L−l+1N. Note that we normalize the patches to a unit cube to improve the computational stability. In Figure 6 we illustrate the described procedure for ˆ L = 3. 
-
 ​	更具体地说，使用kNN（k = N）围绕 $P_{\ell-1}$ 中的随机点 $p_{\ell-1}^{*}$ 来获得 $\ell$ 级的输入。$\tilde{Q}_{\ell}$应该与 $P_{\ell}$ 的空间范围相匹配，但具有更高的分辨率，因此可以使用相同的查询点 $p_{\ell-1}^{*}$ 在 $\tilde{Q}_{\ell-1}$ 中通过kNN搜索来提取它，而$k=2^{\hat{L}-l+1} N$。 请注意，我们将patch规范化为一个单位立方体，以提高计算稳定性。在图6中，我们说明了$\hat{L}=3$时所描述的过程。
 
 ![1615106107773](assets/1615106107773.png)

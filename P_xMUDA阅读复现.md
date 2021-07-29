@@ -47,7 +47,7 @@ Unsupervised Domain Adaptation
 
 ![1622449877717](assets/1622449877717.png)
 
-**Fig 1:**  cross-modal UDA (xMUDA) 在存在域间隙（白天到黑夜）的情况下的优势。 在此3D语义分割示例中，由于2D摄像机图像的UDA Baseline [17]预测由于昼/夜域偏移而未检测到右侧的汽车。 使用 xMUDA，2D 通过与 3D LiDAR 点云的信息交换学习汽车在黑暗中的外观，3D 学习减少错误预测。
+**Fig 1:**  跨模态 UDA (xMUDA) 在存在域偏差（domain gap）的情况下的优势。此 3D 语义分割示例中，2D 摄像机图像的 UDA Baseline 预测由于昼/夜域漂移而未检测到右侧的汽车。而 xMUDA 使 2D 图像与 3D LiDAR 点云的信息交换学习汽车在黑暗中的外观，从而减少错误预测。
 
 
 
@@ -110,7 +110,7 @@ Our contributions can be summarized as follows:
 
 ![1622451434817](assets/1622451434817.png)
 
-**Fig 2:**  Overview of our xMUDA framework for 3D semantic segmentation.  概述：该架构包括一个以图像为输入并使用 U-Net 风格的 2D ConvNet [24] 的 2D 流，以及一个以点云为输入并使用 U-Net-Style 3D SparseConvNet [8] 的 3D 流 . 两个流的特征输出具有相同的长度 $N$，, equal to the number of 3D points。为了实现这一点，我们将 3D 点投影到图像中，并在相应的像素位置对 2D 特征进行**采样**。4 个分割输出由主要预测 $P_2D, P_3D$ 和 mimicry 预测 $ P_{2 \mathrm{D} \rightarrow 3 \mathrm{D}}, P_{3 \mathrm{D} \rightarrow 2 \mathrm{D}} $ 组成。我们使用 KL 散度 $ D_{\mathrm{KL}}\left(P_{3 \mathrm{D}} \| P_{2 \mathrm{D} \rightarrow 3 \mathrm{D}}\right) $  跨模态传输知识，其中 2D mimicry head 的目标是估计主要 3D 输出，反之亦然，$ D_{\mathrm{KL}}\left(P_{2 \mathrm{D}} \| P_{3 \mathrm{D} \rightarrow 2 \mathrm{D}}\right) $。
+**Fig 2:**  Overview of our xMUDA framework for 3D semantic segmentation.  概述：该架构包括一个以图像为输入并使用 U-Net 风格的 2D ConvNet [24] 的 2D 流，以及一个以点云为输入并使用 U-Net-Style 3D SparseConvNet [8] 的 3D 流 . 两个流的特征输出具有相同的长度 $N$， equal to the number of 3D points。为了实现这一点，我们将 3D 点投影到图像中，并在相应的像素位置对 2D 特征进行**采样**。4 个分割输出由主要预测 $P_2D, P_3D$ 和 mimicry 预测 $ P_{2 \mathrm{D} \rightarrow 3 \mathrm{D}}, P_{3 \mathrm{D} \rightarrow 2 \mathrm{D}} $ 组成。我们使用 KL 散度 $ D_{\mathrm{KL}}\left(P_{3 \mathrm{D}} \| P_{2 \mathrm{D} \rightarrow 3 \mathrm{D}}\right) $  跨模态传输知识，其中 2D mimicry head 的目标是估计主要 3D 输出，反之亦然，$ D_{\mathrm{KL}}\left(P_{2 \mathrm{D}} \| P_{3 \mathrm{D} \rightarrow 2 \mathrm{D}}\right) $。
 
 
 
@@ -166,7 +166,7 @@ cross-modal UDA (xMUDA) 的目标是通过启用模态之间的受控信息交�
 
 #### Supervised Learning
 
- 3D 分割的主要目标是通过交叉熵以经典的监督方式在源数据上学习的。我们可以将每个网络流（2D和3D）的分割损失 $ \mathcal{L}_{\mathrm{seg}} $ 写为：
+3D 分割的主要目标是通过交叉熵以经典的监督方式在源数据上学习的。我们可以将每个网络流（2D和3D）的分割损失 $ \mathcal{L}_{\mathrm{seg}} $ 写为：
 $$
 \begin{equation}
  \mathcal{L}_{\mathrm{seg}}\left(\boldsymbol{x}_{s}, \boldsymbol{y}_{s}^{3 \mathrm{D}}\right)=-\frac{1}{N} \sum_{n=1}^{N} \sum_{c=1}^{C} \boldsymbol{y}_{s}^{(n, c)} \log \boldsymbol{P}_{\boldsymbol{x}_{s}}^{(n, c)} 
@@ -274,7 +274,7 @@ A2D2 和 SemanticKITTI 提供分割标签。对于 UDA，我们在两个数据�
 
 对于数据增强，我们在 2D 中采用**水平翻转和色彩抖动**，在 3D 中采用 x 轴**翻转，缩放和旋转**。 由于 SemanticKITTI 中的广角图像，我们在水平图像轴上随机裁剪了一个固定大小的矩形，以减少训练过程中的内存。 在所有实验中都使用对数平滑类权重来解决类不平衡问题。 对于 PyTorch 中跨模态损失的 **KL** 散度，我们将目标变量分离为仅在 2D 或 3D 网络中进行反向传播。 我们使用 batch size of 8、$β_1 = 0.9$、$β_2 = 0.999$ 的 Adam 优化器，以及基于迭代的学习计划，其中 0.001 的学习率在 80k 和 90k 次迭代时除以 10； 训练以 100k 结束。我们联合训练 2D 和 3D 流，并在每次迭代时，累积在源批次和目标批次上计算出的梯度。所有训练都适合具有 11GB RAM 的单个 GPU。
 
-对于 xMUDA，我们使用 Eq.4 进行训练，其中我们在源和目标上使用真实标签和跨模态损失应用分割损失。对于 xMUDA PL，我们使用先前训练的 xMUDA 模型在 [17] 中离线生成伪标签，然后从头开始再次训练，现在使用伪标签对目标进行额外的分割损失 ([Eq .5](#eq5))。 请注意，我们不会在验证集上选择最佳权重，而是使用最后一个检查点来生成伪标签，以防止任何监督学习信号。2D 和 3D 网络在每次迭代时联合训练并在源和目标上进行优化。
+对于 xMUDA，我们使用 [Eq .4](#eq4) 进行训练，其中我们在源和目标上使用真实标签和跨模态损失应用分割损失。对于 xMUDA PL，我们使用先前训练的 xMUDA 模型在 [17] 中离线生成伪标签，然后从头开始再次训练，现在使用伪标签对目标进行额外的分割损失 ([Eq .5](#eq5))。 请注意，我们不会在验证集上选择最佳权重，而是使用最后一个检查点来生成伪标签，以防止任何监督学习信号。2D 和 3D 网络在每次迭代时联合训练并在源和目标上进行优化。
 
 
 
@@ -344,7 +344,7 @@ A2D2 和 SemanticKITTI 提供分割标签。对于 UDA，我们在两个数据�
 
 一种常见的融合架构是后期融合，其中来自不同来源的特征被连接在一起（ **Fig. 4a** ）。 然而，当将主要的 2D/3D 分支合并成一个独特的融合头部时，我们不能再应用跨模态学习（ **Fig. 5a** ）。 为了解决这个问题，我们提出了“xMUDA Fusion”，我们在融合层之前向 2D 和 3D 网络流添加了一个额外的分割头，目的是模仿中央融合头（ **Fig. 4b** ）。 请注意，这个想法也可以应用于其他融合架构之上。
 
-在 **Tab. 2**  中，我们展示了不同融合方法的结果，其中我们指定了使用哪种架构（ **Fig. 4a** 中的 Vanilla 后期融合或  **Fig. 4b** 中的 xMUDA Fusion）。虽然“xMUDA PL Fusion”优于所有其他单模基线，但“xMUDA Fusion”已经取得了比“Deep logCORAL”和“MinEnt”更好的性能。
+在 **Tab. 2**  中，我们展示了不同融合方法的结果，其中我们指定了使用哪种架构（ **Fig. 4a** 中的 Vanilla 后期Fusion或  **Fig. 4b** 中的 xMUDA Fusion）。虽然“xMUDA PL Fusion”优于所有其他单模基线，但“xMUDA Fusion”已经取得了比“Deep logCORAL”和“MinEnt”更好的性能。
 
 
 
@@ -410,9 +410,9 @@ A2D2 和 SemanticKITTI 提供分割标签。对于 UDA，我们在两个数据�
 
 **A.1. nuScenes**
 
-nuScenes 数据集包含 1000 个驾驶场景，每个场景 20 秒，对应于 2Hz 拍摄的 40k 个带注释的关键帧。场景分为训练（28,130 个关键帧）、验证（6,019 个关键帧）和隐藏测试集。逐点 3D 语义标签是从 [33] 中的 3D  boxes 获得的。 我们提出了以下针对各自 source/target domains 进行域适应的拆分：Day/Night 和 Boston/Singapore。
+nuScenes 数据集包含 1000 个驾驶场景，每个场景 20 秒，对应于 2Hz 拍摄的 40k 个带注释的关键帧。场景分为 train（28,130 个关键帧）、 validation（6,019 个关键帧）和隐藏测试集。逐点 3D 语义标签是从 [33] 中的 3D  boxes 获得的。 我们提出了以下针对各自 source/target domains 进行域适应的拆分：Day/Night 和 Boston/Singapore。
 
-因此，我们使用官方的 validation split 作为测试集，将训练集划分为 train/val 作为目标集（每个split的帧数量见下表4）。由于目标分割中的对象实例数量可能非常少（例如夜间），我们将对象合并为 5 类：车辆（汽车、卡车、公共汽车、拖车、工程车辆）、行人、自行车（摩托车、自行车）  ，交通边界（交通锥，障碍）和背景。
+因此，我们使用官方划分的 validation 作为 test set，将 training set 划分为 train/val 作为目标集（每个划分的帧数量见 **Table. 4**）。由于目标分割中的对象实例数量可能非常少（例如夜间），我们将对象合并为 5 类：车辆（汽车、卡车、公共汽车、拖车、工程车辆）、行人、自行车（摩托车、自行车）  ，交通边界（交通锥，障碍）和背景。
 
 
 
@@ -426,9 +426,9 @@ nuScenes 数据集包含 1000 个驾驶场景，每个场景 20 秒，对应于 
 
 **A.2. A2D2 and SemanticKITTI**
 
-A2D2 数据集 [7] 具有 20 个 drives，对应于 28,637 帧。点云来自三个 16 层前置雷达（左、中、右），其中左右前置雷达是倾斜的。 语义标记在 2D 图像中分成了 38个类别，并且我们通过**将点云投影到标记的图像中来计算3D标签**。我们保留场景 20180807_145028 作为测试集，其余用于训练。
+**Source Domain:**A2D2 数据集 [7] 具有 20 个 drives，对应于 28,637 帧。点云来自三个 16 层前置雷达（左、中、右），其中左右前置雷达是倾斜的。 语义标记在 2D 图像中分成了 38 个类别，并且我们通过**将点云投影到标记的图像中来计算3D标签**。我们保留场景 20180807_145028 作为测试集，其余用于训练。
 
-SemanticKITTI 数据集为 Kitti 的 Odometry 数据集提供 3D 点云标签，该数据集具有大角度前置摄像头和 64 层 LiDAR。28 个类的标注已经直接在 3D 中进行了。我们使用场景 {0,1,2,3,4,5,6,9,10} 作为训练集，7 作为验证，8 作为测试集。
+**Target Domain:**SemanticKITTI 数据集为 Kitti 的 Odometry 数据集提供 3D 点云标签，该数据集具有大角度前置摄像头和 64 层 LiDAR。28 个类的标注已经直接在 3D 中进行了。我们使用场景 {0,1,2,3,4,5,6,9,10} 作为训练集，7 作为验证，8 作为测试集。
 
 我们通过合并或忽略它们在 2 个数据集之间选择 10 个共享类（见下表 5）。最后的 10 个类是汽车、卡车、自行车、人、道路、停车场、人行道、建筑、自然、其他物体。
 

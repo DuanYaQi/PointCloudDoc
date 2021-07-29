@@ -641,3 +641,15 @@ Residual flow
 ## 15. Multiscale Invertible Generative Networks for High-Dimensional Bayesian Inference
 
 多尺度处理
+
+
+
+
+
+图像处理找到一些方法 放到点云里来 但要符合点云的特性进行一些修改
+
+对模型的好的解释
+
+
+
+平面 球面 双曲面
