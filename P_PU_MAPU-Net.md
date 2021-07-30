@@ -12,6 +12,13 @@ Deep Magniﬁcation-Arbitrary Upsampling over 3D Point Clouds
 
 
 
+$$
+\begin{equation}
+\begin{aligned} \min _{\theta}\left[ \left(\mathcal{L}_{\mathrm{EMD}}\left(\boldsymbol{PC}_{3},\right.\right.\right.&\left. \left.\boldsymbol{y}_{s}^{3 \mathrm{D}}\right)+\lambda_{s} \mathcal{L}_{\mathrm{xM}}\left(\boldsymbol{x}_{s}\right)\right) \\+& \left.\frac{1}{|\mathcal{T}|} \sum_{\boldsymbol{x}_{i} \in \mathcal{T}} \lambda_{t} \mathcal{L}_{\mathrm{xM}}\left(\boldsymbol{x}_{t}\right)\right] \end{aligned}
+\end{equation}
+$$
+
+
 
 
 
