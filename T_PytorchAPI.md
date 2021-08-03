@@ -1118,6 +1118,10 @@ torch.utils.data.random_split(dataset: torch.utils.data.dataset.Dataset[T],
 
 ## 5. torchvision-计算机视觉库
 
+https://pytorch-cn.readthedocs.io/zh/latest/torchvision/
+
+
+
 ### 5.1. datasets-数据集
 
 #### MNIST-手写数字
@@ -1134,6 +1138,127 @@ class torchvision.datasets.MNIST(root: str, train: bool = True, transform: Union
 ```
 
 
+
+
+
+
+
+---
+
+### 5.2. transform-变换
+
+对PIL.Image进行变换
+
+
+
+#### Compose-组合
+
+```python
+class torchvision.transforms.Compose(transforms)
+```
+
+将多个`transform`组合起来使用。
+
+`transforms`： 由`transform`构成的列表. 例子：
+
+```python
+transforms.Compose([
+     transforms.CenterCrop(10),
+     transforms.ToTensor(),
+ ])
+```
+
+
+
+#### Scale-尺度变换
+
+```python
+class torchvision.transforms.Scale(size, interpolation=2)
+```
+
+将输入的`PIL.Image`重新改变大小成给定的`size`，`size`是最小边的边长。举个例子，如果原图的`height>width`,那么改变大小后的图片大小是`(size*height/width, size)`。
+
+```python
+from torchvision import transforms
+from PIL import Image
+crop = transforms.Scale(12)
+img = Image.open('test.jpg')
+
+print(type(img))
+print(img.size)
+
+croped_img=crop(img)
+print(type(croped_img))
+print(croped_img.size)
+```
+
+
+
+#### Pad-填充
+
+```python
+class torchvision.transforms.Pad(padding, fill=0)
+```
+
+将给定的`PIL.Image`的所有边用给定的`pad value`填充。 `padding：`要填充多少像素 `fill：`用什么值填充 例子：
+
+```python
+from torchvision import transforms
+from PIL import Image
+padding_img = transforms.Pad(padding=10, fill=0)
+img = Image.open('test.jpg')
+
+print(type(img))
+print(img.size)
+
+padded_img=padding(img)
+print(type(padded_img))
+print(padded_img.size)
+```
+
+
+
+#### RandomCrop-切割
+
+```python
+class torchvision.transforms.RandomCrop(size, padding=0)
+```
+
+切割中心点的位置随机选取。size可以是tuple也可以是Integer。
+
+
+
+#### RandomHorizontalFlip-随机水平翻转
+
+```python
+class torchvision.transforms.RandomHorizontalFlip
+```
+
+随机水平翻转给定的`PIL.Image`,概率为`0.5`。即：一半的概率翻转，一半的概率不翻转。
+
+
+
+#### ToTensor-转为张量
+
+把一个取值范围是`[0,255]`的`PIL.Image`或者`shape`为`(H,W,C)`的`numpy.ndarray`，转换成形状为`[C,H,W]`，取值范围是`[0,1.0]`的`torch.FloadTensor`
+
+```python
+data = np.random.randint(0, 255, size=300)
+img = data.reshape(10,10,3)
+print(img.shape)
+img_tensor = transforms.ToTensor()(img) # 转换成tensor
+print(img_tensor)
+```
+
+
+
+#### Normalize-正则化
+
+```python
+class torchvision.transforms.Normalize(mean, std)
+```
+
+给定均值：(R,G,B) 方差：（R，G，B），将会把Tensor正则化。即：Normalized_image=(image-mean)/std。
 
 
 

@@ -6,17 +6,161 @@ ICML2019
 
 
 
+```shell
+python -m visdom.server # 开启visdom服务  http://127.0.0.2:8097/
+#开启容器时加参数 -p 127.0.0.2:8097:8097 
+```
+
 
 
 ```sh
+# dens_set_cifar
 python CIFAR_main.py --nBlocks 16 16 16 --nStrides 1 2 2 --nChannels 512 512 512 --coeff 0.9 -densityEstimation -multiScale --lr 0.003 --weight_decay 0. --numSeriesTerms 5 --dataset cifar10 --batch 128 --warmup_epochs 1 --save_dir ./results/dens_est_cifar --vis_server your.server.local --vis_port your_port_nr
 ```
 
 
 
 ```sh
+# classify_cifar
 python ./CIFAR_main.py --nBlocks 7 7 7 --nStrides 1 2 2 --nChannels 32 64 128 --coeff 0.9 --batch 128 --dataset cifar10 --init_ds 1 --inj_pad 13 --powerIterSpectralNorm 1 --save_dir ./results/zca_clf_full_cifar10_wrn22_inj_pad_coeff09 --nonlin elu --optimizer sgd --vis_server your.server.local --vis_port your_port_nr
 ```
+
+
+
+
+
+
+
+## Code
+
+```python
+parser = argparse.ArgumentParser(description='Train i-ResNet/ResNet on Cifar')
+parser.add_argument('-densityEstimation', '--densityEstimation', dest='densityEstimation',
+                    action='store_true', help='perform density estimation')
+parser.add_argument('--optimizer', default="adamax", type=str, help="optimizer", choices=["adam", "adamax", "sgd"])
+parser.add_argument('--lr', default=0.003, type=float, help='learning rate')
+parser.add_argument('--coeff', default=0.9, type=float, help='contraction coefficient for linear layers')
+parser.add_argument('--numTraceSamples', default=1, type=int, help='number of samples used for trace estimation')
+parser.add_argument('--numSeriesTerms', default=5, type=int, help='number of terms used in power series for matrix log')
+parser.add_argument('--powerIterSpectralNorm', default=5, type=int, help='number of power iterations used for spectral norm')
+parser.add_argument('--weight_decay', default=0., type=float, help='coefficient for weight decay')
+parser.add_argument('--drop_rate', default=0.1, type=float, help='dropout rate')
+parser.add_argument('--batch', default=4, type=int, help='batch size')
+parser.add_argument('--init_batch', default=1024, type=int, help='init batch size')
+parser.add_argument('--init_ds', default=2, type=int, help='initial downsampling')
+parser.add_argument('--warmup_epochs', default=1, type=int, help='epochs for warmup')
+parser.add_argument('--inj_pad', default=0, type=int, help='initial inj padding')
+parser.add_argument('--epochs', default=200, type=int, help='number of epochs')
+parser.add_argument('--nBlocks', nargs='+', type=int, default=[16, 16, 16])
+parser.add_argument('--nStrides', nargs='+', type=int, default=[1, 2, 2])
+parser.add_argument('--nChannels', nargs='+', type=int, default=[512, 512, 512])
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                    help='evaluate model on validation set')
+parser.add_argument('-interpolate', '--interpolate', dest='interpolate', action='store_true', help='train iresnet')
+parser.add_argument('-drop_two', '--drop_two', dest='drop_two', action='store_true', help='2d dropout on')
+parser.add_argument('-nesterov', '--nesterov', dest='nesterov', action='store_true',
+                    help='nesterov momentum')
+parser.add_argument('-norm', '--norm', dest='norm', action='store_true',
+                    help='compute norms of conv operators')
+parser.add_argument('-analysisTraceEst', '--analysisTraceEst', dest='analysisTraceEst', action='store_true',
+                    help='analysis of trace estimation')
+parser.add_argument('-multiScale', '--multiScale', dest='multiScale', action='store_true',
+                    help='use multiscale')
+parser.add_argument('-fixedPrior', '--fixedPrior', dest='fixedPrior', action='store_true',
+                    help='use fixed prior, default is learned prior')
+parser.add_argument('-noActnorm', '--noActnorm', dest='noActnorm', action='store_true',
+                    help='disable actnorm, default uses actnorm')
+parser.add_argument('--nonlin', default="elu", type=str, choices=["relu", "elu", "sorting", "softplus"])
+parser.add_argument('--dataset', default='cifar10', type=str, help='dataset')
+parser.add_argument('--save_dir', default="./results/dens_est_cifar", type=str, help='directory to save results')
+parser.add_argument('--vis_port', default=8097, type=int, help="port for visdom")
+parser.add_argument('--vis_server', default="localhost", type=str, help="server for visdom")
+parser.add_argument('--log_every', default=10, type=int, help='logs every x iters')
+parser.add_argument('-log_verbose', '--log_verbose', dest='log_verbose', action='store_true',
+                    help='verbose logging: sigmas, max gradient')
+parser.add_argument('-deterministic', '--deterministic', dest='deterministic', action='store_true',
+                    help='fix random seeds and set cuda deterministic')
+```
+
+
+
+### main.py
+
+```python
+# dens_est
+
+def main():
+	# transform
+    
+    # datasets
+    
+    # setup logging with visdom
+    
+    # dataloader
+    
+    # get multiscale network4
+    model = multiscale_iResNet(in_shape, #(3, 32, 32)
+                                       args.nBlocks, args.nStrides, args.nChannels,#[16 16 16] [1 2 2] [512 512 512]
+                                       args.init_ds == 2,
+                                       args.inj_pad, args.coeff, args.densityEstimation,#0 0.9 true
+                                       args.nClasses, #10
+                                       args.numTraceSamples, args.numSeriesTerms,#1 5
+                                       args.powerIterSpectralNorm,#5
+                                       actnorm=(not args.noActnorm),#false
+                                       learn_prior=(not args.fixedPrior),#false
+                                       nonlin=args.nonlin)#elu
+    
+```
+
+
+
+### conv_iResNet.py
+
+```python
+# 
+class multiscale_conv_iResNet(nn.Module):
+    def __init__(self, in_shape, nBlocks, nStrides, nChannels, init_squeeze=False, inj_pad=0,
+                 coeff=.9, density_estimation=False, nClasses=None,
+                 numTraceSamples=1, numSeriesTerms=1,
+                 n_power_iter=5,
+                 actnorm=True, learn_prior=True, nonlin="relu"):
+        super(multiscale_conv_iResNet, self).__init__()
+        assert len(nBlocks) == len(nStrides) == len(nChannels)
+        if init_squeeze:
+            self.init_squeeze = Squeeze(2)
+        else:
+            self.init_squeeze = None
+
+        if inj_pad > 0:
+            self.inj_pad = injective_pad(inj_pad)
+        else:
+            self.inj_pad = None
+
+        if init_squeeze:
+            in_shape = downsample_shape(in_shape)
+        in_shape = (in_shape[0] + inj_pad, in_shape[1], in_shape[2])  # adjust channels
+
+        self.nBlocks = nBlocks
+        self.density_estimation = density_estimation
+        self.nClasses = nClasses
+        # parameters for trace estimation
+        self.numTraceSamples = numTraceSamples if density_estimation else 0
+        self.numSeriesTerms = numSeriesTerms if density_estimation else 0
+        self.n_power_iter = n_power_iter
+
+        self.stack, self.in_shapes = self._make_stack(in_shape, nBlocks,
+                                                      nStrides, nChannels, numSeriesTerms, numTraceSamples,
+                                                      coeff, actnorm, n_power_iter, nonlin)
+        # make prior distribution
+        self._make_prior(learn_prior)
+        # make classifier
+        self._make_classifier(self.final_shape(), nClasses)
+        assert (nClasses is not None or density_estimation), "Must be either classifier or density estimator"
+```
+
+
 
 
 
