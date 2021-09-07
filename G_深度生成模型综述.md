@@ -652,4 +652,135 @@ Residual flow
 
 
 
-平面 球面 双曲面
+平面 球面 双曲面ing
+
+
+
+
+
+
+
+
+
+
+
+----
+
+# Condition-Resflow
+
+## Implicit Variational Conditional Sampling with Normalizing Flows
+
+https://arxiv.org/abs/2107.02474
+
+
+
+
+
+---
+
+## Fixed-point algorithms for inverse of residual rectifier neural networks
+
+A deep neural network with invertible hidden layers has a nice property of preserving all the information in the feature learning stage. In this paper, we analyse the hidden layers of residual rectifier neural networks, and investigate conditions for invertibility under which the hidden layers are invertible. 
+
+A new fixed-point algorithm is developed to invert the hidden layers of residual networks. The proposed inverse algorithms are capable of inverting some residual networks which cannot be inverted by existing inverting algorithms. Furthermore, a special residual rectifier network is designed and trained on MNIST so that it can achieve comparable performance with the state-of-art performance while its hidden layers are invertible.
+
+
+
+
+
+---
+
+## x1. Universal Approximation for Log-concave Distributions using Well-conditioned Normalizing Flows
+
+https://arxiv.org/abs/2107.02951
+
+
+
+
+
+
+
+----
+
+# Interpolation-Resflow
+
+Principled Interpolation in Normalizing Flows
+
+
+
+
+
+---
+
+# PointCloud-Resflow
+
+## 0. PointFlow : 3D Point Cloud Generation with Continuous Normalizing Flows
+
+https://github.com/stevenygd/PointFlow 
+
+
+
+
+
+## 1. PointLIE: Locally Invertible Embedding for Point Cloud Sampling and Recovery
+
+https://github.com/zwb0/PointLIE
+
+https://arxiv.org/pdf/2104.14769
+
+
+
+## 2. Discrete Point Flow Networks for Efficient Point Cloud Generation
+
+https://github.com/Regenerator/dpf-nets
+
+
+
+
+
+## 3. Universal Approximation for Log-concave Distributions using Well-conditioned Normalizing Flows
+
+https://arxiv.org/abs/2107.02951
+
+
+
+
+
+---
+
+# PointCloud-realnvp
+
+## 1. Representing point clouds with generative conditional invertible flow
+networks
+
+https://github.com/MStypulkowski/CIF
+
+
+
+## 2. Diffusion Probabilistic Models for 3D Point Cloud Generation
+
+https://github.com/luost26/diffusion-point-cloud
+
+
+
+## 3. ChartPointFlow for Topology-Aware 3D Point Cloud Generation
+
+https://arxiv.org/abs/2012.02346
+
+
+
+## 4. 3D Shape Generation and Completion through Point-Voxel Diffusion
+
+https://arxiv.org/abs/2104.03670
+
+
+
+
+
+---
+
+# Condition-realnvp
+
+## 1. Noise Conditional Flow Model for Learning the Super-Resolution Space
+
+https://openaccess.thecvf.com/content/CVPR2021W/NTIRE/html/Kim_Noise_Conditional_Flow_Model_for_Learning_the_Super-Resolution_Space_CVPRW_2021_paper.html

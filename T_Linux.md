@@ -16,7 +16,7 @@
 | sudo apt-get purge **xxx**    | 彻底卸载删除xxx的相关配置文件                                |
 | sudo apt-get autoclean        | 清理安装软件时候留下的缓存程序软件包                         |
 | sudo apt-get clean            | 清理安装软件时候留下的缓存程序软件包                         |
-| sudo apt-get autoremove       | 卸载不需要的依赖关系                                         |
+| sudo apt-get autoremove       | 卸载不需要的依赖关系   /一般不用                             |
 |                               |                                                              |
 | sudo dpkg -l                  | 查看已经安装的软件                                           |
 | sudo dpkg -r **xxx**          | 卸载xxx                                                      |

@@ -646,6 +646,26 @@ torch.randn(2, 3)
 
 
 
+
+
+#### torch.randn_like()-固定格式的正态分布
+
+```python
+torch.randn_like(input, *, dtype=None, layout=None, device=None, requires_grad=False, memory_format=torch.preserve_format) → Tensor
+```
+
+返回一个大小相同的张量，其中`input`填充了来自均值为 0 且方差为 1 的正态分布的随机数。
+
+**参数**
+
+- input – 的大小将决定输出张量的大小。
+
+
+
+
+
+
+
 #### torch.manual_seed()-固定种子
 
 ```python
@@ -1026,7 +1046,55 @@ relu()-relu激活函数
 softplus()-Softplusji激活函数
 maxpool2d()-2维最大池化
 Linear()-线性转换
+normalize()-归一化
 ```
+
+
+
+### 3.1. normalize()-归一化
+
+```python
+torch.nn.functional.normalize(input, p=2.0, dim=1, eps=1e-12, out=None)
+
+- input – input tensor of any shape
+- p – the exponent value in the norm formulation. Default: 2
+- dim – the dimension to reduce. Default: 1
+- eps – small value to avoid division by zero. Default: 1e-12
+- out – the output tensor. If `out` is used, this operation won’t be differentiable.
+```
+
+对 $L_p$ 执行指定维度上的归一化
+
+For a tensor `input` of sizes, each -element vector $v$ along dimension `dim` is transformed as
+
+对于尺寸为  $(n_0, ..., n_{dim}, ..., n_k)$  的张量 input， 向量 $v$ 沿维度 dim 的每个 $n_{dim}$-元素被转换为
+$$
+v = \frac{v}{\max(\lVert v \rVert_p, \epsilon)}
+$$
+With the default arguments it uses the 欧几里得范数 over vectors along dimension 1 for normalization.
+
+
+
+### 3.2. conv_transpose2d()-反卷积
+
+```python
+torch.nn.functional.conv_transpose2d(input, weight, bias=None, stride=1, padding=0, output_padding=0, groups=1, dilation=1)
+
+# 在由多个输入平面组成的输入图像上应用 2D 转置卷积算子，有时也称为“反卷积”。
+
+- input – input tensor of shape (minibatch,in_channels,iH,iW)   输入张量的形状
+- weight – filters of shape (in_channels, groups out_channels,kH,kW)  权重
+- bias – optional bias of shape (out_channels). Default: None         偏置
+- stride – the stride of the convolving kernel. Can be a single number or a tuple (sH, sW). Default: 1 步长
+- padding – dilation * (kernel_size - 1) - padding zero-padding will be added to both sides of each dimension in the input. Can be a single number or a tuple (padH, padW). Default: 0 #填充
+- output_padding – additional size added to one side of each dimension in the output shape. Can be a single number or a tuple (out_padH, out_padW). Default: 0	#输出填充
+- groups – split input into groups, in_channels should be divisible by the number of groups. Default: 1
+- dilation – the spacing between kernel elements. Can be a single number or a tuple (dH, dW). Default: 1
+```
+
+
+
+
 
 
 
@@ -1578,11 +1646,61 @@ while True:
 
 ## random
 
-#### shuffle
+### poisson
+
+是离散分布，它估计一个事件在指定时间内可能发生的次数。如果一个人一天吃两次饭，他吃三次饭的可能性有多大?
+$$
+P(k;\lambda) = \frac{\lambda^k}{k!}e^{-\lambda}，k=0,1,\cdots
+$$
+对于具有预期间隔 $λ$ 的事件，泊松分布 $P(k; λ)$ 描述了在观察间隔 $λ$ 内发生 $k$ 个事件的概率。泊松分布的期望和方差均为 $\lambda$
+
+
+
+在实际事例中，当一个随机事件，例如某电话交换台收到的呼叫、来到某公共汽车站的乘客、某放射性物质发射出的粒子、显微镜下某区域中的白血球等等，以**固定的平均瞬时速率** $λ$（或称密度）**随机且独立**地出现时，那么这个事件在单位时间（面积或体积）内出现的次数或个数就近似地服从泊松分布 $P(λ)$。
+
+
+
+
+
+泊松分布和二项分布的区别：差异非常细微，因为二项式分布用于离散试验，而泊松分布用于连续试验。
+
+对于一个足够大的泊松分布，类似于二项分布，它会变得类似于具有一定 std 和均值的正态分布。
+
+当二项分布的 $n$ 很大而 $p$ 很小时，泊松分布可作为二项分布的近似，其中 $λ=np$。通常当 $n≧20,p≦0.05$ 时，就可以用泊松公式近似得计算。
+
+
 
 ```python
-np.random.shuffle(list)
+# 从泊松分布绘制样本
+np.random.poisson(lamb, n_samples)
+
+# 参数：
+lam：float，期望间隔，应为≥0。
+size：int或tuple的整数，可选。输出形状。例如（m， n， k）默认值为None，在这种情况下返回单个值。
+
+# 返回：
+samples：ndarray或scalar。绘制的样本。
+```
+
+
+
+二项分布
+$$
+P\{X=k\} = C_n^{k}p^k(1-p)^{n-k}\\
+C_n^{k} = \frac{n!}{k!(n-k)!}
+\\
+E(X) = np\\
+D(X)=np(1-p)
+$$
+
+
+
+
+### shuffle
+
+```python
 # 随机打乱一个列表list
+np.random.shuffle(list)
 ```
 
 

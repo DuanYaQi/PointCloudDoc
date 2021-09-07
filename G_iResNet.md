@@ -162,6 +162,137 @@ class multiscale_conv_iResNet(nn.Module):
 
 
 
+### SpectralNormConv
+
+$$
+\mathbf{W} = \dfrac{\mathbf{W}}{\sigma(\mathbf{W})} \\
+         \sigma(\mathbf{W}) = \max_{\mathbf{h}: \mathbf{h} \ne 0} \dfrac{\|\mathbf{W} \mathbf{h}\|_2}{\|\mathbf{h}\|_2}
+$$
+
+
+
+```python
+def spectral_norm_conv(module, coeff, input_dim, name='weight', n_power_iterations=1, eps=1e-12):
+    r"""将谱归一化应用于给定模块中的参数
+    谱归一化通过使用幂迭代方法计算的权重矩阵的谱范数重新缩放权重张量来稳定GAN中鉴别器的训练。如果权重张量的维数大于2，则在幂迭代法中将其重新整形为2D以获得谱范数。这是通过一个hook实现的，该hook在每个 :meth:`~Module.forward` 调用之前计算谱范数并重新调整权重。 
+    
+    Args:
+        module (nn.Module): 包含的模块
+        name (str, optional): 权重参数名称
+        n_power_iterations (int, optional): 计算谱范数的幂迭代次数
+        eps (float, optional): epsilon 在计算范数时的数值稳定性
+        dim (int, optional): 输出个数对应的维度，默认为0，当为1时，作为ConvTranspose1/2/3d实例的模块，
+    Returns:
+        The original module with the spectal norm hook 带有谱归一化hook的原始模块
+    Example::
+        >>> m = spectral_norm(nn.Linear(20, 40))
+        Linear (20 -> 40)
+        >>> m.weight_u.size()
+        torch.Size([20])
+    """
+    input_dim_4d = (1, input_dim[0], input_dim[1], input_dim[2])
+    SpectralNormConv.apply(module, coeff, input_dim_4d, name, n_power_iterations, eps)
+    return module
+```
+
+
+
+```python
+"""
+Conv2D 层的软谱归一化（未强制，仅 <= coeff）
+"""
+class SpectralNormConv(object):
+    # 每次 forward call 前后不变
+    #   u = normalize(W @ v)
+    # NB: 在初始化时，不强制执行此不变量
+
+    _version = 1
+    # At version 1:
+    #   made  `W` not a buffer,
+    #   added `v` as a buffer, and
+    #   made eval mode use `W = u @ W_orig @ v` rather than the stored `W`.
+
+    @staticmethod
+    def apply(module, coeff, input_dim, name, n_power_iterations, eps):
+        for k, hook in module._forward_pre_hooks.items():
+            if isinstance(hook, SpectralNormConv) and hook.name == name:
+                raise RuntimeError("Cannot register two spectral_norm hooks on "
+                                   "the same parameter {}".format(name))
+
+        fn = SpectralNormConv(coeff, input_dim, name, n_power_iterations, eps)
+        weight = module._parameters[name]
+
+        with torch.no_grad():
+            num_input_dim = input_dim[0]* input_dim[1]* input_dim[2]* input_dim[3]
+            v = normalize(torch.randn(num_input_dim), dim=0, eps=fn.eps)
+
+            # get settings from conv-module (for transposed convolution) 从 conv-module 获取设置（用于转置卷积）
+            stride = module.stride
+            padding = module.padding
+            # forward call to infer the shape 推断shape
+            u = conv2d(v.view(input_dim), weight, stride=stride, padding=padding,
+                               bias=None)
+            fn.out_shape = u.shape
+            num_output_dim = fn.out_shape[0]* fn.out_shape[1]* fn.out_shape[2]* fn.out_shape[3]
+            # overwrite u with random init 用随机初始化覆盖u
+            u = normalize(torch.randn(num_output_dim), dim=0, eps=fn.eps)
+
+            
+            
+    def compute_weight(self, module, do_power_iteration):
+        # NB: 如果设置了 `do_power_iteration`，`u` 和 `v` 向量将在幂迭代中实时更新。这很重要，因为在 `DataParallel` forward 中，向量（作为缓冲区）从并行化模块广播到每个模块副本，这是一个动态创建的新模块对象。每个副本运行自己的谱范数幂迭代。所以简单地将更新的向量分配给这个函数运行的模块将导致更新永远丢失。下次复制并行化模块时，相同的随机初始化向量将被广播并使用！
+		
+        # 因此，为了使更改传播回来，我们依赖两个重要的行为（也通过测试强制执行）： 
+        # 1. 如果广播张量已经在正确的设备上，`DataParallel` 不会克隆存储； 并且它确保parallelized 模块已经在`device[0]` 上。
+        # 2. 如果 `out=` kwarg 中的输出张量具有正确的形状，它会 # 只填充值。
+        
+        # 因此，由于在所有设备上执行相同的幂迭代，只需就地更新张量将确保 `device[0]` 上的模块副本将更新并行化模块上的 _u 向量（通过共享存储）。
+       
+        #然而，在我们就地更新 `u` 和 `v` 之后，我们需要在使用它们来标准化权重之前克隆它们。
+        #这是为了支持通过两次前向传递进行反向传播，例如，GAN 训练中的常见模式：
+        #loss = D(real) - D(fake)
+        #否则，引擎将抱怨第一个前向后需要做的变量（即，`u` 和 `v` 向量）在第二个前向中改变。
+        
+        weight = getattr(module, self.name + '_orig')
+        u = getattr(module, self.name + '_u')
+        v = getattr(module, self.name + '_v')
+        sigma_log = getattr(module, self.name + '_sigma') # for logging
+
+        # 从 conv-module 获取设置（用于转置卷积）
+        stride = module.stride
+        padding = module.padding
+
+        if do_power_iteration: #幂迭代
+            with torch.no_grad():
+                for _ in range(self.n_power_iterations):
+                    v_s = conv_transpose2d(u.view(self.out_shape), weight, stride=stride,padding=padding, output_padding=0)
+                    # Note: out flag for in-place changes就地更改的 out 标志
+                    v = normalize(v_s.view(-1), dim=0, eps=self.eps, out=v)
+                    
+                    u_s = conv2d(v.view(self.input_dim), weight, stride=stride, padding=padding,
+                           bias=None)
+                    u = normalize(u_s.view(-1), dim=0, eps=self.eps, out=u)
+                if self.n_power_iterations > 0:
+                    # See above on why we need to clone 请参阅上文了解为什么我们需要克隆
+                    u = u.clone()
+                    v = v.clone()
+        weight_v = conv2d(v.view(self.input_dim), weight, stride=stride, padding=padding,
+                           bias=None)
+        weight_v = weight_v.view(-1)
+        sigma = torch.dot(u.view(-1), weight_v)  
+        # enforce spectral norm only as constraint 仅将谱范数强制为约束
+        factorReverse = torch.max(torch.ones(1).to(weight.device),
+                                  sigma / self.coeff)
+        # for logging
+        sigma_log.copy_(sigma.detach())
+
+        # rescaling
+        weight = weight / (factorReverse + 1e-5)  # for stability
+        return weight
+```
+
+
+
 
 
 
@@ -965,6 +1096,10 @@ $$
 **Toy Densities**
 
 我们使用了 100 个残差块，其中每个残差连接是一个具有状态大小 2-64-64-64-2 的多层感知器和 ELU 非线性(Clevert，2015)。我们在每次残差块之后都使用 ActNorm (Glow) 。通过在训练期间构造完整的雅可比矩阵来精确计算对数密度的变化可视化。
+
+
+
+
 
 
 

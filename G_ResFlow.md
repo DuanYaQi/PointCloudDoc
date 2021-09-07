@@ -4,6 +4,981 @@ NIPS 2019
 
 
 
+## Code
+
+```bash
+python train_img_cifar10.py --data cifar10 --actnorm True --save experiments/cifar10
+```
+
+
+
+```python
+# coeff: contraction coefficient for linear layers / desired lipschitz constant
+# n_power_iter: number of iterations for spectral normalization
+# numTraceSamples: number of samples used for trace estimation
+# numSeriesTerms: number of terms used in power series for matrix log
+# powerIterSpectralNorm: number of power iterations used for spectral norm
+# weight_decay: coefficient for weight decay
+# inj_pad: initial inj padding
+# resume: path to latest checkpoint
+```
+
+
+
+### LogitTransform
+
+lib\layers\elemwise.py\LogitTransform
+
+```python
+class LogitTransform(nn.Module):
+    """
+    The proprocessing step used in Real NVP:
+    y = sigmoid(x) - a / (1 - 2a)
+    x = logit(a + (1 - 2a)*y)
+    """
+```
+
+resflow:
+$$
+y = \frac{1}{1+e^{-x}} - \frac{a}{1-2a}\\
+x = logit(a + (1-2a)y)
+$$
+iresnet: (a=0)
+$$
+y = \frac{1}{1 + e^{-x}}\\
+x = \text{logit}(y)
+$$
+
+
+
+
+
+
+### ActNormNd
+
+Glow 中提出了名为 Actnorm 的层来取代 BN。不过，所谓 Actnorm 层事实上只不过是 NICE 中的尺度变换层的一般化，也就是缩放平移变换 
+$$
+\boldsymbol{\hat{z}}=\frac{\boldsymbol{z} - \boldsymbol{\mu}}{\boldsymbol{\sigma}}
+$$
+其中 $μ$, $σ$ 都是训练参数。Glow 在论文中提出的创新点是用初始的 batch 的均值和方差去初始化 $μ$, $σ$ 这两个参数，但事实上所提供的源码并没有做到这一点，纯粹是零初始化。缩放平移的加入，确实有助于更好地训练模型。而且，由于 Actnorm 的存在，仿射耦合层的尺度变换已经显得不那么重要了。
+
+
+
+---
+
+激活归一化层，即 Actnorm，使用可学习尺度 $\mu \in \mathbb{R}^D$ 和偏差  $\sigma \in \mathbb{R}^D$ 执行逐通道归一化，以提高训练稳定性，如下所示：
+$$
+h^{l+1} = \frac{h^l-\mu}{\sigma}
+$$
+可以将 Actnorm 为每个通道上的线性缩放层。它的对数行列式可以计算为 $\log|\det \frac{\partial f_{\theta}^{l}} {\partial h^l} |$  。上式的逆过程表示为
+$$
+h^l = \sigma  h^{l+1} + \mu
+$$
+
+
+---
+
+Actnorm 操作实际就是把输入的各个通道归一化为 0 均值，单位方差的通道数据后，进行线性变换。其操作如下:
+
+$$
+y=s\times x+b
+$$
+线性变换的逆变换为:
+
+$$
+x=\frac{y-b}{s}
+$$
+其雅可比矩阵为 $\frac{\partial y}{\partial x} =s$ 。Log-determinant为 $h*w*\sum{log|s|}$
+
+
+
+---
+
+### iResBlock
+
+```
+iResBlock(dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+    (nnet): Sequential(
+    (0): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+    (1): Swish()
+    (2): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+    (3): Swish()
+    (4): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+    )
+)
+```
+
+
+
+**logdetgrad**
+
+```python
+g, logdetgrad = self._logdetgrad(x) #[8 3 32 32]
+
+def _logdetgrad(self, x):
+        """Returns g(x) and logdet|d(x+g(x))/dx|."""
+
+        with torch.enable_grad():
+            if self.n_dist == 'poisson':  #true
+                lamb = self.lamb.item() #2.0
+                sample_fn = lambda m: poisson_sample(lamb, m) #poisson sample function
+                rcdf_fn = lambda k, offset: poisson_1mcdf(lamb, k, offset) #possion 1mcdf function
+
+            if self.training:#true
+                if self.n_power_series is None: #true
+                    # Unbiased estimation.
+                    lamb = self.lamb.item()#2.0
+                    n_samples = sample_fn(self.n_samples) #1 > 1
+                    n_power_series = max(n_samples) + self.n_exact_terms #1 + 2 = 3 至少
+                    coeff_fn = lambda k: 1 / rcdf_fn(k, self.n_exact_terms) * \
+                        sum(n_samples >= k - self.n_exact_terms) / len(n_samples)
+
+            if not self.exact_trace:    #true            exactly trace estimator
+                ####################################
+                # Power series with trace estimator.
+                ####################################
+                vareps = torch.randn_like(x)
+
+                # Choose the type of estimator.
+                if self.training and self.neumann_grad: #true
+                    estimator_fn = neumann_logdet_estimator
+
+                # Do backprop-in-forward to save memory.
+                if self.training and self.grad_in_forward:  #true
+                    g, logdetgrad = mem_eff_wrapper(
+                        estimator_fn, self.nnet, x, n_power_series, vareps, coeff_fn, self.training)
+
+            if self.training and self.n_power_series is None:   #true
+                self.last_n_samples.copy_(torch.tensor(n_samples).to(self.last_n_samples))
+                estimator = logdetgrad.detach()
+                self.last_firmom.copy_(torch.mean(estimator).to(self.last_firmom))
+                self.last_secmom.copy_(torch.mean(estimator**2).to(self.last_secmom))
+            return g, logdetgrad.view(-1, 1)
+        
+        
+def poisson_sample(lamb, n_samples): #lamb = 2.0  均值方差为2
+    return np.random.poisson(lamb, n_samples)
+
+def poisson_1mcdf(lamb, k, offset): #lamb = 2.0
+    if k <= offset:
+        return 1.
+    else:
+        k = k - offset
+    """P(n >= k)"""
+    sum = 1.
+    for i in range(1, k):
+        sum += lamb**i / math.factorial(i)
+    return 1 - np.exp(-lamb) * sum
+```
+
+
+
+```python
+estimator_fn = neumann_logdet_estimator
+g, logdetgrad = mem_eff_wrapper(estimator_fn, self.nnet, x, n_power_series, vareps, coeff_fn, self.training)
+# self.nnet = Sequential(InducedNormConv2d() Swish() InducedNormConv2d() Swish()  InducedNormConv2d())
+# n_power_series = 4
+# vareps = randn
+# coeff_fn
+# self.training = true
+
+parser.add_argument('--', default=5, type=int, help='')
+parser.add_argument('--', default=5, type=int, help='')
+parser.add_argument('-', default=0., type=float, help='')
+
+def mem_eff_wrapper(estimator_fn, gnet, x, n_power_series, vareps, coeff_fn, training):
+
+    # We need this in order to access the variables inside this module,
+    # since we have no other way of getting variables along the execution path.
+    if not isinstance(gnet, nn.Module):
+        raise ValueError('g is required to be an instance of nn.Module.')
+
+    return MemoryEfficientLogDetEstimator.apply(
+        estimator_fn, gnet, x, n_power_series, vareps, coeff_fn, training, *list(gnet.parameters())
+    )
+
+
+
+#####################
+# Logdet Estimators
+#####################
+class MemoryEfficientLogDetEstimator(torch.autograd.Function):
+
+    @staticmethod
+    def forward(ctx, estimator_fn, gnet, x, n_power_series, vareps, coeff_fn, training, *g_params):
+        ctx.training = training #true
+        with torch.enable_grad():
+            x = x.detach().requires_grad_(True)
+            g = gnet(x)
+            ctx.g = g
+            ctx.x = x
+            logdetgrad = estimator_fn(g, x, n_power_series, vareps, coeff_fn, training)
+
+            if training:
+                grad_x, *grad_params = torch.autograd.grad(
+                    logdetgrad.sum(), (x,) + g_params, retain_graph=True, allow_unused=True
+                )
+                if grad_x is None:
+                    grad_x = torch.zeros_like(x)
+                ctx.save_for_backward(grad_x, *g_params, *grad_params)
+
+        return safe_detach(g), safe_detach(logdetgrad)
+```
+
+
+
+
+
+### InducedNormConv2d
+
+```python
+# 初始化 只是为了把u和v的shape确定下来，其中的conv2d操作只用来推到shape
+def _initialize_u_v(self):
+        with torch.no_grad():
+            domain, codomain = self.compute_domain_codomain()
+            if self.kernel_size == (1, 1): #false
+                self.u.resize_(self.out_channels).normal_(0, 1)
+                self.u.copy_(normalize_u(self.u, codomain))
+                self.v.resize_(self.in_channels).normal_(0, 1)
+                self.v.copy_(normalize_v(self.v, domain))
+            else: #true [3 3]
+                c, h, w = self.in_channels, int(self.spatial_dims[0].item()), int(self.spatial_dims[1].item()) # 3 32 32
+                with torch.no_grad():
+                    num_input_dim = c * h * w #3072
+                    self.v.resize_(num_input_dim).normal_(0, 1) #[3072]    0-1 normal distribution
+                    self.v.copy_(normalize_v(self.v, domain))
+                    # forward call to infer the shape
+                    u = F.conv2d(
+                        self.v.view(1, c, h, w), self.weight, stride=self.stride, padding=self.padding, bias=None
+                    )
+                    num_output_dim = u.shape[0] * u.shape[1] * u.shape[2] * u.shape[3] #1*512*32*32=524288
+                    # overwrite u with random init
+                    self.u.resize_(num_output_dim).normal_(0, 1) #[1 512 32 32]>524288
+                    self.u.copy_(normalize_u(self.u, codomain))
+
+            self.initialized.fill_(1) #change flag
+
+            # Try different random seeds to find the best u and v.
+            self.compute_weight(True)
+            best_scale = self.scale.clone()
+            best_u, best_v = self.u.clone(), self.v.clone()
+            if not (domain == 2 and codomain == 2):
+                for _ in range(10):
+                    if self.kernel_size == (1, 1):
+                        self.u.copy_(normalize_u(self.weight.new_empty(self.out_channels).normal_(0, 1), codomain))
+                        self.v.copy_(normalize_v(self.weight.new_empty(self.in_channels).normal_(0, 1), domain))
+                    else:
+                        self.u.copy_(normalize_u(torch.randn(num_output_dim).to(self.weight), codomain))
+                        self.v.copy_(normalize_v(torch.randn(num_input_dim).to(self.weight), domain))
+                    self.compute_weight(True, n_iterations=200)
+                    if self.scale > best_scale:
+                        best_u, best_v = self.u.clone(), self.v.clone()
+            self.u.copy_(best_u)
+            self.v.copy_(best_v)
+            
+            
+def compute_weight(self, update=True, n_iterations=None, atol=None, rtol=None):
+        if not self.initialized:
+            self._initialize_u_v()
+
+        if self.kernel_size == (1, 1): #false
+            return self._compute_weight_1x1(update, n_iterations, atol, rtol)
+        else: #true [3 3]
+            return self._compute_weight_kxk(update, n_iterations, atol, rtol)
+        
+
+def forward(self, input):
+        if not self.initialized: self.spatial_dims.copy_(torch.tensor(input.shape[2:4]).to(self.spatial_dims)) #self.spatial_dims [32 32]
+        weight = self.compute_weight(update=False)
+        return F.conv2d(input, weight, self.bias, self.stride, self.padding, 1, 1)
+    
+    
+
+```
+
+
+
+
+
+
+
+---
+
+### 网络架构
+
+```python
+ResidualFlow(
+  (init_layer): LogitTransform(0.05)
+  (transforms): ModuleList(
+    (0): StackediResBlocks(
+      (chain): ModuleList(
+        (0): LogitTransform(0.05)
+        (1): ActNorm2d(3)
+        (2): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (1): Swish()
+            (2): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (3): Swish()
+            (4): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (3): ActNorm2d(3)
+        (4): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (5): ActNorm2d(3)
+        (6): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (7): ActNorm2d(3)
+        (8): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (9): ActNorm2d(3)
+        (10): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (11): ActNorm2d(3)
+        (12): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (13): ActNorm2d(3)
+        (14): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (15): ActNorm2d(3)
+        (16): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (17): ActNorm2d(3)
+        (18): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (19): ActNorm2d(3)
+        (20): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (21): ActNorm2d(3)
+        (22): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (23): ActNorm2d(3)
+        (24): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (25): ActNorm2d(3)
+        (26): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (27): ActNorm2d(3)
+        (28): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (29): ActNorm2d(3)
+        (30): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (31): ActNorm2d(3)
+        (32): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(3, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+          
+        (33): ActNorm2d(3)
+        (34): SqueezeLayer()
+      )
+    )
+      
+      
+      
+    (1): StackediResBlocks(
+      (chain): ModuleList(
+        (0): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (1): ActNorm2d(12)
+        (2): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (3): ActNorm2d(12)
+        (4): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (5): ActNorm2d(12)
+        (6): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (7): ActNorm2d(12)
+        (8): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (9): ActNorm2d(12)
+        (10): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (11): ActNorm2d(12)
+        (12): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (13): ActNorm2d(12)
+        (14): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (15): ActNorm2d(12)
+        (16): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (17): ActNorm2d(12)
+        (18): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (19): ActNorm2d(12)
+        (20): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (21): ActNorm2d(12)
+        (22): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (23): ActNorm2d(12)
+        (24): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (25): ActNorm2d(12)
+        (26): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (27): ActNorm2d(12)
+        (28): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (29): ActNorm2d(12)
+        (30): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(12, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 12, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (31): ActNorm2d(12)
+        (32): SqueezeLayer()
+      )
+    )
+      
+      
+    (2): StackediResBlocks(
+      (chain): ModuleList(
+        (0): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (1): ActNorm2d(48)
+        (2): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (3): ActNorm2d(48)
+        (4): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (5): ActNorm2d(48)
+        (6): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (7): ActNorm2d(48)
+        (8): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (9): ActNorm2d(48)
+        (10): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (11): ActNorm2d(48)
+        (12): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (13): ActNorm2d(48)
+        (14): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (15): ActNorm2d(48)
+        (16): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (17): ActNorm2d(48)
+        (18): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (19): ActNorm2d(48)
+        (20): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (21): ActNorm2d(48)
+        (22): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (23): ActNorm2d(48)
+        (24): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (25): ActNorm2d(48)
+        (26): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (27): ActNorm2d(48)
+        (28): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (29): ActNorm2d(48)
+        (30): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): Sequential(
+            (0): Swish()
+            (1): InducedNormConv2d(48, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (2): Swish()
+            (3): InducedNormConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            (4): Swish()
+            (5): InducedNormConv2d(512, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+          )
+        )
+        (31): ActNorm2d(48)
+        (32): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): FCNet(
+            (nnet): Sequential(
+              (0): Swish()
+              (1): InducedNormLinear(in_features=3072, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (2): Swish()
+              (3): InducedNormLinear(in_features=128, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (4): Swish()
+              (5): InducedNormLinear(in_features=128, out_features=3072, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            )
+          )
+        )
+        (33): FCWrapper(
+          (fc_module): ActNorm1d(3072)
+        )
+        (34): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): FCNet(
+            (nnet): Sequential(
+              (0): Swish()
+              (1): InducedNormLinear(in_features=3072, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (2): Swish()
+              (3): InducedNormLinear(in_features=128, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (4): Swish()
+              (5): InducedNormLinear(in_features=128, out_features=3072, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            )
+          )
+        )
+        (35): FCWrapper(
+          (fc_module): ActNorm1d(3072)
+        )
+        (36): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): FCNet(
+            (nnet): Sequential(
+              (0): Swish()
+              (1): InducedNormLinear(in_features=3072, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (2): Swish()
+              (3): InducedNormLinear(in_features=128, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (4): Swish()
+              (5): InducedNormLinear(in_features=128, out_features=3072, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            )
+          )
+        )
+        (37): FCWrapper(
+          (fc_module): ActNorm1d(3072)
+        )
+        (38): iResBlock(
+          dist=poisson, n_samples=1, n_power_series=None, neumann_grad=True, exact_trace=False, brute_force=False
+          (nnet): FCNet(
+            (nnet): Sequential(
+              (0): Swish()
+              (1): InducedNormLinear(in_features=3072, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (2): Swish()
+              (3): InducedNormLinear(in_features=128, out_features=128, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+              (4): Swish()
+              (5): InducedNormLinear(in_features=128, out_features=3072, bias=True, coeff=0.98, domain=2.00, codomain=2.00, n_iters=None, atol=0.001, rtol=0.001, learnable_ord=False)
+            )
+          )
+        )
+        (39): FCWrapper(
+          (fc_module): ActNorm1d(3072)
+        )
+      )
+    )
+  )
+)
+```
+
+
+
+
+
 ---
 
 ## Abstract
