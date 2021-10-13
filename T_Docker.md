@@ -8,7 +8,7 @@
 | tensorflow/tensorflow:1.13.2-gpu-py3 |                 PU-Net<br>SampleNet<br>PUGeo                 |   cuda-10.0 + python3.6 + tensorflow_gpu-1.13.1(python3.6)   |
 | ecnet:1.3.0-gpu                      |                            EC-Net                            | cuda-8.0 + python2.7 + python3.5 + tensorflow_gpu-1.3.0(python2.7) |
 | nvidia/cudagl:duan                   | latent_3d_points_Pytorch <br>pointnet.pytorch<br> pytorch-NICE<br>MSN | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
-| nvidia/cudagl:10.2-devel-ubuntu18.04 |                           PU-Flow                            | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
+| nvidia/cudagl:10.2-devel-ubuntu18.04 |                PU-Flow<br>iResNet<br>ResFlow                 | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
 | tensorflow/pu-gan:latest             |                     PU-GAN<br/>pypoisson                     | cuda-9.0 + python2.7 + python3.5 + python3.6 + tensorflow_gpu-1.11.0(python3.6) |
 
 
@@ -408,6 +408,10 @@ service docker start
 # docker info | grep "Docker Root Dir"
 Docker Root Dir: /data/docker
 ```
+
+
+
+
 
 
 

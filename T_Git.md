@@ -202,6 +202,16 @@ ssh-keygen -t rsa –C “youremail@example.com”
 
 
 
+---
+
+## 第三方库
+
+```shell
+git submodule update --init --recursive --remote
+```
+
+
+
 
 
 

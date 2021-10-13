@@ -4,6 +4,29 @@ NIPS 2019
 
 
 
+
+
+```python
+/usr/local/lib/python3.6/dist-packages/pytorch_lightning/utilities/distributed.py:45: UserWarning: you defined a validation_step but have no val_dataloader. Skipping validation loop
+  warnings.warn(*args, **kwargs)
+
+
+
+/home/PU-INN/utils/optimizers.py:88: UserWarning: This overload of add_ is deprecated:
+        add_(Number alpha, Tensor other)
+Consider using one of the following signatures instead:
+        add_(Tensor other, *, Number alpha) (Triggered internally at  /pytorch/torch/csrc/utils/python_arg_parser.cpp:882.)
+  exp_avg.mul_(beta1).add_(1 - beta1, grad)
+
+
+/usr/local/lib/python3.6/dist-packages/pytorch_lightning/utilities/distributed.py:45: UserWarning: training_step returned None if it was on purpose, ignore this warning...
+  warnings.warn(*args, **kwargs)
+```
+
+
+
+
+
 ## Code
 
 ```bash

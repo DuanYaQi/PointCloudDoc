@@ -478,6 +478,76 @@ FP64, FP32, FP16, BFLOAT16, TF32, and other members of the ZOO
 
 
 
+----
+
+# 浅谈深度学习:如何计算模型以及中间变量的显存占用大小
+
+https://oldpan.me/archives/how-to-calculate-gpu-memory
+
+**清空中间变量**，**优化代码**，**减少batch**，等等等等，都能够减少显存溢出的风险。
+
+
+
+
+
+---
+
+# 如何在Pytorch中精细化利用显存
+
+https://oldpan.me/archives/how-to-use-memory-pytorch
+
+**估测模型所占的内存**
+
+模型所占的显存无非是这两种：
+
+- 模型权重参数
+- 模型所储存的中间变量
+
+
+
+**跟踪显存使用情况**
+
+可以通过 `pynvml` 这个Nvidia的Python环境库和Python的垃圾回收工具，可以实时地打印我们使用的显存以及哪些Tensor使用了我们的显存。
+
+
+
+
+
+
+
+
+
+---
+
+# 再次浅谈Pytorch中的显存利用问题(附完善显存跟踪代码)
+
+https://oldpan.me/archives/pytorch-gpu-memory-usage-track
+
+
+
+在深度探究前先了解下我们的输出信息，通过[Pytorch-Memory-Utils](https://github.com/Oldpan/Pytorch-Memory-Utils)工具，我们在使用显存的代码中间插入检测函数(如何使用见工具github页面和下文部分)，就可以输出类似于下面的信息，`At __main__ <module>: line 13 Total Used Memory:696.5 Mb`表示在当前行代码时所占用的显存，即在我们的代码中执行到13行的时候所占显存为695.5Mb。`At __main__ <module>: line 15 Total Used Memory:1142.0 Mb`表示程序执行到15行时所占的显存为1142.0Mb。两条数据之间表示所占显存的`tensor`变量。
+
+```python
+import torch
+import inspect
+
+from torchvision import models
+from gpu_mem_track import MemTracker  # 引用显存跟踪代码
+
+device = torch.device('cuda:0')
+
+frame = inspect.currentframe()     
+gpu_tracker = MemTracker(frame)      # 创建显存检测对象
+
+gpu_tracker.track()                  # 开始检测
+```
+
+
+
+
+
+
+
 ---
 
 # 深度学习工作站
