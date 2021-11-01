@@ -8,17 +8,18 @@
 | tensorflow/tensorflow:1.13.2-gpu-py3 |                 PU-Net<br>SampleNet<br>PUGeo                 |   cuda-10.0 + python3.6 + tensorflow_gpu-1.13.1(python3.6)   |
 | ecnet:1.3.0-gpu                      |                            EC-Net                            | cuda-8.0 + python2.7 + python3.5 + tensorflow_gpu-1.3.0(python2.7) |
 | nvidia/cudagl:duan                   | latent_3d_points_Pytorch <br>pointnet.pytorch<br> pytorch-NICE<br>MSN | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
-| nvidia/cudagl:10.2-devel-ubuntu18.04 |                           PU-Flow                            | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
+| nvidia/cudagl:10.2-devel-ubuntu18.04 |                PU-Flow<br>iResNet<br>ResFlow                 | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
 | tensorflow/pu-gan:latest             |                     PU-GAN<br/>pypoisson                     | cuda-9.0 + python2.7 + python3.5 + python3.6 + tensorflow_gpu-1.11.0(python3.6) |
 
 
 
 ```bash
-docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE -p 127.0.0.2:8097:8097 nvidia/cudagl:duan
+docker run --runtime=nvidia --rm -it -w /home -v /home/duan/windows/udata:/home/data/ -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE -p 127.0.0.2:8097:8097 nvidia/cudagl:10.2-devel-ubuntu18.04
 
 docker commit -p 432e298f0214 nvidia/cudagl:10.2-devel-ubuntu18.04
 
-
+# --runtime=nvidia 开启nvidia模式
+# -w /home 起始目录
 # -v /home/duan/windows/udata:/home/data/ 映射目录
 # -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e GDK_SCALE -e GDK_DPI_SCALE 可视化显示  宿主机需要xhost +
 
@@ -408,6 +409,10 @@ service docker start
 # docker info | grep "Docker Root Dir"
 Docker Root Dir: /data/docker
 ```
+
+
+
+
 
 
 

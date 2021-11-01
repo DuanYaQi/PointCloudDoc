@@ -202,6 +202,16 @@ ssh-keygen -t rsa –C “youremail@example.com”
 
 
 
+---
+
+## 第三方库
+
+```shell
+git submodule update --init --recursive --remote
+```
+
+
+
 
 
 
@@ -574,5 +584,19 @@ git config --global http.sslVerify false
 
 ```
 
+```
+
+
+
+
+
+## 13. The TLS connection was non-properly terminated.
+
+```python
+在docker下用代理
+
+//8889是 v2rayN的http端口号
+git config --global http.proxy 'http://127.0.0.1:8889'
+git config --global https.proxy 'http://127.0.0.1:8889'
 ```
 

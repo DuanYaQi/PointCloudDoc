@@ -1,5 +1,7 @@
 # PytorchAPI
 
+https://pytorch.org/docs/stable/
+
 ## 1. Torch-
 
 ### 1.1. Tensor-张量
@@ -646,6 +648,26 @@ torch.randn(2, 3)
 
 
 
+
+
+#### torch.randn_like()-固定格式的正态分布
+
+```python
+torch.randn_like(input, *, dtype=None, layout=None, device=None, requires_grad=False, memory_format=torch.preserve_format) → Tensor
+```
+
+返回一个大小相同的张量，其中`input`填充了来自均值为 0 且方差为 1 的正态分布的随机数。
+
+**参数**
+
+- input – 的大小将决定输出张量的大小。
+
+
+
+
+
+
+
 #### torch.manual_seed()-固定种子
 
 ```python
@@ -1026,7 +1048,55 @@ relu()-relu激活函数
 softplus()-Softplusji激活函数
 maxpool2d()-2维最大池化
 Linear()-线性转换
+normalize()-归一化
 ```
+
+
+
+### 3.1. normalize()-归一化
+
+```python
+torch.nn.functional.normalize(input, p=2.0, dim=1, eps=1e-12, out=None)
+
+- input – input tensor of any shape
+- p – the exponent value in the norm formulation. Default: 2
+- dim – the dimension to reduce. Default: 1
+- eps – small value to avoid division by zero. Default: 1e-12
+- out – the output tensor. If `out` is used, this operation won’t be differentiable.
+```
+
+对 $L_p$ 执行指定维度上的归一化
+
+For a tensor `input` of sizes, each -element vector $v$ along dimension `dim` is transformed as
+
+对于尺寸为  $(n_0, ..., n_{dim}, ..., n_k)$  的张量 input， 向量 $v$ 沿维度 dim 的每个 $n_{dim}$-元素被转换为
+$$
+v = \frac{v}{\max(\lVert v \rVert_p, \epsilon)}
+$$
+With the default arguments it uses the 欧几里得范数 over vectors along dimension 1 for normalization.
+
+
+
+### 3.2. conv_transpose2d()-反卷积
+
+```python
+torch.nn.functional.conv_transpose2d(input, weight, bias=None, stride=1, padding=0, output_padding=0, groups=1, dilation=1)
+
+# 在由多个输入平面组成的输入图像上应用 2D 转置卷积算子，有时也称为“反卷积”。
+
+- input – input tensor of shape (minibatch,in_channels,iH,iW)   输入张量的形状
+- weight – filters of shape (in_channels, groups out_channels,kH,kW)  权重
+- bias – optional bias of shape (out_channels). Default: None         偏置
+- stride – the stride of the convolving kernel. Can be a single number or a tuple (sH, sW). Default: 1 步长
+- padding – dilation * (kernel_size - 1) - padding zero-padding will be added to both sides of each dimension in the input. Can be a single number or a tuple (padH, padW). Default: 0 #填充
+- output_padding – additional size added to one side of each dimension in the output shape. Can be a single number or a tuple (out_padH, out_padW). Default: 0	#输出填充
+- groups – split input into groups, in_channels should be divisible by the number of groups. Default: 1
+- dilation – the spacing between kernel elements. Can be a single number or a tuple (dH, dW). Default: 1
+```
+
+
+
+
 
 
 
@@ -1118,6 +1188,10 @@ torch.utils.data.random_split(dataset: torch.utils.data.dataset.Dataset[T],
 
 ## 5. torchvision-计算机视觉库
 
+https://pytorch-cn.readthedocs.io/zh/latest/torchvision/
+
+
+
 ### 5.1. datasets-数据集
 
 #### MNIST-手写数字
@@ -1131,6 +1205,191 @@ class torchvision.datasets.MNIST(root: str, train: bool = True, transform: Union
 - download (bool, optional) – 如果为true，则从Internet下载数据集并将其放在根目录中。 如果数据集已经下载，则不会再次下载。
 - transform (callable, optional) – 接受PIL图像并返回转换后版本的函数/转换。
 - target_transform (callable, optional) – 接受目标并对其进行转换的函数/转换。
+```
+
+
+
+
+
+
+
+---
+
+### 5.2. transform-变换
+
+对PIL.Image进行变换
+
+
+
+#### Compose-组合
+
+```python
+class torchvision.transforms.Compose(transforms)
+```
+
+将多个`transform`组合起来使用。
+
+`transforms`： 由`transform`构成的列表. 例子：
+
+```python
+transforms.Compose([
+     transforms.CenterCrop(10),
+     transforms.ToTensor(),
+ ])
+```
+
+
+
+#### Scale-尺度变换
+
+```python
+class torchvision.transforms.Scale(size, interpolation=2)
+```
+
+将输入的`PIL.Image`重新改变大小成给定的`size`，`size`是最小边的边长。举个例子，如果原图的`height>width`,那么改变大小后的图片大小是`(size*height/width, size)`。
+
+```python
+from torchvision import transforms
+from PIL import Image
+crop = transforms.Scale(12)
+img = Image.open('test.jpg')
+
+print(type(img))
+print(img.size)
+
+croped_img=crop(img)
+print(type(croped_img))
+print(croped_img.size)
+```
+
+
+
+#### Pad-填充
+
+```python
+class torchvision.transforms.Pad(padding, fill=0)
+```
+
+将给定的`PIL.Image`的所有边用给定的`pad value`填充。 `padding：`要填充多少像素 `fill：`用什么值填充 例子：
+
+```python
+from torchvision import transforms
+from PIL import Image
+padding_img = transforms.Pad(padding=10, fill=0)
+img = Image.open('test.jpg')
+
+print(type(img))
+print(img.size)
+
+padded_img=padding(img)
+print(type(padded_img))
+print(padded_img.size)
+```
+
+
+
+#### RandomCrop-切割
+
+```python
+class torchvision.transforms.RandomCrop(size, padding=0)
+```
+
+切割中心点的位置随机选取。size可以是tuple也可以是Integer。
+
+
+
+#### RandomHorizontalFlip-随机水平翻转
+
+```python
+class torchvision.transforms.RandomHorizontalFlip
+```
+
+随机水平翻转给定的`PIL.Image`,概率为`0.5`。即：一半的概率翻转，一半的概率不翻转。
+
+
+
+#### ToTensor-转为张量
+
+把一个取值范围是`[0,255]`的`PIL.Image`或者`shape`为`(H,W,C)`的`numpy.ndarray`，转换成形状为`[C,H,W]`，取值范围是`[0,1.0]`的`torch.FloadTensor`
+
+```python
+data = np.random.randint(0, 255, size=300)
+img = data.reshape(10,10,3)
+print(img.shape)
+img_tensor = transforms.ToTensor()(img) # 转换成tensor
+print(img_tensor)
+```
+
+
+
+#### Normalize-正则化
+
+```python
+class torchvision.transforms.Normalize(mean, std)
+```
+
+给定均值：(R,G,B) 方差：（R，G，B），将会把Tensor正则化。即：Normalized_image=(image-mean)/std。
+
+
+
+
+
+---
+
+## 6. torch.grad-梯度
+
+```python
+torch.autograd.no_grad
+```
+
+禁用梯度计算的上下文管理器。
+
+当您确定不会调用`Tensor.backward()`. 它将减少原本需要 `requires_grad=True` 的计算的内存消耗。
+
+在这种模式下，即使输入具有 `requires_grad=True`，每次计算的结果也会有 `requires_grad=False`。
+
+这个上下文管理器是线程本地的；它不会影响其他线程中的计算。
+
+也起到装饰器的作用。（确保用括号实例化）
+
+
+
+在 `with torch.no_grad` 环境下，learning 是被禁止的。
+
+
+
+
+
+`model.eval()`，pytorch会自动把BN和DropOut固定住，而用训练好的值
+
+`torch.no_grad()`：在测试时不进行梯度的计算,也不会进行反向传播，这样可以在测试时有效减小显存的占用，以免发生显存溢出（OOM）
+
+`torch.no_grad()` 会关闭自动求导引擎， 因此能节省显存，和加速。
+
+
+
+
+
+**no_grad与detach有异曲同工之妙，都是逃避autograd的追踪。**
+
+```python
+#训练阶段
+for epoch in range(max_epoch):
+   model.train()
+   dataiter = iter(dataloader)
+   for step in range(step_per_epoch):
+        data= next(dataiter) #假设包含有 images，label数据
+        #  因为images ,labels是输入数据，我们可以使用with torch.no_grad()停止对他们的求导
+        #   当然不使用也是可以的，使用的化可以加快gpu速度和减少占有
+        with torch.no_grad():
+             images = data[0]
+             label = data[1]
+#测试阶段
+model.eval()
+with  torch.no_grad():
+      ....
+#在测试阶段使用with torch.no_grad()可以对整个网络都停止自动求导，可以大大加快速度，也可以使用大的batch_size来测试
+#当然，也可以不使用with torch.no_grad
 ```
 
 
@@ -1453,11 +1712,61 @@ while True:
 
 ## random
 
-#### shuffle
+### poisson
+
+是离散分布，它估计一个事件在指定时间内可能发生的次数。如果一个人一天吃两次饭，他吃三次饭的可能性有多大?
+$$
+P(k;\lambda) = \frac{\lambda^k}{k!}e^{-\lambda}，k=0,1,\cdots
+$$
+对于具有预期间隔 $λ$ 的事件，泊松分布 $P(k; λ)$ 描述了在观察间隔 $λ$ 内发生 $k$ 个事件的概率。泊松分布的期望和方差均为 $\lambda$
+
+
+
+在实际事例中，当一个随机事件，例如某电话交换台收到的呼叫、来到某公共汽车站的乘客、某放射性物质发射出的粒子、显微镜下某区域中的白血球等等，以**固定的平均瞬时速率** $λ$（或称密度）**随机且独立**地出现时，那么这个事件在单位时间（面积或体积）内出现的次数或个数就近似地服从泊松分布 $P(λ)$。
+
+
+
+
+
+泊松分布和二项分布的区别：差异非常细微，因为二项式分布用于离散试验，而泊松分布用于连续试验。
+
+对于一个足够大的泊松分布，类似于二项分布，它会变得类似于具有一定 std 和均值的正态分布。
+
+当二项分布的 $n$ 很大而 $p$ 很小时，泊松分布可作为二项分布的近似，其中 $λ=np$。通常当 $n≧20,p≦0.05$ 时，就可以用泊松公式近似得计算。
+
+
 
 ```python
-np.random.shuffle(list)
+# 从泊松分布绘制样本
+np.random.poisson(lamb, n_samples)
+
+# 参数：
+lam：float，期望间隔，应为≥0。
+size：int或tuple的整数，可选。输出形状。例如（m， n， k）默认值为None，在这种情况下返回单个值。
+
+# 返回：
+samples：ndarray或scalar。绘制的样本。
+```
+
+
+
+二项分布
+$$
+P\{X=k\} = C_n^{k}p^k(1-p)^{n-k}\\
+C_n^{k} = \frac{n!}{k!(n-k)!}
+\\
+E(X) = np\\
+D(X)=np(1-p)
+$$
+
+
+
+
+### shuffle
+
+```python
 # 随机打乱一个列表list
+np.random.shuffle(list)
 ```
 
 

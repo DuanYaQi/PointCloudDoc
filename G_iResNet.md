@@ -6,17 +6,292 @@ ICML2019
 
 
 
+```shell
+python -m visdom.server # 开启visdom服务  http://127.0.0.2:8097/
+#开启容器时加参数 -p 127.0.0.2:8097:8097 
+```
+
 
 
 ```sh
+# dens_set_cifar
 python CIFAR_main.py --nBlocks 16 16 16 --nStrides 1 2 2 --nChannels 512 512 512 --coeff 0.9 -densityEstimation -multiScale --lr 0.003 --weight_decay 0. --numSeriesTerms 5 --dataset cifar10 --batch 128 --warmup_epochs 1 --save_dir ./results/dens_est_cifar --vis_server your.server.local --vis_port your_port_nr
 ```
 
 
 
 ```sh
+# classify_cifar
 python ./CIFAR_main.py --nBlocks 7 7 7 --nStrides 1 2 2 --nChannels 32 64 128 --coeff 0.9 --batch 128 --dataset cifar10 --init_ds 1 --inj_pad 13 --powerIterSpectralNorm 1 --save_dir ./results/zca_clf_full_cifar10_wrn22_inj_pad_coeff09 --nonlin elu --optimizer sgd --vis_server your.server.local --vis_port your_port_nr
 ```
+
+
+
+
+
+
+
+## Code
+
+```python
+parser = argparse.ArgumentParser(description='Train i-ResNet/ResNet on Cifar')
+parser.add_argument('-densityEstimation', '--densityEstimation', dest='densityEstimation',
+                    action='store_true', help='perform density estimation')
+parser.add_argument('--optimizer', default="adamax", type=str, help="optimizer", choices=["adam", "adamax", "sgd"])
+parser.add_argument('--lr', default=0.003, type=float, help='learning rate')
+parser.add_argument('--coeff', default=0.9, type=float, help='contraction coefficient for linear layers')
+parser.add_argument('--numTraceSamples', default=1, type=int, help='number of samples used for trace estimation')
+parser.add_argument('--numSeriesTerms', default=5, type=int, help='number of terms used in power series for matrix log')
+parser.add_argument('--powerIterSpectralNorm', default=5, type=int, help='number of power iterations used for spectral norm')
+parser.add_argument('--weight_decay', default=0., type=float, help='coefficient for weight decay')
+parser.add_argument('--drop_rate', default=0.1, type=float, help='dropout rate')
+parser.add_argument('--batch', default=4, type=int, help='batch size')
+parser.add_argument('--init_batch', default=1024, type=int, help='init batch size')
+parser.add_argument('--init_ds', default=2, type=int, help='initial downsampling')
+parser.add_argument('--warmup_epochs', default=1, type=int, help='epochs for warmup')
+parser.add_argument('--inj_pad', default=0, type=int, help='initial inj padding')
+parser.add_argument('--epochs', default=200, type=int, help='number of epochs')
+parser.add_argument('--nBlocks', nargs='+', type=int, default=[16, 16, 16])
+parser.add_argument('--nStrides', nargs='+', type=int, default=[1, 2, 2])
+parser.add_argument('--nChannels', nargs='+', type=int, default=[512, 512, 512])
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                    help='evaluate model on validation set')
+parser.add_argument('-interpolate', '--interpolate', dest='interpolate', action='store_true', help='train iresnet')
+parser.add_argument('-drop_two', '--drop_two', dest='drop_two', action='store_true', help='2d dropout on')
+parser.add_argument('-nesterov', '--nesterov', dest='nesterov', action='store_true',
+                    help='nesterov momentum')
+parser.add_argument('-norm', '--norm', dest='norm', action='store_true',
+                    help='compute norms of conv operators')
+parser.add_argument('-analysisTraceEst', '--analysisTraceEst', dest='analysisTraceEst', action='store_true',
+                    help='analysis of trace estimation')
+parser.add_argument('-multiScale', '--multiScale', dest='multiScale', action='store_true',
+                    help='use multiscale')
+parser.add_argument('-fixedPrior', '--fixedPrior', dest='fixedPrior', action='store_true',
+                    help='use fixed prior, default is learned prior')
+parser.add_argument('-noActnorm', '--noActnorm', dest='noActnorm', action='store_true',
+                    help='disable actnorm, default uses actnorm')
+parser.add_argument('--nonlin', default="elu", type=str, choices=["relu", "elu", "sorting", "softplus"])
+parser.add_argument('--dataset', default='cifar10', type=str, help='dataset')
+parser.add_argument('--save_dir', default="./results/dens_est_cifar", type=str, help='directory to save results')
+parser.add_argument('--vis_port', default=8097, type=int, help="port for visdom")
+parser.add_argument('--vis_server', default="localhost", type=str, help="server for visdom")
+parser.add_argument('--log_every', default=10, type=int, help='logs every x iters')
+parser.add_argument('-log_verbose', '--log_verbose', dest='log_verbose', action='store_true',
+                    help='verbose logging: sigmas, max gradient')
+parser.add_argument('-deterministic', '--deterministic', dest='deterministic', action='store_true',
+                    help='fix random seeds and set cuda deterministic')
+```
+
+
+
+### main.py
+
+```python
+# dens_est
+
+def main():
+	# transform
+    
+    # datasets
+    
+    # setup logging with visdom
+    
+    # dataloader
+    
+    # get multiscale network4
+    model = multiscale_iResNet(in_shape, #(3, 32, 32)
+                                       args.nBlocks, args.nStrides, args.nChannels,#[16 16 16] [1 2 2] [512 512 512]
+                                       args.init_ds == 2,
+                                       args.inj_pad, args.coeff, args.densityEstimation,#0 0.9 true
+                                       args.nClasses, #10
+                                       args.numTraceSamples, args.numSeriesTerms,#1 5
+                                       args.powerIterSpectralNorm,#5
+                                       actnorm=(not args.noActnorm),#false
+                                       learn_prior=(not args.fixedPrior),#false
+                                       nonlin=args.nonlin)#elu
+    
+```
+
+
+
+### conv_iResNet.py
+
+```python
+# 
+class multiscale_conv_iResNet(nn.Module):
+    def __init__(self, in_shape, nBlocks, nStrides, nChannels, init_squeeze=False, inj_pad=0,
+                 coeff=.9, density_estimation=False, nClasses=None,
+                 numTraceSamples=1, numSeriesTerms=1,
+                 n_power_iter=5,
+                 actnorm=True, learn_prior=True, nonlin="relu"):
+        super(multiscale_conv_iResNet, self).__init__()
+        assert len(nBlocks) == len(nStrides) == len(nChannels)
+        if init_squeeze:
+            self.init_squeeze = Squeeze(2)
+        else:
+            self.init_squeeze = None
+
+        if inj_pad > 0:
+            self.inj_pad = injective_pad(inj_pad)
+        else:
+            self.inj_pad = None
+
+        if init_squeeze:
+            in_shape = downsample_shape(in_shape)
+        in_shape = (in_shape[0] + inj_pad, in_shape[1], in_shape[2])  # adjust channels
+
+        self.nBlocks = nBlocks
+        self.density_estimation = density_estimation
+        self.nClasses = nClasses
+        # parameters for trace estimation
+        self.numTraceSamples = numTraceSamples if density_estimation else 0
+        self.numSeriesTerms = numSeriesTerms if density_estimation else 0
+        self.n_power_iter = n_power_iter
+
+        self.stack, self.in_shapes = self._make_stack(in_shape, nBlocks,
+                                                      nStrides, nChannels, numSeriesTerms, numTraceSamples,
+                                                      coeff, actnorm, n_power_iter, nonlin)
+        # make prior distribution
+        self._make_prior(learn_prior)
+        # make classifier
+        self._make_classifier(self.final_shape(), nClasses)
+        assert (nClasses is not None or density_estimation), "Must be either classifier or density estimator"
+```
+
+
+
+### SpectralNormConv
+
+$$
+\mathbf{W} = \dfrac{\mathbf{W}}{\sigma(\mathbf{W})} \\
+         \sigma(\mathbf{W}) = \max_{\mathbf{h}: \mathbf{h} \ne 0} \dfrac{\|\mathbf{W} \mathbf{h}\|_2}{\|\mathbf{h}\|_2}
+$$
+
+
+
+```python
+def spectral_norm_conv(module, coeff, input_dim, name='weight', n_power_iterations=1, eps=1e-12):
+    r"""将谱归一化应用于给定模块中的参数
+    谱归一化通过使用幂迭代方法计算的权重矩阵的谱范数重新缩放权重张量来稳定GAN中鉴别器的训练。如果权重张量的维数大于2，则在幂迭代法中将其重新整形为2D以获得谱范数。这是通过一个hook实现的，该hook在每个 :meth:`~Module.forward` 调用之前计算谱范数并重新调整权重。 
+    
+    Args:
+        module (nn.Module): 包含的模块
+        name (str, optional): 权重参数名称
+        n_power_iterations (int, optional): 计算谱范数的幂迭代次数
+        eps (float, optional): epsilon 在计算范数时的数值稳定性
+        dim (int, optional): 输出个数对应的维度，默认为0，当为1时，作为ConvTranspose1/2/3d实例的模块，
+    Returns:
+        The original module with the spectal norm hook 带有谱归一化hook的原始模块
+    Example::
+        >>> m = spectral_norm(nn.Linear(20, 40))
+        Linear (20 -> 40)
+        >>> m.weight_u.size()
+        torch.Size([20])
+    """
+    input_dim_4d = (1, input_dim[0], input_dim[1], input_dim[2])
+    SpectralNormConv.apply(module, coeff, input_dim_4d, name, n_power_iterations, eps)
+    return module
+```
+
+
+
+```python
+"""
+Conv2D 层的软谱归一化（未强制，仅 <= coeff）
+"""
+class SpectralNormConv(object):
+    # 每次 forward call 前后不变
+    #   u = normalize(W @ v)
+    # NB: 在初始化时，不强制执行此不变量
+
+    _version = 1
+    # At version 1:
+    #   made  `W` not a buffer,
+    #   added `v` as a buffer, and
+    #   made eval mode use `W = u @ W_orig @ v` rather than the stored `W`.
+
+    @staticmethod
+    def apply(module, coeff, input_dim, name, n_power_iterations, eps):
+        for k, hook in module._forward_pre_hooks.items():
+            if isinstance(hook, SpectralNormConv) and hook.name == name:
+                raise RuntimeError("Cannot register two spectral_norm hooks on "
+                                   "the same parameter {}".format(name))
+
+        fn = SpectralNormConv(coeff, input_dim, name, n_power_iterations, eps)
+        weight = module._parameters[name]
+
+        with torch.no_grad():
+            num_input_dim = input_dim[0]* input_dim[1]* input_dim[2]* input_dim[3]
+            v = normalize(torch.randn(num_input_dim), dim=0, eps=fn.eps)
+
+            # get settings from conv-module (for transposed convolution) 从 conv-module 获取设置（用于转置卷积）
+            stride = module.stride
+            padding = module.padding
+            # forward call to infer the shape 推断shape
+            u = conv2d(v.view(input_dim), weight, stride=stride, padding=padding,
+                               bias=None)
+            fn.out_shape = u.shape
+            num_output_dim = fn.out_shape[0]* fn.out_shape[1]* fn.out_shape[2]* fn.out_shape[3]
+            # overwrite u with random init 用随机初始化覆盖u
+            u = normalize(torch.randn(num_output_dim), dim=0, eps=fn.eps)
+
+            
+            
+    def compute_weight(self, module, do_power_iteration):
+        # NB: 如果设置了 `do_power_iteration`，`u` 和 `v` 向量将在幂迭代中实时更新。这很重要，因为在 `DataParallel` forward 中，向量（作为缓冲区）从并行化模块广播到每个模块副本，这是一个动态创建的新模块对象。每个副本运行自己的谱范数幂迭代。所以简单地将更新的向量分配给这个函数运行的模块将导致更新永远丢失。下次复制并行化模块时，相同的随机初始化向量将被广播并使用！
+		
+        # 因此，为了使更改传播回来，我们依赖两个重要的行为（也通过测试强制执行）： 
+        # 1. 如果广播张量已经在正确的设备上，`DataParallel` 不会克隆存储； 并且它确保parallelized 模块已经在`device[0]` 上。
+        # 2. 如果 `out=` kwarg 中的输出张量具有正确的形状，它会 # 只填充值。
+        
+        # 因此，由于在所有设备上执行相同的幂迭代，只需就地更新张量将确保 `device[0]` 上的模块副本将更新并行化模块上的 _u 向量（通过共享存储）。
+       
+        #然而，在我们就地更新 `u` 和 `v` 之后，我们需要在使用它们来标准化权重之前克隆它们。
+        #这是为了支持通过两次前向传递进行反向传播，例如，GAN 训练中的常见模式：
+        #loss = D(real) - D(fake)
+        #否则，引擎将抱怨第一个前向后需要做的变量（即，`u` 和 `v` 向量）在第二个前向中改变。
+        
+        weight = getattr(module, self.name + '_orig')
+        u = getattr(module, self.name + '_u')
+        v = getattr(module, self.name + '_v')
+        sigma_log = getattr(module, self.name + '_sigma') # for logging
+
+        # 从 conv-module 获取设置（用于转置卷积）
+        stride = module.stride
+        padding = module.padding
+
+        if do_power_iteration: #幂迭代
+            with torch.no_grad():
+                for _ in range(self.n_power_iterations):
+                    v_s = conv_transpose2d(u.view(self.out_shape), weight, stride=stride,padding=padding, output_padding=0)
+                    # Note: out flag for in-place changes就地更改的 out 标志
+                    v = normalize(v_s.view(-1), dim=0, eps=self.eps, out=v)
+                    
+                    u_s = conv2d(v.view(self.input_dim), weight, stride=stride, padding=padding,
+                           bias=None)
+                    u = normalize(u_s.view(-1), dim=0, eps=self.eps, out=u)
+                if self.n_power_iterations > 0:
+                    # See above on why we need to clone 请参阅上文了解为什么我们需要克隆
+                    u = u.clone()
+                    v = v.clone()
+        weight_v = conv2d(v.view(self.input_dim), weight, stride=stride, padding=padding,
+                           bias=None)
+        weight_v = weight_v.view(-1)
+        sigma = torch.dot(u.view(-1), weight_v)  
+        # enforce spectral norm only as constraint 仅将谱范数强制为约束
+        factorReverse = torch.max(torch.ones(1).to(weight.device),
+                                  sigma / self.coeff)
+        # for logging
+        sigma_log.copy_(sigma.detach())
+
+        # rescaling
+        weight = weight / (factorReverse + 1e-5)  # for stability
+        return weight
+```
+
+
 
 
 
@@ -821,6 +1096,10 @@ $$
 **Toy Densities**
 
 我们使用了 100 个残差块，其中每个残差连接是一个具有状态大小 2-64-64-64-2 的多层感知器和 ELU 非线性(Clevert，2015)。我们在每次残差块之后都使用 ActNorm (Glow) 。通过在训练期间构造完整的雅可比矩阵来精确计算对数密度的变化可视化。
+
+
+
+
 
 
 
