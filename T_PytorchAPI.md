@@ -1,5 +1,7 @@
 # PytorchAPI
 
+https://pytorch.org/docs/stable/
+
 ## 1. Torch-
 
 ### 1.1. Tensor-张量
@@ -1327,6 +1329,70 @@ class torchvision.transforms.Normalize(mean, std)
 ```
 
 给定均值：(R,G,B) 方差：（R，G，B），将会把Tensor正则化。即：Normalized_image=(image-mean)/std。
+
+
+
+
+
+---
+
+## 6. torch.grad-梯度
+
+```python
+torch.autograd.no_grad
+```
+
+禁用梯度计算的上下文管理器。
+
+当您确定不会调用`Tensor.backward()`. 它将减少原本需要 `requires_grad=True` 的计算的内存消耗。
+
+在这种模式下，即使输入具有 `requires_grad=True`，每次计算的结果也会有 `requires_grad=False`。
+
+这个上下文管理器是线程本地的；它不会影响其他线程中的计算。
+
+也起到装饰器的作用。（确保用括号实例化）
+
+
+
+在 `with torch.no_grad` 环境下，learning 是被禁止的。
+
+
+
+
+
+`model.eval()`，pytorch会自动把BN和DropOut固定住，而用训练好的值
+
+`torch.no_grad()`：在测试时不进行梯度的计算,也不会进行反向传播，这样可以在测试时有效减小显存的占用，以免发生显存溢出（OOM）
+
+`torch.no_grad()` 会关闭自动求导引擎， 因此能节省显存，和加速。
+
+
+
+
+
+**no_grad与detach有异曲同工之妙，都是逃避autograd的追踪。**
+
+```python
+#训练阶段
+for epoch in range(max_epoch):
+   model.train()
+   dataiter = iter(dataloader)
+   for step in range(step_per_epoch):
+        data= next(dataiter) #假设包含有 images，label数据
+        #  因为images ,labels是输入数据，我们可以使用with torch.no_grad()停止对他们的求导
+        #   当然不使用也是可以的，使用的化可以加快gpu速度和减少占有
+        with torch.no_grad():
+             images = data[0]
+             label = data[1]
+#测试阶段
+model.eval()
+with  torch.no_grad():
+      ....
+#在测试阶段使用with torch.no_grad()可以对整个网络都停止自动求导，可以大大加快速度，也可以使用大的batch_size来测试
+#当然，也可以不使用with torch.no_grad
+```
+
+
 
 
 

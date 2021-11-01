@@ -18,7 +18,8 @@
 | sudo apt-get clean            | 清理安装软件时候留下的缓存程序软件包                         |
 | sudo apt-get autoremove       | 卸载不需要的依赖关系   /一般不用                             |
 |                               |                                                              |
-| sudo dpkg -l                  | 查看已经安装的软件                                           |
+| sudo dpkg -i xxx              | 安装xxx软件  .deb                                            |
+| sudo dpkg -l xxx              | 查看已经安装的软件                                           |
 | sudo dpkg -r **xxx**          | 卸载xxx                                                      |
 |                               |                                                              |
 | locate **xxx**                | 一般寻找**文件**xxx 数据搜寻 搜索数据库（/var/lib/locatedb）<br>比find -name快。使用前，先使用**updatedb**命令，手动更新数据库 |
@@ -56,6 +57,8 @@
 |                               |                                                              |
 |                               |                                                              |
 |                               |                                                              |
+
+
 
 
 
@@ -437,3 +440,35 @@ https://www.cnblogs.com/zifeiy/p/9142086.html
 
 https://blog.csdn.net/u014436243/article/details/89952671
 
+
+
+
+
+### 安装anydesk
+
+步骤1.首先，通过apt在终端中运行以下命令来确保所有系统软件包都是最新的。
+
+```shell
+sudo apt update
+sudo apt upgrade
+```
+
+步骤2.在Ubuntu 20.04上安装AnyDesk。
+
+现在，我们将存储库密钥添加到“受信任的软件提供者”列表中，然后通过运行以下命令将PPA添加到您的系统中：
+
+```shell
+wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | sudo apt-key add - 
+sudo echo "deb http://deb.anydesk.com/ all main" > /etc/apt/sources.list.d/anydesk.list
+```
+
+然后，运行以下命令从存储库中安装Anydesk及其依赖项：
+
+```shell
+sudo apt update 
+sudo apt install anydesk
+```
+
+步骤3.在Ubuntu系统上访问AnyDesk。
+
+成功安装后，您可以通过在应用程序启动器中键入Anydesk来启动。现在，您可能需要为无人参与访问设置密码。这将在您的系统上设置一个固定的密码，该密码可随时用于连接。
