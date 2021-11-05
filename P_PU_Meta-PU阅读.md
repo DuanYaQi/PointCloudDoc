@@ -62,7 +62,7 @@ To demonstrate the effectiveness and ﬂexibility of our method, we compare it w
 
 #### Overview
 
-​	骨干上采样网络包含五个基本模块，它们在图2中以不同的颜色区分。输入点云首先通过点卷积神经网络（CNN）和几个RGC块为每个质心及其邻居提取特征。在这些RGC块中，meta-RGC块是特殊的。 给定的输入 $R$ ，由 meta-sub-network 动态生成meta-RGC块权重。因此，由该meta-RGC块提取的特征将调整为给定的比例因子。在RGC块之后，展开一个非池化层以输出$ \lfloor R_{\max } \times n\rfloor $ 点，其中 $R_{max}$ 表示我们的网络支持的最大比例因子，默认情况下 $R_{max} = 16$。 之后，采用最远采样块从 $ \lfloor R_{\max } \times n\rfloor $ 点中采样 $N$ 个点作为最终输出，并受复合损失函数的约束。在以下部分中，我们将详细介绍 Meta-PU 中每个块的详细结构以及训练损失。
+​	骨干上采样网络包含五个基本模块，它们在图2中以不同的颜色区分。输入点云首先通过点卷积神经网络（CNN）和几个RGC块为每个质心及其邻居提取特征。在这些RGC块中，meta-RGC块是特殊的。 给定的输入 $R$ ，由 meta-sub-network 动态生成 meta-RGC 块权重。因此，由该meta-RGC 块提取的特征将调整为给定的比例因子。在 RGC 块之后，展开一个非池化层以输出$ \lfloor R_{\max } \times n\rfloor $ 点，其中 $R_{max}$ 表示我们的网络支持的最大比例因子，默认情况下 $R_{max} = 16$。 之后，采用最远采样块从 $ \lfloor R_{\max } \times n\rfloor $ 点中采样 $N$ 个点作为最终输出，并受复合损失函数的约束。在以下部分中，我们将详细介绍 Meta-PU 中每个块的详细结构以及训练损失。
 
 ![1615295735847](assets/1615295735847.png)
 
