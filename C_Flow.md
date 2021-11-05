@@ -677,3 +677,281 @@ https://openai.com/blog/glow/
 
 
 
+---
+
+# Normalizing Flows - wechat
+
+https://mp.weixin.qq.com/s/oUQuHvy0lYco4HsocqvH3Q
+
+标准化流能做什么？假设我们想生成人脸，但我们并不知道人脸图片在高维空间 $D$ 的分布，我可以用一个简单的分布 $p_z$，从中sample出一个向量 $z$，让它通过标准化流，得到一个新的向量 $x$，让 $x$ 的分布与人脸的分布相近，这样我们就可以生成任意张不同的人脸照片。
+
+再举一个例子，如果我们有一堆冷漠脸的图片，和一堆笑脸的图片，把多张冷漠脸通过逆标准化流，取平均得到一个向量z1，再把多张笑脸通过逆标准化流，取平均得到向量z2，用z2减去z1得到z3，z3应该就是在z空间中，从冷漠脸区域指向笑脸区域的向量，那我们现在把任意一个冷漠脸的人的图片x拿来通过逆标准化流得到z4，令z5 = z3 + z4，再通过标准化流应该就可以得到这个人笑脸样子的图片了！
+
+![图片](assets/640.webp)
+
+
+
+## 1. 前置
+
+### 1.1. 行列式
+
+一个矩阵的行列式的值表示的是该矩阵对空间所做的变换，将原来的空间放大或缩小了多少倍
+
+比如二维空间在原点有一个边长为1的正方形a，对它做变换得到新的正方形b，$b=Wa$，$ W=\left[\begin{array}{ll}2 & 0 \\ 0 & 2\end{array}\right] $，新的正方形边长被放大为原来的2倍，面积为原来的4倍，$det(W)=4$，
+
+
+
+三维变为体积，更高维同理
+
+
+
+---
+
+### 1.2. 雅可比矩阵
+
+互为逆变换的 $f$ 与 $f^{-1}$，其二者对应的雅可比矩阵也互为逆阵，因此又由行列式的性质可得它们的雅可比行列式互为倒数，即
+$$
+\begin{equation}
+ \left|\operatorname{det} J_{f}\right|=\left|\operatorname{det} J_{f^{-1}}\right|^{-1} 
+\end{equation}
+$$
+变换 $f$ 可以不仅仅是矩阵变换，也可以任意的函数，将 $D$ 维的向量变换为 $D'$ 维的 $x$，$ f: \mathbb{R}^{D} \rightarrow \mathbb{R}^{D} $。
+
+
+
+---
+
+### 1.3. 变量变换定理
+
+假设有一变量 $u$ ，服从分布 $u \sim p_u(u)$，有一变换 $T$，$x=T(u)$，$p_u(u)$ 是已知的一种简单分布，变换 $T$ 可逆，且 $T$ 与 $T^{-1}$ 都可微分，现在要求 $p_x(x)$，即随机变量的概率密度函数，因为概率之和相等
+$$
+\begin{equation}
+ \int_{x} p_{x}(\mathbf{x}) d \mathbf{x}=1=\int_{z} p_{z}(\mathbf{z}) d \mathbf{z} 
+\end{equation}
+$$
+假设 $x$ 和 $z$ 都是在整个空间上积分，那么**被积分的部分绝对值必定处处相等**，由于概率 $p$ 必大于等于0，可去掉其两边的绝对值号，即得
+$$
+\begin{equation}
+ \begin{aligned}\left|p_{x}(\mathbf{x}) d \mathbf{x}\right| &=\left|p_{z}(\mathbf{z}) d \mathbf{z}\right| \\ 
+ p_{x}(\mathbf{x}) &=p_{z}(\mathbf{z})\left|\frac{d \mathbf{z}}{d \mathbf{x}}\right| \\ 
+ p_{x}(\mathbf{x}) &=p_{z}(\mathbf{z})\left|\frac{\partial T^{-1}(\mathbf{x})}{\partial \mathbf{x}}\right| \\ 
+ p_{x}(\mathbf{x}) &=p_{z}\left(T^{-1}(\mathbf{x})\right)\left|\operatorname{det} J_{T^{-1}}(\mathbf{x})\right| \end{aligned} 
+\end{equation}
+$$
+两边都是**概率密度**乘以**空间的大小**，得到是一个**标量**，即随机变量落在该空间的概率大小，将变换 $T$ 写入 $ \left|\frac{d \mathbf{z}}{d \mathbf{x}}\right| $，即将其写为 $ \left|\frac{\partial T^{-1}(\mathbf{x})}{\partial \mathbf{x}}\right| $，但 $x$ 为向量而非标量，这里 $ \left|\frac{d z}{d x}\right| $ 要表示的是空间变化的大小关系，我们由雅可比矩阵的定义可知 $ \frac{\partial T^{-1}(\mathbf{x})}{\partial \mathbf{x}}=J_{T^{-1}}(\mathbf{x}) $ ，又由行列式的物理意义，知道 $ J_{T}(\mathbf{z}) $ 的绝对值为 $T$ 将 $z$ 映射到 $x$ 时，空间大小放缩的倍数，即为概率密度放缩的倍数倒数，又因 $ \operatorname{det} J_{T^{-1}}(\mathbf{x})=\operatorname{det} J_{T}(\mathbf{z})^{-1} $，因此可得下式：
+$$
+\begin{equation}
+ p_{x}(\mathbf{x})=p_{z}(\mathbf{z})\left|\operatorname{det} J_{T}(\mathbf{z})\right|^{-1} 
+\end{equation}
+$$
+在论文中解释大意是：
+
+>我们可以认为T在通过expand或contract R^D空间来使得pz变得和px相近。雅可比行列式detT的绝对值量化了原向量z附近的体积由于经过T变换后，体积相对变化的大小，即当z附近一块无穷小的体积dz，经过T后被map到了x附近的一块无穷小的体积dx处，那么detT等于dx除以dz，即映射后的体积是原来的几倍，因为dz中包含的概率等于dx中包含的概率，因此如果dz的体积被放大了，那么dx里的概率密度应该缩小
+
+
+
+举个例子，假设随机变量 $z$ 属于 0-1 均匀分布，在取值空间 $C_1=(0, 1)$ 上，$p(z)=1$，有变换 $T$，$T(z)=2z$，令 $x=T(z)$，则 $x$ 必是 $C_2=(0, 2)$ 上的均匀分布，但此时 $p(x)$ 不再是 1 了，否则在(0, 2)上都有 $p(x)=1$ ，积分可得概率之和为2，明显错误，因为变换$T$ 将原空间中 $z$ 可取值的范围放大了一倍，从(0, 1)变为了(0, 2)，即可取值空间从 $C_1$ 变$C_2$ 为，空间放大的倍数为 $ \left|\operatorname{det} J_{T}(\mathbf{z})\right|=2 $，那概率密度缩小的倍数为 $ \left|\operatorname{det} J_{T^{-1}}(\mathbf{x})\right|=\frac{1}{2} $，即相应的 $x$ 概率密度应该缩小一倍，因此
+$$
+\begin{equation}
+ 0.5=p_{x}(\mathbf{x})=p_{z}(\mathbf{z}) \cdot\left|\operatorname{det} J_{T^{-1}}(\mathbf{x})\right|=1 \cdot \frac{1}{2} 
+\end{equation}
+$$
+
+
+## 2. 标准化流
+
+目标是使用简单的概率分布来建立我们想要的更为复杂更有表达能力的概率分布，使用的方法就是Normalizing Flow，flow的字面意思是一长串的 $T$，即很多的transformation。让简单的概率分布，通过这一系列的transformation，一步一步变成complex、expressive的概率分布，like a fluid flowing through a set of tubes，fluid就是说概率分布像水一样，是可塑的易变形的，我们把它通过一系列tubes，即变换T们，塑造成我们想要的样子——最终的概率分布。
+
+
+
+### 2.1. 属性
+
+1. $x$ 与 $u$ 必须维度相同，因为只有维度相同，下面的变换 $T$ 才可能可逆
+2. 变换 $T$ 必须可逆，且 $T$ 和 $T$ 的逆必须可导
+3. 变换 $T$ 可以由多个符合条件2的变换 $T_i$ 组合而成
+
+$$
+\begin{equation}
+ \begin{aligned}\left(T_{2} \circ T_{1}\right)^{-1} &=T_{1}^{-1} \circ T_{2}^{-1} \\ \operatorname{det} J_{T_{2} \circ T_{1}}(\mathbf{u}) &=\operatorname{det} J_{T_{2}}\left(T_{1}(\mathbf{u})\right) \cdot \operatorname{det} J_{T_{1}}(\mathbf{u}) \end{aligned} 
+\end{equation}
+$$
+
+从使用角度来说，一个flow-based model提供了两个操作，一是sampling，即从 $p_u$ 中sample出 $u$ ，经过变换 $T$ 得到 $x$，$ \mathbf{x}=T(\mathbf{u}) $ where $ \mathbf{u} \sim p_{u}(\mathbf{u}) $，另一个是evaluating模型的概率分布，使用公式 $ p_{\mathrm{x}}(\mathbf{x})=p_{\mathrm{u}}\left(T^{-1}(\mathbf{x})\right)\left|\operatorname{det} J_{T^{-1}}(\mathbf{x})\right| $。
+
+两种操作有不同的计算要求，sampling需要能够sample from $p_u$ 以及计算变换 $T$，evaluating需要能够计算T的逆与雅可比行列式，并evaluate $p_u$，因此计算时的效率与难度对应用来说至关重要
+
+
+
+### 2.2. 流的非线性变化能力
+
+$p(u)$ 是很简单的一个概率分布，那么可以通过flow，将 $p(u)$ 转换为任意的概率分布 $p(x)$
+
+
+
+### 2.3. 
+
+
+
+
+
+## 3. 构建标准化流
+
+https://mp.weixin.qq.com/s/XtlK3m-EHgFRKrtcwJHZCw
+
+
+
+### 3.3. 残差流
+
+$$
+\begin{equation}
+ \mathbf{z}^{\prime}=\mathbf{z}+g_{\phi}(\mathbf{z}) 
+\end{equation}
+$$
+
+$g_{\phi}$ 是一个输出 $D$ 维向量的神经网络，我们需要对其加以合适的限制，以让其可逆
+
+
+
+#### 3.3.1 Contractive residual flows
+
+构建满足Lipschitz连续条件，且Lipschitz常数小于1的变换F
+
+
+
+#### 3.3.2 Residual flows based on the matrix determinant lemma
+
+A为DxD的可逆矩阵，V、W为DxM的矩阵，M<D，有矩阵行列式引理如下
+$$
+\begin{equation}
+ \operatorname{det}\left(\mathbf{A}+\mathbf{V} \mathbf{W}^{\top}\right)=\operatorname{det}\left(\mathbf{I}+\mathbf{W}^{\top} \mathbf{A}^{-1} \mathbf{V}\right) \operatorname{det} \mathbf{A} 
+\end{equation}
+$$
+如果A是对角阵的话计算量从左式的 $ \mathcal{O}\left(D^{3}+D^{2} M\right) $ 降到了 $ \mathcal{O}\left(M^{3}+M^{2} D\right) $
+
+
+
+**Planar flow**
+
+Planar flow是一个单层神经网络，只有一个神经元w
+$$
+\begin{equation}
+ \begin{aligned} \mathbf{z}^{\prime} &=\mathbf{z}+\mathbf{v} \sigma\left(\mathbf{w}^{\top} \mathbf{z}+b\right) \\ J_{f_{\phi}}(\mathbf{z}) &=\mathbf{I}+\sigma^{\prime}\left(\mathbf{w}^{\top} \mathbf{z}+b\right) \mathbf{v} \mathbf{w}^{\top} \\ \operatorname{det} J_{f_{\phi}}(\mathbf{z}) &=1+\sigma^{\prime}\left(\mathbf{w}^{\top} \mathbf{z}+b\right) \mathbf{w}^{\top} \mathbf{v} \end{aligned} 
+\end{equation}
+$$
+$\sigma$ 是一个可微的激活函数例如tanh，假设处处大于0，且有上界S，则当 $ \mathbf{w}^{\top} \mathbf{v}>-\frac{1}{S} $ 时，雅可比行列式大于0
+
+
+
+**Sylvester flow**
+
+将Planar flow推广到有M个神经元W就是Sylvester flow，$ \mathbf{V} \in \mathbb{R}^{D \times M}, \mathbf{W} \in \mathbb{R}^{D \times M}, \mathbf{b} \in \mathbb{R}^{M} $，S(z)是对角矩阵，元素是 $ \sigma^{\prime}\left(\mathbf{W}^{\top} \mathbf{z}+\mathbf{b}\right) $ 的对角线上的元素
+$$
+\begin{equation}
+ \begin{aligned} \mathbf{z}^{\prime} &=\mathbf{z}+\mathbf{V} \sigma\left(\mathbf{W}^{\top} \mathbf{z}+\mathbf{b}\right) \\ J_{f_{\phi}}(\mathbf{z}) &=\mathbf{I}+\mathbf{V} \mathbf{S}(\mathbf{z}) \mathbf{W}^{\top} \\ \operatorname{det} J_{f_{\phi}}(\mathbf{z}) &=\operatorname{det}\left(\mathbf{I}+\mathbf{S}(\mathbf{z}) \mathbf{W}^{\top} \mathbf{V}\right) \end{aligned} 
+\end{equation}
+$$
+
+
+---
+
+# Normalizing Flows - zhihu
+
+https://www.zhihu.com/question/376122890
+
+## 2.标准化流框架
+
+### 2.3 流模型的推导
+
+流模型，是我们为了增加非线性能力，需要多个简单变换的复合来增强产生式模型对于分布的拟合能力，公式如下 $ T=T_{K} \circ \cdots \circ T_{1} $ 。由于简单变换 $T$ 的逆与微分都满足可乘性，即多个变换组合后其可逆性和可微性依然存在而不会由于乘积改变，因此我们可以用标准化流为概率分布建模。新分布由以下二者唯一确定：
+
+1.**基础分布**，就是我们转换前的那个分布，可以是高斯分布；用tensorflow框架可以设为`base_dist()`
+2.**双射函数**,它由三部分构成：
+①前向映射 $ x=T(u) $ ，用tf实现前向传播 `X = bijector.forward(base_dist.sample())`
+②反向映射 $ u=T^{-1}(x) $ ，用tf实现评估函数 `J = new_dist.log_prob(bijector.inverse(x)) + bijector.inverse_log_det_jacobian(x)`，x为样本，要是双射函数在求解log_prob中有可变的参数，我们就可以用一个优化器来学习参数，最终拟合真实数据。
+③雅各比矩阵的**逆对数行列式** $ \log \left(\mid \operatorname{det} J\left(T^{-1}(x) \mid\right)\right. $ ，用于评估转换后分布的对数密度。算法通过最大似然估计，把拟合真实数据的分布问题变成拟合变换后的概率的对数密度问题。
+
+
+
+## 3.现代流模型I - 有限变换模型
+
+### 3.4 其他流模型-残差流
+
+$$
+\begin{equation}
+ \mathbf{z}^{\prime}=\mathbf{z}+g_{\phi}(\mathbf{z}) 
+\end{equation}
+$$
+
+$g_{\phi}$ 是一个输出 $D$ 维向量的神经网络，我们需要对其加以合适的限制，以让其可逆
+
+
+
+下面我们讨论两个设计残差流的技术：收缩映射(contractive maps) 和 矩阵求逆引理(matrix determinant lemma)。
+
+收缩映射的代表工作有Behrmann et al. (2019)[12]，Miyato et al., (2018)[13]。收缩映射对$g_\phi$ 限制条件是，如果 $g_\phi$ 对某个距离函数是可收缩的(contractive)，则整个残差变换是可逆的.
+
+形象地说contractive性质如下：找到映射F，套上距离函数后A和B的距离是逐渐拉近的，至少拉近因子L倍。我们称F满足李普希兹连续条件。
+
+那么映射F也满足巴拿赫不动点定理Banach ﬁxed-point theorem：如果 $F$ 是收缩算子,那么 $F$ 有唯一的不动点(存在且唯一)，即 $ z_{*}=F\left(z_{*}\right) $。由此条件可以证出， $g_\phi$  是收缩的，则构造 $ F(z)=z^{\prime}-g_{\phi}(z) $，易知 $F$ 也是收缩的，有 $ z_{*}=z^{\prime}-g_{\phi}(z) $，移项合并后得到 $ z^{\prime}=f_{\phi}\left(z_{*}\right) $ ，那么意味着每个输出 $z^{\prime}$ 的变换的逆变换都具有不动点，因此整个残差变换是可逆的。
+
+逆函数的计算公式也可以由上面推导得出，$ z_{*}=f_{\phi}^{-1}\left(z^{\prime}\right) $ ，其中**求逆的速度由压缩因子L决定**。我们将**L视为获取表达力和计算速度的权衡因子**，如下公式决定收敛速度，L越小，整个迭代到 $z_0$ 的速度越快，但是由于NN的限制，残差流的表达能力也越差。
+
+$ \operatorname{map} F: \mathbb{R}^{D} \rightarrow \mathbb{R}^{D} $ is said to be contractive with respect to a distance function $ \delta $ if there exists a constant $ L<1 $ such that for any two inputs $ \mathrm{Z}_{A} $ and $ \mathrm{Z}_{B} $ we have:
+$$
+\begin{equation}
+ \delta(F(\mathbf{z} A), F(\mathbf{z} B)) \leq L \delta(\mathbf{z} A, \mathbf{z} B), \delta(\mathbf{z} k, \mathbf{z} *) \leq \frac{L^{k}}{1-L} \delta(\mathbf{z} 0, \mathbf{z} 1) 
+\end{equation}
+$$
+同上文所说，构建  $g_\phi$  的整个网络需要加以限制。NN的每一层，要找Lipschitz连续函数，满足压缩的条件。幸运的是，大多非线性变换函数，如sigmoid，tanh，Relu都满足这一条件，而**卷积层和全连接层可以通过除以一个严格大于它们操作范数的方式保证**。代表有，**spectral normalization**。
+
+所以通过收缩映射实现残差流是比较容易的，因为可以满足可逆性，逆运算速度快。但缺点是，直接计算雅克比行列式需要 $O(D^3)$，目前没有明显高效的方法去直接求解。一些工作采用了无偏估计的方式，估计雅克比行列式的对数值。通过泰勒展开的方式，$ \log (1+x)=x-\frac{x^{2}}{2}+\frac{x^{3}}{3}-\cdots $，展开为下式。其中因子 $Tr$ 为哈钦森迹估计器。将复杂度进一步降低到 $O(KD)$。
+$$
+\begin{equation}
+ \log \left|\operatorname{det} J_{f_{\phi}}(\mathbf{z})\right|=\log \left|\operatorname{det}\left(\mathbf{I}+J_{g_{\phi}}(\mathbf{z})\right)\right|=\sum_{k=1}^{\infty} \frac{(-1)^{k+1}}{k} \operatorname{Tr}\left\{J_{g_{\phi}}^{k}(\mathbf{z})\right\} 
+\end{equation}
+$$
+
+$$
+\begin{equation}
+ \operatorname{Tr}\left\{J_{g_{\phi}}^{k}(\mathbf{z})\right\} \approx \mathbf{v}^{\top} J_{g_{\phi}}^{k}(\mathbf{z}) \mathbf{v} 
+\end{equation}
+$$
+
+
+
+不同于自回归流，其雅克比矩阵是稀疏的，残差流中的收缩映射技术中雅克比矩阵是稠密的，影响了计算效率的同时却**允许所有的输入影响输出**。因此，**流模型表达能力十分强，可以拟合出较好的结果**。不过也由于评估模型 $p(x)$ 计算的效率低，采样只能迭代进行，很难应用于高维任务中。
+
+
+
+
+
+## 6.应用
+
+流模型提供最基本的两个应用，概率密度计算与采样。此外还可以用在概率模型的建模，推断，监督学习和强化学习这些领域。
+
+### 6.4 表示学习
+
+流模型不只在建模和推断具有表现，在**构建下游任务中也具有很多应用场景**，常见的做法是构建**产生式模型和预测模型的混合模型**。这里介绍监督学习和强化学习。
+
+残差流类的模型，如 Invertible ResNet，被运用在**分类任务**中。第一篇论文(Gomez et al., 2017[33])作了工程上的改进，通过**不需要存储反向传播的激活函数值来减少模型的内存占用**。第二篇论文（Jacobsen et al. 2018[34]）改进了**模型的可解释性**和深度学习机制的理解：可逆ResNet在ImageNet上可以训练到和标准ResNet一样的准确率，这一成果可能有助于我们理解在何种程度上丢弃怎样的信息，在深度学习领域至关重要。
+
+
+
+混合模型的工作有(Nalisnick et al., 2019[35])，没有采用常见的ResNet架构，而是使用了雅克比行列式易求的架构，设计了联合密度。模型的结构在前 $L-1$ 层采用流模型的架构，而在**最后一层采用线性模型对特征** 进行操作。
+
+
+
+## 7. 总结
+
+在流模型的发展中，一个里程碑的原理是**概率链规则**及其与**雅克比行列式的体积变换关系**。自回归流建立在这两个支柱之上，前者是其**表达能力的基础**，而后者提供了**有效的实现**。Banachxed point theorem提供了收缩映射残差流的数学基础，在未来流模型的设计中，残差流将遵守**李普希茨连续**的条件以**不会违背不动点定理**。
+
+贯穿本文的是我们始终强调一些关键的实现，能够设计出成功的流模型。也许最重要的是在**前向传播和反向传播中的雅克比行列式计算的限制**。
+
+展望未来，流模型和众多概率模型一样，存在许多障碍阻止其大范围的应用。但流模型不像**其他概率模型采用近似推断策略**，总是允许一些可求得解析解的计算甚至在高维度进行**精确的采样**。这些困难存在于，我们如何在保持精确密度计算和采样计算可处理性的同时**设计更灵活，更具有表达力的转换**？这是当前很多工作研究的对象，更多的理论研究需要拓展。了解流模型对有限样本和有限深度设置的近似能力将有助于从业者选择最适合给定应用的流类。
+
+
+
+
+
+
+
