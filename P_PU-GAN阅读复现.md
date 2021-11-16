@@ -64,6 +64,7 @@ https://www.cgal.org/download/linux.html
 
 cmake-gui 修改CGAL_DIR的路径
 /usr/local/lib/cmake/CGAL
+/usr/lib/x86_64-linux-gnu/cmake/CGAL
 
 cmake时需要Realease模式
 sudo cmake -DCMAKE_BUILD_TYPE=Release .
