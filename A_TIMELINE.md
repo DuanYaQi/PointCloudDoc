@@ -70,6 +70,76 @@
 
 
 
+
+
+## ICML
+
+ICML Workshop on Invertible Neural Networks, Normalizing Flows, and Explicit Likelihood Models		/
+
+https://invertibleworkshop.github.io/
+
+
+
+
+
+## NIP
+
+NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications			/DGMs and Applications @ NeurIPS 2021
+
+https://dgms-and-applications.github.io/2021/
+
+
+
+The Symbiosis of Deep Learning and Differential Equations			/DLDE Workshop -- NeurIPS 2021
+
+ https://dl-de.github.io/
+
+
+
+NeurIPS 2021 Workshop on Distribution Shifts: Connecting Methods and Applications		/NeurIPS 2021 Workshop DistShift
+
+https://sites.google.com/view/distshift2021
+
+
+
+NeurIPS 2021 Workshop on Deep Learning and Inverse Problems            /NeurIPS 2021 Deep Inverse Workshop
+
+https://deep-inverse.org/
+
+
+
+Bayesian Deep Learning NeurIPS workshop				/BDL 2021
+
+http://bayesiandeeplearning.org
+
+
+
+eXplainable AI approaches for debugging and diagnosis.								/XAI 4 Debugging Workshop @ NEURIPS 2021
+
+https://xai4debugging.github.io/
+
+
+
+### ICLR
+
+ICLR 2021 Workshop on Geometrical and Topological Representation Learning		/GTRL 2021             
+
+https://gt-rl.github.io
+
+图拓扑用于修正GNN
+
+
+
+Neural Compression: From Information Theory to Applications -- Workshop @ ICLR 2021		/Neural Compression Workshop @ ICLR 2021
+
+https://neuralcompression.github.io/
+
+压缩用于点云压缩、图像压缩
+
+
+
+---
+
 ## **职业技能**
 
 **T3**
