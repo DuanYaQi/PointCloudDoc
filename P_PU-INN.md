@@ -1,3 +1,5 @@
+
+
 # PU-INN
 
 ## 论文注意要点
@@ -148,6 +150,20 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 
 - [ ] Fig. 5 曲面对比图，5*6 矩阵 5个模型 （5个方法+1个GT）  一个boudingbox放大展示局部信息
 
+compute normal ->25
+
+![image-20211117145300506](assets/image-20211117145300506.png)
+
+
+
+octree depth ->12  top15
+
+![image-20211117151559857](assets/image-20211117151559857.png)
+
+
+
+![image-20211117164605294](assets/image-20211117164605294.png)
+
 
 
 - [ ] Fig. 6 真实场景对比图，2*4矩阵 第一行为稀疏输入，第二行为稠密输出；4个场景，每个场景一个boundingbox放大
@@ -177,6 +193,28 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 
 
 
+
+## Wait
+
+尽量画成这种哪些变量影响哪些变量的形式，投射关系
+
+![img](assets/0-0174.jpg)
+
+![MAF and IAF](assets/MAF-vs-IAF.png)
+
+
+
+
+
+
+
+注意力机制的图矩阵画成下边的颜色
+
+![image-20211119135040027](assets/image-20211119135040027.png)
+
+分布的转化方式如下t图
+
+![Normalizing flow](assets/normalizing-flow.png)
 
 
 
