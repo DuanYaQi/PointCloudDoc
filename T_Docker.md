@@ -274,6 +274,14 @@ docker load -i PU-GAN.img
 
 **目录容量不足/更新后镜像丢失**
 
+首先检查原先镜像的位置在哪里 
+
+```python
+Docker Root Dir: /home/duan/workspace/docker
+```
+
+查看这个目录现在在哪里
+
 
 
 **第一次迁移**
