@@ -196,6 +196,12 @@ octree depth ->12  top15
 
 ## Wait
 
+Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D Shapes
+
+里边的图片的风格！！！！！！！！！！！！ 必须follow
+
+
+
 尽量画成这种哪些变量影响哪些变量的形式，投射关系
 
 ![img](assets/0-0174.jpg)
