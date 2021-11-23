@@ -1,8 +1,32 @@
+# Git Branching
+
+https://learngitbranching.js.org/?locale=zh_CN
+
+```shell
+git init #初始化为git管理的仓库 目录中的.git 是Git来跟踪管理版本的
+git add readme.md  # 添加到暂存区 index 中
+git commit -m '添加了readme文件' #提交至仓库
+git branch newImage #创建新的分支
+git checkout -b newImage #-b创建并切换checkout分支newImage  相当于 git branch newImage & git checkout newImage
+
+# 有两个问题，代码有两个分支，每个分支上各有一个独有的提交。没有一个分支同时解决了这两个问题，因此需要通过合并两个分支。
+git merge bugFix #把bugFix合并到当前分支  当前分支的父节点变为两个 本身和bugFix 包含了两个修改信息
+git checkout bugFix & git merge main #把main分支合并到bugFix,现在两个分支都包含了代码库的所有修改
+
+
+```
+
+
+
+
+
+
+
 # Git
 
 ## 流程
 
-![img](assets/640.webp)
+![img](assets/gitProcess.webp)
 
 Workspace：工作区
 
@@ -15,26 +39,6 @@ Remote：远程仓库
 
 
 ## 管理
-
-### 创建版本库
-
-​	在一个目录下`git init`，把这个目录变成 git 可以管理的仓库
-
-​	目录中的.git 是Git来跟踪管理版本的
-
-------
-
-### 添加暂存区
-
-​	在该目录下新建文件 readme.txt，使用命令`git add readme.txt` 添加到暂存区
-
-------
-
-### 提交仓库
-
-​	命令`git commit -m '添加了readme文件' `提交文件
-
-------
 
 ### 查看状态
 
@@ -77,8 +81,6 @@ Remote：远程仓库
 ​	readme.txt文件里面增加一行 内容为555555555555，未提交之前，我发现添加5555555555555内容有误，需要恢复以前的版本。
 
 ​	`git status` 、`git checkout -- readme.txt` 可以丢弃工作区的修改
-
-
 
 ------
 
@@ -290,11 +292,13 @@ https://mp.weixin.qq.com/s?__biz=MzIwNTc4NTEwOQ==&mid=2247487611&idx=2&sn=67022b
 
 ## 冲突实战
 
-​	git checkout master
+```shell
+git checkout master
+git pull https://github.com/unknownue/PU-Flow.git
+git push -u origin master
+```
 
-​	git pull https://github.com/unknownue/PU-Flow.git
 
-​	git push -u origin master
 
 ### fork 更新
 
@@ -303,6 +307,12 @@ https://blog.csdn.net/ganquanzhong/article/details/103023081
 
 
 
+
+
+
+
+
+---
 
 # Git + Typora
 
@@ -422,6 +432,8 @@ git checkout master
 这里实际远程端的其他分支也同步了下来的了，但是 git branch 不会展示出来
 直接 git checkout 分支名 就可以直接切过去了
 ```
+
+
 
 
 
