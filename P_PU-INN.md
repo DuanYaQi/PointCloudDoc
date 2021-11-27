@@ -194,11 +194,9 @@ octree depth ->12  top15
 
 
 
-## Wait
+# TODO
 
-Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D Shapes
-
-里边的图片的风格！！！！！！！！！！！！ 必须follow
+- [ ] Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D Shapes 里边的图片的风格！！！！！！！！！！！！ 必须follow
 
 
 
@@ -214,11 +212,11 @@ Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D S
 
 
 
-注意力机制的图矩阵画成下边的颜色
+- [ ] 注意力机制的图矩阵画成下边的颜色
 
 ![image-20211119135040027](assets/image-20211119135040027.png)
 
-分布的转化方式如下t图
+- [ ] 分布的转化方式如下t图
 
 ![Normalizing flow](assets/normalizing-flow.png)
 
@@ -226,7 +224,7 @@ Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D S
 
 
 
-Exploring Data-Efficient 3D Scene Understanding with Contrastive Scene Contexts
+- [ ] Exploring Data-Efficient 3D Scene Understanding with Contrastive Scene Contexts
 
 ![image-20211125192301886](assets/image-20211125192301886.png)
 
@@ -234,9 +232,21 @@ Exploring Data-Efficient 3D Scene Understanding with Contrastive Scene Contexts
 
 
 
-elf-Supervised Deep Learning on Point Clouds by Reconstructing Space
+- [ ] self-Supervised Deep Learning on Point Clouds by Reconstructing Space
 
 ![image-20211125192555456](assets/image-20211125192555456.png)
+
+
+
+- [ ] 重复的形式层数，画在全局特征提取器
+
+DYNAMICALLY PRUNING SEGFORMER FOR EFFICIENT SEMANTIC SEGMENTATION
+
+![image-20211127131200529](assets/image-20211127131200529.png)
+
+
+
+
 
 
 
@@ -257,6 +267,8 @@ DensePoint: Learning Densely Contextual Representation for Efficient Point Cloud
 ----
 
 # Global Feature
+
+
 
 **Global Context Reasoning for Semantic Segmentation of 3D Point Clouds**
 
