@@ -14,7 +14,13 @@ docker commit -p 78d220933b21 nvidia/cudagl:duan
 
 
 
+# Error
 
+## nvcc fatal   : Unsupported gpu architecture 'compute_86'
+
+```shell
+export TORCH_CUDA_ARCH_LIST="7.5"
+```
 
 
 

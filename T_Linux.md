@@ -134,6 +134,18 @@ https://www.linuxidc.com/Linux/2017-12/149655.htm
 
 
 
+
+
+### /home空间不足
+
+```
+在磁盘里查看
+```
+
+
+
+
+
 ### nvidia驱动 核显
 
 https://blog.csdn.net/xiaokedou_hust/article/details/82187860
@@ -151,6 +163,39 @@ https://segmentfault.com/a/1190000010533832
 https://zhuanlan.zhihu.com/p/63584709?utm_source=qq&utm_medium=social&utm_oi=730754962790813696
 
 
+
+---
+
+# SSH
+
+免密登录
+
+**本地客户端生成公私钥**
+
+```shell
+ssh-keygen
+~/.ssh
+id_rsa私钥
+id_rsa.pub公钥
+```
+
+
+
+**公钥上传至服务器**
+
+```shell
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.235.22
+ssh-copy-id -i ~/.ssh/id_rsa.pub -p 37490 root@region-4.autodl.com
+```
+
+-p为端口号
+
+
+
+```shell
+Now try logging into the machine, with:   "ssh -p '37490' 'root@region-4.autodl.com'"
+and check to make sure that only the key(s) you wanted were added.
+```
 
 
 
