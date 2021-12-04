@@ -47,8 +47,8 @@
 | ssh -l root **xxx**           | 连接IPxxx的远程服务器                                        |
 |                               |                                                              |
 |                               |                                                              |
-|                               |                                                              |
-|                               |                                                              |
+| dpkg -l \| grep ssh           | grep 过滤不包含ssh的  global search regularexpression        |
+| ps -e \| grep ssh             |                                                              |
 |                               |                                                              |
 |                               |                                                              |
 |                               |                                                              |
@@ -167,6 +167,21 @@ https://zhuanlan.zhihu.com/p/63584709?utm_source=qq&utm_medium=social&utm_oi=730
 ---
 
 # SSH
+
+https://blog.csdn.net/li528405176/article/details/82810342
+
+如果只是想远程登陆别的机器只需要安装客户端（Ubuntu默认安装了客户端），如果要开放本机的SSH服务就需要安装服务器。
+
+```
+sudo apt-get install openssh-client 
+sudo apt-get install openssh-server
+```
+
+
+
+
+
+
 
 免密登录
 
