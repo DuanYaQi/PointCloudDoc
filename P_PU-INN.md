@@ -310,6 +310,15 @@ P_PointASNL.md 文件
 
 ![image-20211125215539619](assets/image-20211125215539619.png)
 
+```python
+''' Input:
+      xyz: (batch_size, ndataset, 3) TF tensor
+      feature: (batch_size, ndataset, channel) TF tensor
+'''
+
+
+```
+
 
 
 

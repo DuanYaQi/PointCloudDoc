@@ -787,6 +787,26 @@ docker --version
 
  
 
+---
+
+# Docker Image优化	
+
+https://www.ctl.io/developers/blog/post/optimizing-docker-images/
+
+```shell
+docker history nvidia/cudagl:duan
+```
+
+https://learnk8s.io/blog/smaller-docker-images
+
+
+
+
+
+**docker image get bigger after docker commit**
+
+
+
 
 
 
@@ -1093,7 +1113,4 @@ cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker
 
 Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.html
 
-
-
----
 
