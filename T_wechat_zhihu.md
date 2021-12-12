@@ -94,4 +94,3 @@ https://gpu.shareaiot.net/createWallet/gpu
 ## Movie
 
 - [ ] 天注定
-- [x] 鸡毛飞上天

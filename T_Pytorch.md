@@ -17,9 +17,125 @@
 
 
 
+
+
+## Tips
+
+1. 简洁的API来查看模型的每一层输出尺寸
+
+```python
+from torchsummary import summary
+summary(your_model, input_size=(channels, H, W))
+
+#input_size 是根据你自己的网络模型的输入尺寸进行设置
+```
+
+
+
+2. 验证模型时不需要求导，即不需要梯度计算，关闭autograd，可以提高速度，节约内存。如果不关闭可能会爆显存。
+
+```python
+with torch.no_grad():
+    # 使用model进行预测的代码
+    pass
+```
+
+
+
+3. 保存模型
+
+Pytorch 有三种保存模型的方式，都是通过调用pickle序列化方法实现的。
+
+第一种方法只保存模型参数；第二种方法保存完整模型。第三种自定义
+
+推荐使用第一种和第二种，第二种方法可能在切换设备和目录的时候出现各种问题。
+
+
+
+**保存模型参数**
+
+```python
+print(net.state_dict().keys())
+
+torch.save(net.state_dict(), "./model/net_parameter.pkl")
+
+net_clone = create_net()
+net_clone.load_state_dict(torch.load("./model/net_parameter.pkl"))
+
+net_clone.forward(torch.tensor(x_test[0:10]).float()).data
+
+```
+
+
+
+---
+
+**保存完整模型**
+
+```python
+torch.save(net, './model/net_model.pkl')
+net_loaded = torch.load('./model/net_model.pkl')
+net_loaded(torch.tensor(x_test[0:10]).float()).data
+```
+
+
+
+**保存加载自定义模型**
+
+上面保存加载的 `net_model.pkl` 其实一个字典，通常包含如下内容：
+
+- **网络结构**：输入尺寸、输出尺寸以及隐藏层信息，以便能够在加载时重建模型。
+- **模型的权重参数**：包含各网络层训练后的可学习参数，可以在模型实例上调用 `state_dict()` 方法来获取，比如前面介绍只保存模型权重参数时用到的 `model.state_dict()`。
+- **优化器参数**：有时保存模型的参数需要稍后接着训练，那么就必须保存优化器的状态和所其使用的超参数，也是在优化器实例上调用 `state_dict()` 方法来获取这些参数。
+- **其他信息**：有时我们需要保存一些其他的信息，比如 `epoch`，`batch_size` 等超参数。
+
+
+知道了这些，那么我们就可以自定义需要保存的内容，比如：
+
+```python
+#saving a checkpoint assuming the network class named ClassNet
+checkpoint = {'model': ClassNet(),
+              'model_state_dict': model.state_dict(),
+              'optimizer_state_dict': optimizer.state_dict(),
+              'epoch': epoch}
+
+torch.save(checkpoint, 'checkpoint.pkl')
+```
+
+上面的 checkpoint 是个字典，里面有4个**键值对**，分别表示网络模型的不同信息。然后我们要加载上面保存的自定义的模型：
+
+```python
+def load_checkpoint(filepath):
+    checkpoint = torch.load(filepath)
+    model = checkpoint['model']  # 提取网络结构
+    model.load_state_dict(checkpoint['model_state_dict'])  # 加载网络权重参数
+    optimizer = TheOptimizerClass()
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])  # 加载优化器参数
+    
+    for parameter in model.parameters():
+    	parameter.requires_grad = False
+        
+	model.eval()
+	return model
+
+model = load_checkpoint('checkpoint.pkl')
+```
+
+如果加载模型只是为了进行**推理测试**，则将每一层的 `requires_grad` 置为 **False**，即固定这些权重参数；还需要调用 `model.eval()` 将模型置为测试模式，主要是将 **dropout** 和 **batch normalization** 层进行固定，否则模型的预测结果每次都会不同。
+
+`state_dict()` 也是一个Python字典对象，`model.state_dict()` 将每一层的**可学习参数映射为参数矩阵**，其中只包含具有可学习参数的层(卷积层、全连接层等)。
+
+
+
+
+
+
+
 ---
 
 ## Start
+
+
 
 如果是工程师，应该优先选 TensorFlow2.
 
@@ -374,45 +490,7 @@ y_pred = torch.where(y_pred_probs>0.5,
 print(y_pred)
 ```
 
-
-
----
-
-#### 1.1.6. 保存模型
-
-​	Pytorch 有两种保存模型的方式，都是通过调用pickle序列化方法实现的。
-
-​	第一种方法只保存模型参数；第二种方法保存完整模型。
-
-​	推荐使用第一种，第二种方法可能在切换设备和目录的时候出现各种问题。
-
-##### 保存模型参数
-
-```python
-print(net.state_dict().keys())
-
-torch.save(net.state_dict(), "./model/net_parameter.pkl")
-
-net_clone = create_net()
-net_clone.load_state_dict(torch.load("./model/net_parameter.pkl"))
-
-net_clone.forward(torch.tensor(x_test[0:10]).float()).data
-
-```
-
-
-
----
-
-##### 保存完整模型
-
-```python
-torch.save(net, './model/net_model.pkl')
-net_loaded = torch.load('./model/net_model.pkl')
-net_loaded(torch.tensor(x_test[0:10]).float()).data
-```
-
-
+​	
 
 ---
 
