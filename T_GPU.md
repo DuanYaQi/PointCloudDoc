@@ -14,6 +14,20 @@ docker commit -p 78d220933b21 nvidia/cudagl:duan
 
 
 
+## CUDAExtension setup.py
+
+https://github.com/daerduoCarey/PyTorchEMD
+
+https://github.com/unlimblue/KNN_CUDA
+
+https://github.com/erikwijmans/Pointnet2_PyTorch/tree/master/pointnet2_ops_lib
+
+https://github.com/facebookresearch/SparseConvNet
+
+
+
+---
+
 # Error
 
 ## nvcc fatal   : Unsupported gpu architecture 'compute_86'

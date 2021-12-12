@@ -142,6 +142,54 @@ https://www.linuxidc.com/Linux/2017-12/149655.htm
 在磁盘里查看
 ```
 
+https://linuxconfig.org/ubuntu-20-04-disk-space-check
+
+
+
+disk usage analyzer
+
+```shell
+sudo apt install baobab
+
+sudo -i
+baobab
+
+sudo baobab
+```
+
+https://askubuntu.com/questions/305554/disk-space-used-up
+
+
+
+```shell
+#快速而简洁地读取 Ubuntu 20.04 系统上的硬盘使用情况
+df -h
+df -h /home
+#-h flag tells the command to make the sizes “human-readable.”
+```
+
+
+
+```shell
+#检查任何目录及其子目录上的存储使用情况来补充它
+du -sh
+#s命令中的标志告诉du只返回单个目录的统计信息，而不是列出所有子目录。
+#h如前所述，该标志使输出易于阅读。
+
+du -h --max-depth=1 /home/duan
+#--max-depth它告诉du它应该遍历到子目录的深度。像这样使用它（用任何数字替换 1）：
+```
+
+
+
+```shell
+# 如果您尝试du在根目录上运行以查看整个磁盘的存储空间，请记住您需要以 root 权限执行该命令，
+# 并且您应该将标准错误重定向到，/dev/null因为您将获得很多“权限”拒绝”您输出中的垃圾邮件。
+# 否则有些目录没权限 会输出错误
+
+sudo du -sh / 2> /dev/null
+```
+
 
 
 

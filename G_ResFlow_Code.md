@@ -7,35 +7,49 @@
         Layer (type)               Output Shape         Param #
 ================================================================
     LogitTransform-1            [-1, 3, 32, 32]               0
+    
+    
+    
+#1st-stackediresblocks
     LogitTransform-2            [-1, 3, 32, 32]               0
+    
          ActNorm2d-3            [-1, 3, 32, 32]               6
+#1st-iresblocks
  InducedNormConv2d-4          [-1, 512, 32, 32]          14,336
              Swish-5          [-1, 512, 32, 32]               1
  InducedNormConv2d-6          [-1, 512, 32, 32]         262,656
              Swish-7          [-1, 512, 32, 32]               1
  InducedNormConv2d-8            [-1, 3, 32, 32]          13,827
+
          ActNorm2d-9            [-1, 3, 32, 32]               6
+#2nd-iresblocks
             Swish-10            [-1, 3, 32, 32]               1
 InducedNormConv2d-11          [-1, 512, 32, 32]          14,336
             Swish-12          [-1, 512, 32, 32]               1
 InducedNormConv2d-13          [-1, 512, 32, 32]         262,656
             Swish-14          [-1, 512, 32, 32]               1
 InducedNormConv2d-15            [-1, 3, 32, 32]          13,827
+
         ActNorm2d-16            [-1, 3, 32, 32]               6
+#3rd-iresblocks
             Swish-17            [-1, 3, 32, 32]               1
 InducedNormConv2d-18          [-1, 512, 32, 32]          14,336
             Swish-19          [-1, 512, 32, 32]               1
 InducedNormConv2d-20          [-1, 512, 32, 32]         262,656
             Swish-21          [-1, 512, 32, 32]               1
 InducedNormConv2d-22            [-1, 3, 32, 32]          13,827
+
         ActNorm2d-23            [-1, 3, 32, 32]               6
+#4th-iresblocks
             Swish-24            [-1, 3, 32, 32]               1
 InducedNormConv2d-25          [-1, 512, 32, 32]          14,336
             Swish-26          [-1, 512, 32, 32]               1
 InducedNormConv2d-27          [-1, 512, 32, 32]         262,656
             Swish-28          [-1, 512, 32, 32]               1
 InducedNormConv2d-29            [-1, 3, 32, 32]          13,827
+
         ActNorm2d-30            [-1, 3, 32, 32]               6
+#5th-iresblocks   
             Swish-31            [-1, 3, 32, 32]               1
 InducedNormConv2d-32          [-1, 512, 32, 32]          14,336
             Swish-33          [-1, 512, 32, 32]               1

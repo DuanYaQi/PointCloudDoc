@@ -6,10 +6,11 @@
 | :----------------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | tensorflow/tensorflow:1.13.2-gpu     |                            PUGeo                             | cuda-10.0 + python2.7 + python3.6 + tensorflow_gpu-1.31.1(python2.7) |
 | tensorflow/tensorflow:1.13.2-gpu-py3 |                 PU-Net<br>SampleNet<br>PUGeo                 |   cuda-10.0 + python3.6 + tensorflow_gpu-1.13.1(python3.6)   |
-| ecnet:1.3.0-gpu                      |                            EC-Net                            | cuda-8.0 + python2.7 + python3.5 + tensorflow_gpu-1.3.0(python2.7) |
-| nvidia/cudagl:duan                   | latent_3d_points_Pytorch <br>pointnet.pytorch<br> pytorch-NICE<br>MSN | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
-| nvidia/cudagl:10.2-devel-ubuntu18.04 |                PU-Flow<br>iResNet<br>ResFlow                 | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
 | tensorflow/pu-gan:latest             |                     PU-GAN<br/>pypoisson                     | cuda-9.0 + python2.7 + python3.5 + python3.6 + tensorflow_gpu-1.11.0(python3.6) |
+| nvidia/cudagl:duan                   | latent_3d_points_Pytorch <br>pointnet.pytorch<br> pytorch-NICE<br>MSN | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
+|                                      |                                                              |                                                              |
+| ecnet:1.3.0-gpu                      |                            EC-Net                            | cuda-8.0 + python2.7 + python3.5 + tensorflow_gpu-1.3.0(python2.7) |
+| nvidia/cudagl:10.2-devel-ubuntu18.04 |                PU-Flow<br>iResNet<br>ResFlow                 | cuda-10.2 + python2.7 + python3.6 + torch-1.7.0(python3.6) + opengl |
 
 
 
@@ -44,7 +45,7 @@ python -m visdom.server # 开启visdom服务  http://127.0.0.2:8097/
 
 ## 2. 安装
 
-```
+```shell
 //由于apt官方库里的docker版本可能比较旧，所以先卸载可能存在的旧版本：
 sudo apt-get remove docker docker-engine docker-ce docker.io
 //更新apt包索引：
@@ -67,7 +68,7 @@ sudo apt-get install -y docker-ce
 
 ### 查看状态
 
-```
+```shell
 systemctl status docker
 
 //启动
@@ -227,7 +228,7 @@ docker rmi myubunut:0.1
 #### 运行docker容器
 
 ```
-sudo docker run -it myubuntu:docker /bin/bash
+docker run -it myubuntu:docker /bin/bash
 ```
 
 
@@ -430,21 +431,39 @@ Docker Root Dir: /data/docker
 
 ## 6. Nvidia docker
 
-### 安装
+**本机不需要装cuda**!!!!!!!!!!
 
-本机安装nividia显卡驱动
+### 6.1. 本机安装nividia显卡驱动
 
-https://zhuanlan.zhihu.com/p/59618999
+https://zhuanlan.zhihu.com/p/59618999 使用 Ubuntu 软件仓库中的稳定版本安装
+
+```shell
+ubuntu-drivers devices
+```
+
+输出可以看出，我的显卡是：`GM107M [GeForce GTX 960M]`，推荐安装的版本号是：`nvidia-driver-470-server - distro non-free recommended`。
 
 
 
-安装nvidia docker2
+- 如果同意安装推荐版本，那我们只需要终端输入：`sudo ubuntu-drivers autoinstall` 就可以自动安装了。
+- 当然我们也可以使用 apt 命令安装自己想要安装的版本，比如我想安装 `340` 这个版本号的版本，终端输入：`sudo apt install nvidia-340` 就自动安装了。
+- 安装过程中按照提示操作，**除非你知道每个提示的真实含义，否则所有的提示都选择默认就可以了**，安装完成后**重启**系统，NVIDIA 显卡就可以正常工作了。安装完成后你可以参照 `https://linuxconfig.org/benchmark-your-graphics-card-on-linux` 上的介绍测试你的显卡。
+
+
+
+
+
+---
+
+### 6.2. 安装nvidia docker2
 
 https://www.cnblogs.com/answerThe/p/12238990.html
 
+有时，Ubuntu上会默认安装有Docker。若先前有安装Docker，则**需要先卸载**（卸载的方法在官方文档上有详细介绍）。为了确定本机上没有安装Docker，执行命令： docker run hello-world。
 
 
-#### 安装Docker
+
+**安装Docker**
 
 更新`apt` 包的索引
 
@@ -475,7 +494,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 
 
-验证当前你所拥有的key的指纹是`9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88，方法是搜索指纹中的后八个字符。`
+验证当前你所拥有的key的指纹是`9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88`，方法是搜索指纹中的后八个字符。
 
 ```shell
 sudo apt-key fingerprint 0EBFCD88
@@ -494,7 +513,7 @@ sudo add-apt-repository \
 
 
 
-正式安装docker：
+正式安装docker
 
 ```shell
 sudo apt-get update
@@ -513,7 +532,13 @@ sudo docker run hello-world
 
 
 
-#### **安装NVIDIA-Docker**
+​	
+
+**安装NVIDIA-Docker**
+
+https://github.com/NVIDIA/nvidia-docker
+
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
 
 添加包的地址
 
@@ -562,19 +587,15 @@ sudo docker run hello-world
 
 
 
-
-
-
-
 最后测试镜像cuda:10.2
 
 
 
 
 
-### 各种启动命令
+---
 
-
+### 6.3. 各种启动命令
 
 ```
 docker run --runtime=nvidia --rm -it unknownue/pu-flow:latest
@@ -641,17 +662,9 @@ ubuntu16.04 docker tensorflow-gpu镜像使用https://www.cnblogs.com/deepllz/p/9
 
 
 
-```
-docker cp /home/duan/windows/Workspace/PU-Flow/runs/PUGAN/ckpt/4577251581f7b1fe1dea6f6320002e46ba1348b4-PatchSRFlow-resort4-100epoch.ckpt af6c9fadb71c:/home/
-```
 
 
-
-```
-docker commit -a "duan" -m "mkdir test" -p 401ad1da19e4 unknownue/pu-flow:latest
-```
-
-
+---
 
 ## 7. docker pull速度问题
 
@@ -679,9 +692,7 @@ sudo systemctl restart docker
 
 
 
-
-
-## 8. 报错
+**报错**
 
 - docker version  Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
 
@@ -715,7 +726,7 @@ docker: Error response from daemon: OCI runtime create failed: container_linux.g
 
 
 
-## 9. 更换apt软件源
+## 8. 更换apt软件源
 
 ```bash
 https://developer.aliyun.com/mirror/
@@ -744,7 +755,9 @@ apt update
 
 
 
-## 10. 卸载
+
+
+## 9. 卸载
 
 1. 删除某软件,及其安装时自动安装的所有包
 
@@ -787,9 +800,24 @@ docker --version
 
  
 
+
+
+
+
 ---
 
 # Docker Image优化	
+
+你是把docker容器当虚拟机用了，这个是不正确的使用方法，应该使用Dockerfile制作镜像，并遵循Dockerfile编写的最佳原则。
+
+
+
+减小镜像尺寸有两种方法
+
+- 使用链式指令
+- 分离编译镜像和部署镜像
+
+
 
 https://www.ctl.io/developers/blog/post/optimizing-docker-images/
 
@@ -801,13 +829,15 @@ https://learnk8s.io/blog/smaller-docker-images
 
 
 
-
-
 **docker image get bigger after docker commit**
 
 
 
 
+
+用Docker玩转深度学习http://www.dockerone.com/article/2127
+
+https://www.orchome.com/8191
 
 
 
@@ -1004,7 +1034,7 @@ docker run -d \
 
 
 
-## References
+**References**
 
 Docker容器图形界面显示（运行GUI软件）的配置方法
 
@@ -1030,6 +1060,10 @@ https://blog.csdn.net/weixin_42698556/article/details/86661877
 
 
 
+
+
+
+
 ---
 
 # Docker + VSCode
@@ -1050,7 +1084,7 @@ https://blog.csdn.net/weixin_42698556/article/details/86661877
 
 ​	重启vscode 左下角>< 点击，remote-containers
 
-![Remote-Containers](pic/2035930647-d6805f5f2fd3be3c_articlex.png)
+![Remote-Containers](assets/2035930647-d6805f5f2fd3be3c_articlex.png)
 
 ​	源代码通过卷映射进去的。命令行和运行app和debugger都是在容器中完成的。
 
@@ -1074,7 +1108,7 @@ https://blog.csdn.net/weixin_42698556/article/details/86661877
 
 
 
-## References
+**References**
 
 在 VS Code 中使用容器开发
 
@@ -1100,7 +1134,13 @@ https://zhuanlan.zhihu.com/p/129908390
 
 Docker+VSCode 配置属于自己的深度学习炼丹炉
 
-https://mp.weixin.qq.com/s?__biz=MzIwOTc2MTUyMg==&mid=2247496031&idx=2&sn=c4cffb694e7b6da6aeda11b55fcc4b12&chksm=976c54c2a01bddd40335bd34cfe983319f956f44e7dc92c368d658a5b929d84c6240e3ca232f&mpshare=1&scene=1&srcid=&sharer_sharetime=1581209859633&sharer_shareid=69c2dc2b0fd2	e402d2771218812300dc&key=2c4881e20dc9fe0ff3aeb777a0a5fd6f5c4dda40604a9c3a5926fcb8fbe7f4f6c349d2b6339e37951652d72842ebf715aeaa83be7875406c5a6f950d25d9237fc11b5800d03c3e8e8817fdbf868f89b0&ascene=1&uin=Nzg1Mzk1MTg0&devicetype=Windows+10&version=62080079&lang=zh_CN&exportkey=AeXgoaqBS0aeerNEurcioQA%3D&pass_ticket=QCK5Q2BnABxVpCO5L0EUmesGL3sGiHOXgOGT1%2B6DCaa6KDpnGSQT19URVzskJdq7
+https://mp.weixin.qq.com/s?__biz=MzIwOTc2MTUyMg==&mid=2247496031&idx=2&sn=c4cffb694e7b6da6aeda11b55fcc4b12&chksm=976c54c2a01bddd40335bd34cfe983319f956f44e7dc92c368d658a5b929d84c6240e3ca232f&mpshare=1&scene=1&srcid=&sharer_sharetime=1581209859633&sharer_shareid=69c2dc2b0fd2e402d2771218812300dc&key=2c4881e20dc9fe0ff3aeb777a0a5fd6f5c4dda40604a9c3a5926fcb8fbe7f4f6c349d2b6339e37951652d72842ebf715aeaa83be7875406c5a6f950d25d9237fc11b5800d03c3e8e8817fdbf868f89b0&ascene=1&uin=Nzg1Mzk1MTg0&devicetype=Windows+10&version=62080079&lang=zh_CN&exportkey=AeXgoaqBS0aeerNEurcioQA%3D&pass_ticket=QCK5Q2BnABxVpCO5L0EUmesGL3sGiHOXgOGT1%2B6DCaa6KDpnGSQT19URVzskJdq7
+
+
+
+
+
+
 
 ---
 

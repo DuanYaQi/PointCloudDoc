@@ -13,6 +13,8 @@
 
 
 
+
+
 ---
 
 ### 评论1
@@ -194,6 +196,10 @@ octree depth ->12  top15
 
 
 
+
+
+
+
 # TODO
 
 - [ ] Supplementary Material for:Unsupervised Detection of Distinctive Regions on 3D Shapes 里边的图片的风格！！！！！！！！！！！！ 必须follow
@@ -207,6 +213,22 @@ octree depth ->12  top15
 ![MAF and IAF](assets/MAF-vs-IAF.png)
 
 
+
+- [ ] Conditional 形式
+
+- [ ] GUIDED IMAGE GENERATION WITH CONDITIONAL INVERTIBLE NEURAL NETWORKS
+
+
+
+![image-20211207203849396](assets/image-20211207203849396.png)
+
+
+
+- [ ] 可逆架构里的切片换成下图这种 $\theta_1$ 和 $\theta_2$ 这种残缺的形式
+
+Inference of cosmic-ray source properties by conditional invertible neural networks
+
+![image-20211207203638753](assets/image-20211207203638753.png)
 
 
 
@@ -475,22 +497,67 @@ where we use a Scaled Dot-Product attention [39] for S, i.e., S(Q,X) = softmax(Q
 
 # Interpolation
 
-## ECCV2021_Intrinsic Point Cloud Interpolation via
-Dual Latent Space Navigation
-
-给定两个可能有噪声的无组织点云 P A 和 P B 我们首先计算它们相关的基于边缘的潜在代码：m A = M PE (enc p (P A )) 和 m B = M PE (enc p (P B ))。 在这里，我们使用编码器 enc p 的置换不变性允许对无序点集进行编码。 然后我们在 m A 和 m B 之间进行线性插值，但使用形状解码器 dec p 进行重建。 因此，我们计算一系列中间点云如下： 
-
-P α = dec p (M EP ((1 − α)m A + αm B )), α ∈ [0...1] (10) 
-
-换句话说 ，**我们在基于边缘的潜在空间中插入潜在代码，但通过形状解码器 dec p 执行重建。** **这使我们能够确保重建的形状既逼真又平滑地插入它们的内在度量。** 请注意，与纯几何方法（例如 [30]）不同，我们的方法不依赖于测试时给定的网格结构。相反，**我们使用学习到的基于边缘的潜在空间作为恢复固有形状结构的代理**，如下所示，这足以获得准确和平滑的插值。
-
-由于边长自动编码器是完全旋转不变的，因此有必要在测试时对齐输出形状。 我们可以通过使用与计算 Eq.9 相同的最优刚性变换来轻松做到这一点。 
+https://zhuanlan.zhihu.com/p/369946876
 
 
 
+## **ECCV2020_Progressive Point Cloud Deconvolution Generation Network**
+
+https://github.com/fpthink/PDGN/
+
+在本文中，我们提出了一种有效的点云生成方法，该方法可以从潜在向量生成相同形状的多分辨率点云。 具体来说，我们开发了一种具有**基于学习的双边插值的新型渐进式反卷积网络**。在点云的空间和特征空间中进行基于学习的双边插值，从而可以利用点云的局部几何结构信息。从低分辨率点云开始，通过双边插值和最大池化操作，反卷积网络可以逐步输出高分辨率的局部和全局特征图。 通过连接不同分辨率的局部和全局特征图，我们采用多层感知器作为生成网络来生成多分辨率点云。 为了保持点云不同分辨率的形状一致，我们提出了一种形状保持对抗性损失来训练点云反卷积生成网络。 实验结果证明了我们提出的方法的有效性
 
 
 
+**3.1 Progressive deconvolution generation network**
+
+给定一个潜在向量，我们的目标是生成高质量的 3D 点云。   点云生成的一个关键问题是如何利用一维向量生成一组与几何中的 3D 对象一致的 3D 点。   为此，我们为 3D 点云开发了一个特殊的反卷积网络，我们首先使用基于学习的双边插值获得高分辨率特征图，然后应用 MLP 生成局部和全局特征图。 希望生成的局部和全局特征图的融合能够表征高维特征空间中点云的几何结构。
+
+**Learning-based bilateral interpolation** 由于点云的无序和不规则结构，我们无法直接对特征图进行插值操作。 因此，我们需要为特征图上的每个点建立一个邻域来实现插值操作。 在这项工作中，我们简单地使用 k-最近邻 (k-NN) 来构建特征空间中每个点的邻域。 具体来说，给定一个具有 N 个特征向量 $ \boldsymbol{x}_{i} \in \mathbb{R}^{d} $ 的输入，点 i 和 j 之间的相似度定义为：
+$$
+\begin{equation}
+ a_{i, j}=\exp \left(-\beta\left\|\boldsymbol{x}_{i}-\boldsymbol{x}_{j}\right\|_{2}^{2}\right) 
+\end{equation}
+$$
+其中 β 在我们的实验中凭经验设置为 β = 1。 如图2（a）和（b）所示，我们可以在特征空间中选择k个具有定义相似度的最近邻点。 并且本文中参数k设置为k=20。
+
+![image-20211110175415785](assets/image-20211110175415785.png)
+
+**Fig.2.** 反卷积网络的过程。 （a）首先，我们定义特征空间中点对之间的相似性。 我们在特征空间中选择 k 个最近邻点 (k-NN)，并在 (b) 中定义相似度。 然后我们在邻域中进行插值以形成（c）中的放大特征图。 最后，我们在 (d) 中应用 MLP 生成新的高维特征图。 请注意，我们可以通过反卷积网络获得双倍的点数。
+
+
+
+一旦我们获得了每个点的邻域，我们就可以在其中进行插值。 如图2(c)所示，通过插值，可以将邻域内的k个点生成为特征空间中的2k个点。**线性和双线性插值**等经典插值方法是非学习插值方法，在点云生成过程中无法适应不同类别的3D模型。但**经典插值方法不会同时利用空间和特征空间中每个点的邻域信息**。
+
+为此，我们提出了一种**基于学习的双边插值方法**，该方法利用每个点的邻域的空间坐标和特征来生成高分辨率的特征图。给定点 $ \boldsymbol{p}_{i} \in \mathbb{R}^{3} $ 和其邻域中的 k 个点，我们可以将双边插值公式化为： 
+$$
+\begin{equation}
+ \tilde{\boldsymbol{x}}_{i, l}=\frac{\sum_{j=1}^{k} \theta_{l}\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \psi_{l}\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right) \boldsymbol{x}_{j, l}}{\sum_{j=1}^{k} \theta_{l}\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \psi_{l}\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right)} 
+\end{equation}\tag{2}
+$$
+其中 $ \boldsymbol{p}_{i}$ 和 $ \boldsymbol{p}_{j}$ 是 3D 空间坐标，$ \boldsymbol{x}_{i}$ 和 $ \boldsymbol{x}_{j}$ 是 d 维特征向量，$ \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $ 和 $ \psi\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $  分别是空间和特征空间中的两个嵌入，$ \tilde{\boldsymbol{x}}_{i, l} $ 是插值特征 $ \tilde{\boldsymbol{x}}_{i}, l=1,2, \cdots, d $ 的第 $l$ 个元素。 嵌入 $ \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $ 和 $ \psi\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $  可以定义为：
+$$
+\begin{equation}
+ \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right)=\operatorname{ReLU}\left(\boldsymbol{W}_{\theta, j}^{\top}\left(\boldsymbol{p}_{i}-\boldsymbol{p}_{j}\right)\right), \quad \psi\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right)=\operatorname{ReLU}\left(\boldsymbol{W}_{\psi, j}^{\top}\left(\boldsymbol{x}_{i}-\boldsymbol{x}_{j}\right)\right) 
+\end{equation}
+$$
+其中 ReLU 是激活函数，$ \boldsymbol{W}_{\theta, j} \in \mathbb{R}^{3 \times d} $ 和 $ \boldsymbol{W}_{\psi, j} \in \mathbb{R}^{d \times d} $ 是要学习的权重。 基于点 $p_i$ 和 $p_j$ 、$p_i − p_j$ 和 $x_i − x_j$ 之间的差异，嵌入 $θ(p_i ,p_j )$ 和 $ψ (x_i ,x_j )$ 可以分别编码点 $p_i$ 在空间和特征空间中的局部结构信息。 值得注意的是，在**Eq. 2**中，采用channel-wise双边插值。 如图 3 所示，新的插值特征 $ \tilde{\boldsymbol{x}}_{i} $ 可以从 $ \boldsymbol{x}_{i} $ 的邻域中获得，具有双边权重。 对于每个点，我们在 k 邻域中执行双边插值以生成新的 k 点。因此，我们可以获得高分辨率的特征图，其中每个点的邻域包含 2k 个点。
+
+![image-20211110210625768](assets/image-20211110210625768.png)
+
+插值后，我们然后在放大的特征图上应用卷积。 对于每个点，我们根据距离将 2k 个点的邻域划分为两个区域。 如图2(c)所示，最近的k个点属于第一个区域，其余的作为第二个区域。 与PointNet [26]类似，我们首先使用多层感知器生成高维特征图，然后使用最大池化操作从两个区域获取两个插值点的局部特征。 如图 2 (d) 所示，我们可以通过反卷积网络将输入的点数加倍以生成高分辨率的局部特征图 X local 。我们还使用最大池化操作来提取全局特征 点云。 通过将全局特征复制 N 次，其中 N 是点数，我们可以获得高分辨率的全局特征图 X global 。 然后我们将局部特征图 X local 和全局特征图 X global 连接起来，得到反卷积网络的输出 X c = [X local ;X global ]。 因此，输出X c 不仅可以表征点云的局部几何结构，还可以在点云生成过程中捕捉点云的全局形状。
+
+![image-20211110201554840](assets/image-20211110201554840.png)
+
+**Fig. 3** 基于学习的双边插值方法示意图。中心点 $x_i$ 附近的点被着色。 我们通过考虑邻域中点的局部几何特征来插入新点。$ \boldsymbol{W}_{\theta, j} $ 和 $ \boldsymbol{W}_{\psi, j}, j=1,2,3,4 $ 是要学习的空间和特征空间中的权重。
+
+
+
+
+
+
+
+---
 
 ## **ICCV2019Oral_Interpolated Convolutional Networks for 3D Point Cloud Understanding**
 
@@ -552,63 +619,54 @@ $$
 
 
 
-## **ECCV2020_Progressive Point Cloud Deconvolution Generation Network**
-
-https://github.com/fpthink/PDGN/
-
-在本文中，我们提出了一种有效的点云生成方法，该方法可以从潜在向量生成相同形状的多分辨率点云。 具体来说，我们开发了一种具有**基于学习的双边插值的新型渐进式反卷积网络**。在点云的空间和特征空间中进行基于学习的双边插值，从而可以利用点云的局部几何结构信息。从低分辨率点云开始，通过双边插值和最大池化操作，反卷积网络可以逐步输出高分辨率的局部和全局特征图。 通过连接不同分辨率的局部和全局特征图，我们采用多层感知器作为生成网络来生成多分辨率点云。 为了保持点云不同分辨率的形状一致，我们提出了一种形状保持对抗性损失来训练点云反卷积生成网络。 实验结果证明了我们提出的方法的有效性
 
 
+---
 
-**3.1 Progressive deconvolution generation network**
+## ECCV2021_Intrinsic Point Cloud Interpolation via Dual Latent Space Navigation
 
-给定一个潜在向量，我们的目标是生成高质量的 3D 点云。   点云生成的一个关键问题是如何利用一维向量生成一组与几何中的 3D 对象一致的 3D 点。   为此，我们为 3D 点云开发了一个特殊的反卷积网络，我们首先使用基于学习的双边插值获得高分辨率特征图，然后应用 MLP 生成局部和全局特征图。 希望生成的局部和全局特征图的融合能够表征高维特征空间中点云的几何结构。
-
-**Learning-based bilateral interpolation** 由于点云的无序和不规则结构，我们无法直接对特征图进行插值操作。 因此，我们需要为特征图上的每个点建立一个邻域来实现插值操作。 在这项工作中，我们简单地使用 k-最近邻 (k-NN) 来构建特征空间中每个点的邻域。 具体来说，给定一个具有 N 个特征向量 $ \boldsymbol{x}_{i} \in \mathbb{R}^{d} $ 的输入，点 i 和 j 之间的相似度定义为：
-$$
-\begin{equation}
- a_{i, j}=\exp \left(-\beta\left\|\boldsymbol{x}_{i}-\boldsymbol{x}_{j}\right\|_{2}^{2}\right) 
-\end{equation}
-$$
-其中 β 在我们的实验中凭经验设置为 β = 1。 如图2（a）和（b）所示，我们可以在特征空间中选择k个具有定义相似度的最近邻点。 并且本文中参数k设置为k=20。
-
-![image-20211110175415785](assets/image-20211110175415785.png)
-
-**Fig.2.** 反卷积网络的过程。 （a）首先，我们定义特征空间中点对之间的相似性。 我们在特征空间中选择 k 个最近邻点 (k-NN)，并在 (b) 中定义相似度。 然后我们在邻域中进行插值以形成（c）中的放大特征图。 最后，我们在 (d) 中应用 MLP 生成新的高维特征图。 请注意，我们可以通过反卷积网络获得双倍的点数。
+我们提出了一种基于学习的方法，用于内插和操作表示为点云的 3D 形状，该方法明确设计为保留固有的形状属性。 我们的方法基于构建一个双编码空间，该空间可以实现形状合成，同时提供指向固有形状信息的链接，这通常在点云数据上不可用。 我们的方法一次性工作，避免了现有技术采用的昂贵优化。 此外，我们的双潜在空间方法提供的强正则化也有助于改善具有挑战性的环境中不同数据集的嘈杂点云的形状恢复。 大量实验表明，与基线相比，我们的方法产生了更真实、更平滑的插值。
 
 
 
-一旦我们获得了每个点的邻域，我们就可以在其中进行插值。 如图2(c)所示，通过插值，可以将邻域内的k个点生成为特征空间中的2k个点。**线性和双线性插值**等经典插值方法是非学习插值方法，在点云生成过程中无法适应不同类别的3D模型。但**经典插值方法不会同时利用空间和特征空间中每个点的邻域信息**。
+**3. Motivation & Background**
 
-为此，我们提出了一种**基于学习的双边插值方法**，该方法利用每个点的邻域的空间坐标和特征来生成高分辨率的特征图。给定点 $ \boldsymbol{p}_{i} \in \mathbb{R}^{3} $ 和其邻域中的 k 个点，我们可以将双边插值公式化为： 
-$$
-\begin{equation}
- \tilde{\boldsymbol{x}}_{i, l}=\frac{\sum_{j=1}^{k} \theta_{l}\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \psi_{l}\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right) \boldsymbol{x}_{j, l}}{\sum_{j=1}^{k} \theta_{l}\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \psi_{l}\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right)} 
-\end{equation}\tag{2}
-$$
-其中 $ \boldsymbol{p}_{i}$ 和 $ \boldsymbol{p}_{j}$ 是 3D 空间坐标，$ \boldsymbol{x}_{i}$ 和 $ \boldsymbol{x}_{j}$ 是 d 维特征向量，$ \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $ 和 $ \psi\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $  分别是空间和特征空间中的两个嵌入，$ \tilde{\boldsymbol{x}}_{i, l} $ 是插值特征 $ \tilde{\boldsymbol{x}}_{i}, l=1,2, \cdots, d $ 的第 $l$ 个元素。 嵌入 $ \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $ 和 $ \psi\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right) \in \mathbb{R}^{d} $  可以定义为：
-$$
-\begin{equation}
- \theta\left(\boldsymbol{p}_{i}, \boldsymbol{p}_{j}\right)=\operatorname{ReLU}\left(\boldsymbol{W}_{\theta, j}^{\top}\left(\boldsymbol{p}_{i}-\boldsymbol{p}_{j}\right)\right), \quad \psi\left(\boldsymbol{x}_{i}, \boldsymbol{x}_{j}\right)=\operatorname{ReLU}\left(\boldsymbol{W}_{\psi, j}^{\top}\left(\boldsymbol{x}_{i}-\boldsymbol{x}_{j}\right)\right) 
-\end{equation}
-$$
-其中 ReLU 是激活函数，$ \boldsymbol{W}_{\theta, j} \in \mathbb{R}^{3 \times d} $ 和 $ \boldsymbol{W}_{\psi, j} \in \mathbb{R}^{d \times d} $ 是要学习的权重。 基于点 $p_i$ 和 $p_j$ 、$p_i − p_j$ 和 $x_i − x_j$ 之间的差异，嵌入 $θ(p_i ,p_j )$ 和 $ψ (x_i ,x_j )$ 可以分别编码点 $p_i$ 在空间和特征空间中的局部结构信息。 值得注意的是，在**Eq. 2**中，采用channel-wise双边插值。 如图 3 所示，新的插值特征 $ \tilde{\boldsymbol{x}}_{i} $ 可以从 $ \boldsymbol{x}_{i} $ 的邻域中获得，具有双边权重。 对于每个点，我们在 k 邻域中执行双边插值以生成新的 k 点。因此，我们可以获得高分辨率的特征图，其中每个点的邻域包含 2k 个点。
+我们的主要目标是设计一种能够高效准确地插入表示为点云的形状的方法。 由于几个关键原因，这个问题具有挑战性。 首先，大多数现有理论上有充分根据的公理 3D 形状插值方法 [30,25,23,24] 假设输入形状表示为具有 1-1 对应关系的固定连接的三角形网格，而且通常需要在测试时进行大量优化 . 另一方面，基于学习的方法通常将形状嵌入到紧凑的潜在空间中，并通过线性插值它们相应的潜在向量来插值形状 [1,49]。 尽管这种方法是有效的，但**潜在空间中的度量通常不被很好地理解**，**因此该空间中的线性插值可能会导致不切实际和严重扭曲的形状**。 变分自动编码器 (VAE) 等经典方法有助于将规律性引入潜在空间，并实现更准确的生成模型，但对距离的控制很少，因此对潜在空间中的插值提供了很少的控制。 为了应对这一挑战，最近的几种方法提出了为潜在空间赋予度量并帮助恢复测地距离的方法 [31,12,17]。 然而，这些方法通常再次涉及昂贵的计算，例如解码器网络的雅可比矩阵，以及在测试时进行昂贵的优化。在这种情况下，我们的主要目标是将几何方法 [30,24] 提出的形式主义和形状度量与数据驱动技术的准确性和灵活性相结合，同时保持效率和可扩展性。
 
-![image-20211110210625768](assets/image-20211110210625768.png)
 
-插值后，我们然后在放大的特征图上应用卷积。 对于每个点，我们根据距离将 2k 个点的邻域划分为两个区域。 如图2(c)所示，最近的k个点属于第一个区域，其余的作为第二个区域。 与PointNet [26]类似，我们首先使用多层感知器生成高维特征图，然后使用最大池化操作从两个区域获取两个插值点的局部特征。 如图 2 (d) 所示，我们可以通过反卷积网络将输入的点数加倍以生成高分辨率的局部特征图 X local 。我们还使用最大池化操作来提取全局特征 点云。 通过将全局特征复制 N 次，其中 N 是点数，我们可以获得高分辨率的全局特征图 X global 。 然后我们将局部特征图 X local 和全局特征图 X global 连接起来，得到反卷积网络的输出 X c = [X local ;X global ]。 因此，输出X c 不仅可以表征点云的局部几何结构，还可以在点云生成过程中捕捉点云的全局形状。
 
-![image-20211110201554840](assets/image-20211110201554840.png)
+**Shape Interpolation Energy**
 
-**Fig. 3** 基于学习的双边插值方法示意图。中心点 $x_i$ 附近的点被着色。 我们通过考虑邻域中点的局部几何特征来插入新点。$ \boldsymbol{W}_{\theta, j} $ 和 $ \boldsymbol{W}_{\psi, j}, j=1,2,3,4 $ 是要学习的空间和特征空间中的权重。
+首先回顾一下[30]中介绍的内在形状插值能量。具体假设我们有一对形状 M,N 表示为具有固定连通性的三角形网格，因此 M = (VM ,E) 和 N = (VN ,E)，其中 V,E 表示点的坐标， 分别是固定的边集。 内插序列由单参数族 S t = (V t ,E) 定义，使得 V 0 = V M ，并且 V 1 = V N 。 用v i (t) 表示顶点i 在S t 中的轨迹，S t 的基本时间连续内在插值能量定义为：
+
+
+
+**3.1. Metric interpolation in a learned space**
+
+为了克服这个限制，也许最简单的方法是使用可学习的潜在空间，但要计算插值序列，同时显式地最小化解码形状的内在失真能量。
+   即，在训练自动编码器后，给定具有潜在向量 l M ,l N 的源和目标形状，可以在潜在空间中构造一组样本 l k 并在测试时优化：
+
+
+
+给定两个可能有噪声的无组织点云 P A 和 P B 我们首先计算它们相关的基于边缘的潜在代码：m A = M PE (enc p (P A )) 和 m B = M PE (enc p (P B ))。 在这里，我们使用编码器 enc p 的置换不变性允许对无序点集进行编码。 然后我们在 m A 和 m B 之间进行线性插值，但使用形状解码器 dec p 进行重建。 因此，我们计算一系列中间点云如下： 
+
+P α = dec p (M EP ((1 − α)m A + αm B )), α ∈ [0...1] (10) 
+
+换句话说 ，**我们在基于边缘的潜在空间中插入潜在代码，但通过形状解码器 dec p 执行重建。** **这使我们能够确保重建的形状既逼真又平滑地插入它们的内在度量。** 请注意，与纯几何方法（例如 [30]）不同，我们的方法不依赖于测试时给定的网格结构。相反，**我们使用学习到的基于边缘的潜在空间作为恢复固有形状结构的代理**，如下所示，这足以获得准确和平滑的插值。
+
+由于边长自动编码器是完全旋转不变的，因此有必要在测试时对齐输出形状。 我们可以通过使用与计算 Eq.9 相同的最优刚性变换来轻松做到这一点。 
 
 
 
 
 
 
+
+---
 
 ## x**ICCV2021_Interpolation-Aware Padding for 3D Sparse Convolutional Neural Networks**
+
+https://github.com/Yukichiii/SparsePadding
 
 这里基于稀疏体素的 CNN 的填充与传统的 2D 图像填充有着根本的不同。我们在空体素周围填充额外的体素作为输入。最初，填充体素的输入特征设置为零，然后所有体素特征都由 CNN 操作动态生成。 对于图像上的 2D 卷积，由于卷积核的形状固定，靠近图像边界的像素需要虚拟填充像素。 并且填充像素的特征直接设置为零（即零填充）或图像边界上反射像素处的特征图（即反射填充）。
 
@@ -640,7 +698,7 @@ only for condition part
 
 ## *PUFlow
 
-### 3.2. Normalizing Flows
+**3.2. Normalizing Flows**
 
 标准化流是一系列可逆的分布变换。它通常用于通过简单的先验分布对难以处理的复杂分布进行建模。形式上，让 $ z \in \mathbb{R}^{D} $ 是一个具有已知密度分布 $ p_{\vartheta}(z) $ 的潜在变量，即 $ z \sim p_{\vartheta}(z) $ 。
 
@@ -679,7 +737,7 @@ $$
 
 ## *Generative Flows with Invertible Attentions
 
-### 2. Related Work
+**2. Related Work**
 
 早期的基于流的生成模型（如 [3、26、18、27]）被引入用于对真实数据对数似然的精确推断。 它们通常由一系列可逆变换构建，以将基本分布映射到复杂分布。
 
@@ -705,7 +763,7 @@ $$
 
 ## *DUAL-GLOW_Conditional_Flow-Based_Generative_Model_for_Modality_Transfer
 
-### 3. Deriving DUAL-GLOW
+**3. Deriving DUAL-GLOW**
 
 在这一节中，我们介绍了用于模态间传递的双GLOWframework。我们首先讨论了给定磁共振图像的正电子发射断层图像的条件分布的推导，然后提供了有效计算其对数似然的策略。然后，我们介绍了可逆流的构造和雅可比矩阵的计算。接下来，我们为我们的DUAL-GLOW框架构建了分层架构，与平面结构相比，这大大降低了计算成本。最后，用附加的鉴别器导出了辅助信息操作的条件结构。
 
@@ -724,7 +782,7 @@ $$
 
 传统的结构化预测模型尝试学习条件似然，即 p(y|x)，以捕捉结构化输出 y 和输入特征 x 之间的关系。 对于许多模型，计算似然性是棘手的。 因此，这些模型很难训练，需要使用替代目标或变分推理来近似似然。 在本文中，我们提出了条件发光（c-Glow），一种用于结构化输出学习的条件生成流。  CGlow 受益于基于流的模型准确有效地计算 p(y|x) 的能力。 使用 c-Glow 学习不需要替代目标或在训练期间进行推理。 一旦经过训练，我们就可以直接有效地生成条件样本。 我们开发了一种基于样本的预测方法，可以利用这一优势进行高效有效的推理。 在我们的实验中，我们在五个不同的任务上测试了 c-Glow。  C-Glow 在某些任务中优于最先进的基线，并在其他任务中预测可比较的输出。 结果表明，c-Glow 是通用的，适用于许多不同的结构化预测问题。
 
-### 3.2. Conditional Normalizing Flows
+**3.2. Conditional Normalizing Flows**
 
 归一化流是可逆函数 f = f 1 ◦f 2 ◦···◦f M 的组合，它将目标代码转换为从简单分布中提取的潜在代码 z。 在条件归一化流（Trippe and Turner 2018）中，我们将每个函数重写为 $ f_{i}=f_{x, \phi_{i}} $，使其由 x 及其参数 φ i 参数化。 因此，随着变量公式的变化，我们可以将条件似然改写为 logp(y|x,θ) = logp Z (z) + M X i=1 log ?  ？  ∂f x,φ i ∂r i−1 ?  ?  , (1) 其中 r i = f φ i (r i−1 )，r 0 = x，并且 r M = z。
 
@@ -736,7 +794,7 @@ $$
 
 
 
-### 4.1 Conditional Glow
+**4.1 Conditional Glow**
 
 为了将 Glow 修改为条件生成流，我们需要为其三个组件添加条件架构：actnorm 层、1×1 卷积层和仿射耦合层。主要思想是使用神经网络，我们将其称为**条件网络 (CN)**，用于**为每一层生成参数权重**。 详细情况如下。
 
@@ -810,7 +868,7 @@ $$
 
 
 
-### 4.2 Learning
+**4.2 Learning**
 
 为了学习模型参数，我们可以利用基于流的模型有效计算的对数似然。 在输出连续的情况下，似然计算是直接的。 因此，我们可以反向传播到微分精确的条件似然，即等式。  1，并使用梯度方法优化所有 c-Glow 参数。
 
@@ -843,7 +901,7 @@ $$
 
 
 
-### 4.3 Inference
+**4.3 Inference**
 
 Givenalearnedmodelp(y|x)，我们可以通过 c-Glow 单次前向传递进行高效采样。 我们首先计算给定 x 的变换函数，然后从 p Z (z) 中采样潜在代码 z。 最后，我们通过模型传播采样后的 z，我们得到相应的样本 y。 整个过程可以概括为
 
