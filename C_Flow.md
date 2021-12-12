@@ -852,6 +852,11 @@ $$
 $$
 
 
+
+
+
+
+
 ---
 
 # Normalizing Flows - zhihu
@@ -873,6 +878,20 @@ https://www.zhihu.com/question/376122890
 
 
 ## 3.现代流模型I - 有限变换模型
+
+### 3.1 耦合技术
+
+NICE RealNVP Glow WaveGlow FloWaveNet Flow++
+
+
+
+### 3.2 自回归技术
+
+
+
+### 3.3 其他流模型-线性流
+
+
 
 ### 3.4 其他流模型-残差流
 
@@ -923,7 +942,13 @@ $$
 
 
 
+## 4. 现代流模型II - 微分模型
 
+
+
+
+
+---
 
 ## 6.应用
 
@@ -948,6 +973,278 @@ $$
 贯穿本文的是我们始终强调一些关键的实现，能够设计出成功的流模型。也许最重要的是在**前向传播和反向传播中的雅克比行列式计算的限制**。
 
 展望未来，流模型和众多概率模型一样，存在许多障碍阻止其大范围的应用。但流模型不像**其他概率模型采用近似推断策略**，总是允许一些可求得解析解的计算甚至在高维度进行**精确的采样**。这些困难存在于，我们如何在保持精确密度计算和采样计算可处理性的同时**设计更灵活，更具有表达力的转换**？这是当前很多工作研究的对象，更多的理论研究需要拓展。了解流模型对有限样本和有限深度设置的近似能力将有助于从业者选择最适合给定应用的流类。
+
+
+
+
+
+
+
+---
+
+# Zhihu-Zhifeng-UCSD CSE Phd
+
+## 1. Normalizing Flows Overview
+
+https://zhuanlan.zhihu.com/p/378198039
+
+
+
+我粗浅将 normalizing flow 分为三类。
+
+### Non-triangular
+
+我比较关注这一类，因为这一类模型数学上更漂亮 (虽然另外两类更加popular, 这更说明了non-triangular flow比较困难) 。
+
+这一类的思想是，**利用线性代数/矩阵的性质使得 $ \operatorname{det} J_{f} $ 容易计算**。举几个简单例子：
+
+**Planar flow**: $ f(z)=z+u h\left(w^{\top} z+b\right) $, $ u, w $ 是向量，$b$ 是标量, $ h: \mathbb{R} \rightarrow \mathbb{R} $. 其 $ \operatorname{det} J_{f}(z)=1+u^{\top} w h^{\prime}\left(w^{\top} z+b\right) $.
+
+**Sylvester flow**: planar flow 的矩阵推广。$ f(z)=z+A h\left(B^{\top} z+b\right) $, $ A, B $ 为 $ d \times m $ 矩阵，$ m \ll d, b $ 为向量, $ h: \mathbb{R} \rightarrow \mathbb{R} $. 其 $ \operatorname{det} J_{f}(z)=\operatorname{det}\left(I_{m}+\operatorname{diag}\left(h^{\prime}\left(B^{\top} z+b\right) B^{\top} A\right)\right) $ 只用计算一个 $ m \times m $ 矩阵的 determinant.
+**Radial flow**: $ f(z)=z+\frac{b}{a+\left\|z-z_{0}\right\|_{2}}\left(z-z_{0}\right) $, 以 $ z_{0} $ 为中心进行类似辐射的变换，其 $ \operatorname{det} J_{f}(z)=\left(1+\frac{b}{a\left\|z-z_{0}\right\|_{2}}\right) I-\frac{b\left(z-z_{0}\right)\left(z-z_{0}\right)^{\top}}{\left(a+\left\|z-z_{0}\right\|_{2}\right)^{2}\left\|z-z_{0}\right\|_{2}} $.
+**Householder flow**: $ f(z)=z-2 v v^{\top} z, v $ 是单位反射向量，其 $ \operatorname{det} J_{f}(z)=-1 $.
+
+
+
+### Triangular
+
+ autoregressive, 自回归
+
+这一类的思想是，$ f=\left(f^{1}, \cdots, f^{d}\right) $, 每一个 $ f^{i} $ 都只是 $ z_{1}, \cdots, z_{i} $ 的函数。那么，$ J_{f}(z) $ 将会是一个三角矩阵，这也是为什么被称为 triangular 的原因。由于三角矩阵的 determinant 是对角元乘积，我们有
+$$
+\begin{equation}
+ \log \left|\operatorname{det} J_{f}(z)\right|=\sum_{i=1}^{d} \log \left|\frac{\partial f^{i}(z)}{\partial z_{i}}\right| 
+\end{equation}
+$$
+因此很好计算。为了计算 $ f^{-1} $, 我们可以采取一类特殊的变换:
+
+$$
+\begin{equation}
+ y_{1}=f^{1}\left(z_{1}\right)=\mu_{1}+\sigma_{1} z_{1} \\y_{i}=f^{i}\left(z_{1: i}\right)=\mu\left(y_{1: i-1}\right)+\sigma\left(y_{1: i-1}\right) z_{i} 
+\end{equation}
+$$
+那么逆可以如下计算
+
+$$
+\begin{equation}
+ z_{i}=\frac{y_{i}-\mu\left(y_{1: i-1}\right)}{\sigma\left(y_{1: i-1}\right)} \Rightarrow z=\frac{y-\mu(y)}{\sigma(y)} 
+\end{equation}
+$$
+这一类模型现在很多变体，本文就不展开了，经典的比如 Real-NVP, IAF, NAF, MAF 等等。WaveNet 也勉强算这一类吧。除此之外，有一类叫 coupling flow layers 的方法在自回归的框架上做了比较大的改动，有近似但不完全 triangular 的 Jacobian, 我也不展开了。
+
+
+
+### Continuous-time
+
+(Neural ODE) 这一类其实和上述 normalizing flow 有比较大的区别。之前讲的都是离散步数的，从 $ f_{1} $ 到 $ f_{T} $. 这一类将整个过程连续化，用微分方程 (ODE) 表示，代表作是 Neural ODE. 整个理论都有改动，包括 $ q_{y}(y) $ 的计算，逆映射的计算都不一样，还涉及数值 ODE 求解。因为差别较大，我先占个坑，有空再专门写写。
+
+
+
+---
+
+## 2. Normalizing Flow Theory -- Approximation of Planar Flow (1)
+
+今天讨论 non-triangular flow 里面最简单的一类: planar flow. 我们想知道，**堆积足够多的 planar layers 能否做到近似任意一个概率分布**。这被称为**生成模型的 universal approximation 问题**，类似于神经网络的 universal approximation (区别下文会讲)，是深度学习理论的一个非常基础底层的问题。
+
+
+
+**问题定义**
+
+我们考虑维度 $d=1$ 的情况。此时，planar layer 的定义为 $ f_{i}(z)=z+u_{i} h\left(w_{i} z+b_{i}\right) $. 一个由 $T$ 个 planar layer 构成的 normalizing flow 为 $ f=f_{T} \circ f_{T-1} \circ \cdot \circ f_{1} $.
+
+对于一个简单的 latent distribution $q$ 和一个复杂的 target distribution $p$, 是否存在足够大的 $T$ 和 $f$ 使得 $f$ 作用于 $q$ 后能无限接近 $p$? 
+
+我们用 $ f \# q $ 表示 $f$ 作用于 $q$ 后的分布，用 $ \ell_{1} $ distance (等价于两倍的 total variation distance, 是一种非常强的度量) 衡量概率分布之间的距离。那么，我们的目标便是证明，$ \forall \epsilon>0, \exists T, f $ such that $ \|f \# q-p\|_{1} \leq \epsilon $.
+
+
+
+**先说结论**
+
+在 **1 维情况下**，我在 The Expressive Power of a Class of Normalizing Flow Models 文章的 Section 3 中**证明了 universal approximation**. 高维情况下，无法证明 universal approximation, 没有完全证否但是说明了非常困难，这一部分就不展开了。完整的结果我写了一个 blog 展示，见 https://ucsdml.github.io/jekyll/update/2020/11/16/expressive-power-normalizing-flows.html.
+
+
+
+**相关工作**
+
+有一个非常重要的 related work, 标题是 ResNet with one-neuron hidden layers is a Universal Approximator. 该文章证明了在函数空间中，每一个 residual block 只有一个 neuron 的 ResNet 是 universal approximator. 其实，这种 ResNet 的定义几乎就是 planar flow 的定义，只有两点不同
+
+- planar flow 需要每一个 planar layer 可逆
+- planar flow 作用在概率密度上，因此是泛函而不是简单的函数
+
+除此之外，两者的数学形式是一模一样的。但是，我们为什么不能直接将这个结果拿来用？有两点原因。
+
+- 一个 function class 是 universal approximator 不代表它的可逆函数的子集也是 universal approximator. 
+  - 举例：piecewise constant functions 是所有绝对连续函数的 universal approximator, 但是它没有可逆子集。由于在 resnet universal approximation 那篇论文里，实现 approximation 的方法是非可逆的，不能套用在其可逆子集上。
+- **即使一个 function class 在函数空间不是 universal approximator, 不代表其在 transforming distribution 的泛函空间不是 universal approximator** (也就是，有可能是 universal approximator). 
+  - 举例：autoregressive flow 用到的 triangular maps, 可以通过 Knothe–Rosenblatt rearrangements 实现概率分布的任意 transformation (page 17, Optimal Transport, Old and New).
+
+
+
+---
+
+## 3. Normalizing Flow -- Invertible ResNet and Residual Flow
+
+iResNet 是集大成之作，数学上简洁而又巧妙，推广了之前的 planar / Sylvester flow, 并且可以利用几乎所有现有的 ResNet 结构。
+
+### iResNet
+
+首先，我们简单回顾一下 ResNet 的定义，其由若干个形如 $ \mathrm{Id}+g $ 的函数堆积在一起，其中  $ \mathrm{Id} $ 是恒等映射，也被称为 skip connection, $g$ 是一个 feedforward network (conv/fc 都可以), 被称为 residual block.
+
+我们再回顾 normalizing flow 的两个难点：**可逆条件的满足/逆的求解**，以及 **likelihood / log-determinant of Jacobian 的计算**。我们现在分别利用 ResNet 的框架解决这两个难点。这一章节参考了我很久以前写的一篇 blog (http://cseweb.ucsd.edu/~z4kong/files/Invertible_ResNet_Presentation.pdf).
+
+
+
+#### 难点1: invertibility
+
+我们增加一个简单的条件，令 $g$ 的 Lipschitz 常数 $ \operatorname{Lip}(g)<1 $. 根据**压缩映射**原理，$ f=\mathrm{Id}+g $ 可逆。其逆的求解可以通过 **Banach 不动点迭代**。令 $ y=f(x)=x+g(x) $, 已知 $y$, 我们通过如下迭代求解 $x$:
+$$
+\begin{equation}
+ x^{0}=y \\ x^{i+1}=y-g\left(x^{i}\right) 
+\end{equation}
+$$
+通过**数学归纳法**，容易证明
+
+$$
+\begin{equation}
+ \left\|x^{n}-x^{0}\right\| \leq \frac{\operatorname{Lip}(g)^{n}}{1-\operatorname{Lip}(g)}\left\|x^{1}-x^{0}\right\| \rightarrow 0 
+\end{equation}
+$$
+进一步，我们还能够证明
+
+$$
+\begin{equation}
+ \operatorname{Lip}(f) \leq 1+\operatorname{Lip}(g), \operatorname{Lip}\left(f^{-1}\right) \leq \frac{1}{1-\operatorname{Lip}(g)} 
+\end{equation}
+$$
+这样，我们便理论上解决了第一个难点，给出了求逆的算法以及理论保证。实际使用的时候，如何在 ResNet 中强制 $g$ 的 Lipschitz 常数小于1呢？
+
+首先，我们将所有的 conv 都看作是**特殊的 fc 层**，那么 residual block $g$ 可以写成类似 $ g(x)=W_{n}\left(\phi\left(W_{n-1} \phi\left(\cdots W_{1} x\right)\right)\right) $, 其中 $\phi$ 是 Lipschitz constant $\leq 1$ 的激活函数，比如 ReLU/ELU. 
+
+接下来，当每一个 $ W_{i} $ 的谱范数 $ \left\|W_{i}\right\|_{2} $ 小于1的时候，我们便能保证 $ \operatorname{Lip}(g)<1 $. 而使得一个矩阵的**谱范数小于1**，只需要**每次 normalize** 一下就好了，比如令 $ c=0.9 $, 然后 $ W_{i} \leftarrow c W_{i} /\left\|W_{i}\right\|_{2} $.
+
+
+
+#### 难点2: likelihood 计算
+
+在 normalizing flow 中，如果 $ z=f(x)=x+g(x) $， 那么 $ \log p_{x}(x)=\log p_{z}(z)+\log \operatorname{det} J_{f}(z) $, 其中 $ J_{f} $ 是 $f$ 的 Jacobian 矩阵。根据定义，我们有 $ J_{f}=I+J_{g} $. 接下来，我们利用公式 $ \log \operatorname{det} A=\operatorname{Tr}(\log A) $, 其中 $\operatorname{Tr}$ 是矩阵的迹。根据**矩阵迹的 power series**，有
+$$
+\begin{equation}
+ \log \operatorname{det} J_{f}=\operatorname{Tr}\left(\log \left(I+J_{g}\right)\right)=\sum_{k=1}^{\infty}(-1)^{k+1} \frac{\operatorname{Tr}\left(J_{g}^{k}\right)}{k} 
+\end{equation}
+$$
+于是，我们可以利用该**展开的有限项**
+
+$$
+\begin{equation}
+ P S\left(J_{g}, n\right)=\sum_{k=1}^{n}(-1)^{k+1} \frac{\operatorname{Tr}\left(J_{g}^{k}\right)}{k} 
+\end{equation}
+$$
+来估计 $\begin{equation}
+ \log \operatorname{det} J_{f}=P S\left(J_{g}, \infty\right) 
+\end{equation}$.
+
+在这个框架下，有两个问题。
+
+第一，$n$ 应该取多少。在实际中，$n=5\sim10$ 便能得到不错的精度。当然，我们也需要理论上的保证。我们令 $ e r r_{n}=\left|\log \operatorname{det} J_{f}-\operatorname{PS}\left(J_{g}, n\right)\right| $. 那么我们有如下 convergence 收敛的结果
+$$
+\begin{equation}
+ e r r_{n} \leq-d\left(\log (1-\operatorname{Lip}(g))+\sum_{k=1}^{n} \frac{\operatorname{Lip}(g)^{k}}{k}\right) \\
+ \left\|\nabla e r r_{n}\right\|_{\infty}=\mathcal{O}\left(\operatorname{Lip}(g)^{n}\right) 
+\end{equation}
+$$
+
+
+第二，$ J_{g}^{k} $ 的计算占用很多资源，因为矩阵 [公式] 的行/列数量为 residual block [公式] 的参数个数。我们利用一种矩阵迹的随即近似方法 (Hutchinson trace estimator): [公式]. 基于此，我们可以随机采样一个 [公式], 然后只需要更新向量 [公式], 便能够估计每一个 [公式]. 将这些方法结合起来，我们能写出如下 log-det estimator 的算法
+
+
+
+### ResFlow
+
+Residual Flow (ResFlow) 在 iResNet 的基础上作了几点改动。
+
+#### Log-det estimator
+
+ResFlow 相比于 iResNet 最主要的改进是给出了一个无偏的 log-det estimator. 我们记 $ P S\left(J_{g}, \infty\right) $ 中的每一项为 $ \Delta_{k} $, 即 $ P S\left(J_{g}, \infty\right)=\sum_{k=1}^{\infty} \Delta_{k} $. 接下来，我们利用 **Bernoulli 分布** $ \mathcal{B} $ 做一个小 trick. 令 $ b \sim \mathcal{B}(q) $, 那么
+$$
+\begin{equation}
+ \sum_{k=1}^{\infty} \Delta_{k}=\Delta_{1}+\frac{\sum_{k=2}^{\infty} \Delta_{k}}{1-q}(1-q)=\Delta_{1}+\mathbb{E}_{b}\left(\left(\frac{\sum_{k=2}^{\infty} \Delta_{k}}{1-q}\right) 1\{b=0\}+0 \times 1\{b=1\}\right) 
+\end{equation}
+$$
+基于这个思想，我们有如下 **Russian roulette estimator**
+
+$$
+\begin{equation}
+ \sum_{k=1}^{\infty} \Delta_{k}=\mathbb{E}_{n \sim p(N)} \sum_{k=1}^{n} \frac{\Delta_{k}}{p(N \geq k)} 
+\end{equation}
+$$
+**再代入 iResNet 中的 Hutchinson trace estimator**,我们便得到一个无偏的 log-det estimator:
+$$
+\begin{equation}
+ \log \operatorname{det} J_{f} \approx \mathbb{E}_{n \sim p(N), v \sim \mathcal{N}(0, I)} \sum_{k=1}^{n} \frac{(-1)^{k+1}}{k} \frac{v^{\top} J_{g}^{k} v}{P(N \geq k)} 
+\end{equation}
+$$
+
+
+#### Memory-efficient backprop
+
+在优化 log-likelihood 的时候，我们需要计算 log-det Jacobian 相对于网络中所有参数的梯度 $ \nabla \log \operatorname{det} J_{f} $. 
+
+在 **power series 中**，便会产生一项 $ \nabla\left(v^{\top} J_{g}^{k} v\right) $, 该项会占用很大的内存。因此，ResFlow 提供了一个无偏的 log-det gradient estimator (Neumann gradient series), 其基于上文给出的无偏 log-det estimator.
+$$
+\begin{equation}
+ \nabla \log \operatorname{det} J_{f}=\mathbb{E}_{n \sim p(N), v \sim \mathcal{N}(0, I)} \sum_{k=1}^{n} \frac{(-1)^{k}}{P(N \geq k)} v^{\top} J_{g}^{k}\left(\nabla J_{g}\right) v 
+\end{equation}
+$$
+这一项甚至**能够在 forward pass 中计算 likelihood 的时候一起算出来，以进一步节省内存，增加效率**。
+
+
+
+#### 激活函数
+
+由于梯度的计算涉及 $ \nabla J_{g} $ 是二阶导数，对于 Lipschitz-constrained 激活函数，会出现被称为是 **saturation problem** 的问题。
+
+比如说，当 $ \mathrm{ELU}^{\prime}(z)=1 $ 的时候，其达到最大的 Lipschitz 常数，而此时其二阶导数为 0. 换言之，我们不能同时实现较大的 Lipschitz 常数和非退化的梯度。因此，我们需要一个更好的激活函数 $ \phi $, 满足
+
+- $ \left|\phi^{\prime}(z)\right| \leq 1 $, 即 $ \operatorname{Lip}(\phi) \leq 1 $.
+- 当 $ \left|\phi^{\prime}(z)\right| \approx 1 $ 的时候，$ \phi^{\prime \prime}(z) $ 不能渐近消失
+
+本文提出 $ \phi(z)=\operatorname{LipSwish}(z)=\operatorname{Swish}(z) / \operatorname{Lip}(  \operatorname{Swish}  ) $ 激活函数，为 $ \operatorname{Swish}(z)=z \cdot \operatorname{sigmoid}(\beta z) $ 的 Lipschitz 版本，其中 $ \operatorname{Lip}(\operatorname{Swish}) \approx 1.1 $ 是一个常数。
+
+
+
+iResNet 相比于其它的 normalizing flow 模型的特点对比如下图所示。由于其 **free-form** 的特点，逆和 likelihood 都需要通过算法近似，因此得不到解析的解。至于最后一个指标，在 iResNet 中 log-det estimator 不是无偏估计，这确实算一个缺点，这个问题在后续的 ResFlow 中被解决了。
+
+**iResNet** 还有一个很有意思的特点，由于其**在 ResNet 的基础上没有太大改动，只是增加了一个谱范数的 normalization**, 因此在分类任务上，也能够接近 SOTA ResNet. 换言之，iResNet 在有监督的分类任务和无监督的生成任务都有很好的表现，这一点是十分有意义的。
+
+ResFlow 将 iResNet 进一步完善，包括提供了 unbiased estimator. 其生成的质量也相比 iResNet 提升了不少，与 Glow 相当，因此能够被称为 **normalizing flow 里的 SOTA,** 但是仍然无法与其它模型相比较，甚至还不如更早的 DC-GAN 和 WGAN-GP. 我个人觉得 ResFlow 在**数学上十分简洁而对网络结构无需太多限制，是很巧妙的工作**，希望有一天能够看到这一类模型达到真正的 SOTA.
+
+
+
+
+
+## 4. Normalizing Flow Theory -- Approximation of ResFlow
+
+ iResNet 和 ResFlow 模型，这两个模型的前向过程是一样的，只是 log-det estimator 不一样。ResNet 的表征能力很强，其 **skip connection 能带来极大的 expressive power**. 可以将 **ResFlow 看作是 ResNet 的 invertible subset**. 本文介绍对 ResFlow 的表征能力的研究，在文章 (Universal Approximation of Residual Flows in Maximum Mean Discrepancy) 证明了其具有一定 (但不是特别强) 的 universal approximation 性质。
+
+
+
+对于 ResFlow 以及相关模型表征能力的理论研究已经有若干篇，大部分是负面的结果。在之前的文章中证明了 1 维上，其能实现 total variance distance 的 universal approximation (https://zhuanlan.zhihu.com/p/378644481 和 https://zhuanlan.zhihu.com/p/379880649). 除此之外，所有的结果都是负面的，即 **ResFlow 不可能或者很难表达某些概率分布**。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

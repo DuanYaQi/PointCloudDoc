@@ -175,6 +175,10 @@ $$
 
 
 
+**见文件Pre_StableArch4DNN.md 小节 3.2. Convolutional Layers**
+
+
+
 ---
 
 ## 3.2. 逆函数计算

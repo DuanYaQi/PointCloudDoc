@@ -128,6 +128,8 @@ $$
 
 ### 3.2. Convolutional Layers
 
+https://blog.csdn.net/github_36326955/article/details/72835148
+
 卷积层 $\phi^{\text {conv }}(X)$ 也执行仿射变换，但通常用离散卷积和逐点加法来表达计算更方便。对于卷积层，第 $i$ 个输出特征图由下式给出
 $$
 \begin{equation}
