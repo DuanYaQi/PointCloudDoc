@@ -324,9 +324,23 @@ DensePoint: Learning Densely Contextual Representation for Efficient Point Cloud
 
 # Attention
 
+
+
+**NIPS Deep Modular Co-Attention Networks for Visual Question Answering**
+
 P_PointASNL.md 文件
 
+
+
+
+
+
+
+
+
 **PointASNL: Robust Point Clouds Processing using Nonlocal Neural Networks with Adaptive Sampling**
+
+P_PointASNL.md 文件
 
 ![image-20211125215549692](assets/image-20211125215549692.png)
 
@@ -347,13 +361,16 @@ P_PointASNL.md 文件
 
 **SA-Det3D: Self-Attention Based Context-Aware 3D Object Detection**
 
+P_PointASNL.md 文件
+
 ![image-20211125220439691](assets/image-20211125220439691.png)
 
 
 
 
 
-**ACMMM2020_CF-SIS: Semantic-Instance Segmentation of 3D Point Clouds by**
+## **ACMMM2020_CF-SIS: Semantic-Instance Segmentation of 3D Point Clouds by**
+
 **Context Fusion with Self-Attention**
 
 ![image-20211110153842126](assets/image-20211110153842126.png)
@@ -399,13 +416,13 @@ $$
 
 
 
-x**WACV2020_Global Context Reasoning for Semantic Segmentation of 3D Point Clouds**
+## x**WACV2020_Global Context Reasoning for Semantic Segmentation of 3D Point Clouds**
 
 - 一定要参考它的**Implementation Details**.
 
 
 
-**CVPR2021_SOE-Net_A_Self-Attention_and_Orientation_Encoding_Network_for_Point_Cloud**
+## **CVPR2021_SOE-Net_A_Self-Attention_and_Orientation_Encoding_Network_for_Point_Cloud**
 
 - Sec 4.2
 
@@ -431,7 +448,7 @@ $$
 
 
 
-√**CVPR2018_Attentional_ShapeContextNet**
+## √**CVPR2018_Attentional_ShapeContextNet**
 
 https://github.com/umyta/A-SCN
 
@@ -459,7 +476,7 @@ $$
 
 ---
 
-√**CVPR2020_SA-Net_PointCloud_Completion_by_Skip-attention_Network_with_HierarchicalFolding**
+## √**CVPR2020_SA-Net_PointCloud_Completion_by_Skip-attention_Network_with_HierarchicalFolding**
 
 https://github.com/RaminHasibi/SA_Net
 
@@ -467,7 +484,7 @@ https://github.com/RaminHasibi/SA_Net
 
 
 
-√**TVCG2019_VoxSegNet- Volumetric CNNs for semantic**
+## √**TVCG2019_VoxSegNet- Volumetric CNNs for semantic**
 
 https://github.com/screnary/VoxSegNet
 
@@ -479,7 +496,7 @@ https://github.com/screnary/VoxSegNet
 
 
 
-x**CVPR2019_Modeling Point Clouds with Self-Attention and Gumbel Subset Sampling**
+## x**CVPR2019_Modeling Point Clouds with Self-Attention and Gumbel Subset Sampling**
 
 We propose to use attention layers to capture the relations between the points. MHA is successful in modeling relations by introducing a critical multi-head design [10, 40, 28], however we argue that it is voluminous for modeling point clouds. To this regard, we propose a parameter-efficient Group Shuffle Attention (GSA) to replace MHA. There are two improvements over MHA:  
 
@@ -490,6 +507,12 @@ Firstly, toget rid ofposition-wise MLPs, we integrate the non-linearity σ into 
 Attn σ (Q,X) = S(Q,X) · σ(X), (7)
 
 where we use a Scaled Dot-Product attention [39] for S, i.e., S(Q,X) = softmax(QX T / √ c), and ELU activation [8] for σ. In other words, we use the ”pre-activation” to attend to the ”post-activation”. 其中我们对 S 使用 Scaled Dot-Product attention [39]，即 S(Q,X) = softmax(QX T / √ c)，对 σ 使用 ELU 激活 [8]。 换句话说，我们使用“预激活”来处理“激活后”。
+
+
+
+
+
+
 
 
 

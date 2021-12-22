@@ -258,58 +258,53 @@ $$
 
 # Deep Modular Co-Attention Networks for Visual Question Answering
 
+
+
 ## 3. Modular Co-Attention Layer
 
 在介绍模块化协同注意网络之前，我们首先介绍它的基本组成部分——模块化协同注意(MCA)层。MCA层是两个基本注意单元，即自我注意单元(self -attention, SA)和引导注意单元(guided-attention, GA)的模块化组成，其灵感来自于中提出的尺度点积注意[29]。使用不同的组合，我们得到了三种不同动机的MCA变体
 
 
 
-### 3.1. Self-Attention and Guided-Attention Units
+### **3.1. Self-Attention and Guided-Attention Units**
 
-尺度点积注意力的输入由维度为 $d_{\text {key}}$ 的 queries和 keys 还有维度为 $d_{\text {value}}$ 的 value 组成。为简单起见， $d_{\text {key}}$ 和 $d_{\text {value}}$ 通常被设置为相同的数字 $d$。我们计算 query 与所有 keys 的点积，将每个键除以 $\sqrt{d}$，并应用 softmax 函数来获得在 values 上的注意力权重。给定一个 query $ q \in \mathbb{R}^{1 \times d} $, n 个 key-value 对(挤进一个 key 矩阵 $ K \in \mathbb{R}^{n \times d} $ 和一个 value 矩阵 $ V \in \mathbb{R}^{n \times d} $),参加特性 $ f \in \mathbb{R}^{1 \times d} $ 是通过加权总和所有 values $V$ 的注意力从 $q$ 和 $K$:
+缩放点积注意力的输入由 query 和 key 维度 $ d_{\text {key }} $ 的以及 value 的维度 $ d_{\text {value }} $ 组成。为简单起见， $ d_{\text {key }} $ 和 $ d_{\text {value }} $ 通常设置为相同的数字 $d$。我们使用所有 key 计算 query 的点积，将每个键除以 $ \sqrt{d} $ 并应用 softmax 函数来获取值的关注权重。 给定一个 query $ q \in \mathbb{R}^{1 \times d} $，n 个 key-value 对（打包成一个 key 矩阵 $ K \in \mathbb{R}^{n \times d} $ 和一个 value 矩阵 $ V \in \mathbb{R}^{n \times d} $），得到关注特征 $ f \in \mathbb{R}^{1 \times d} $ 通过关于从 $q$ 和 $K$ 中学习到的注意力的所有 values $V$ 的加权求和：
 $$
 \begin{equation}
  f=A(q, K, V)=\operatorname{softmax}\left(\frac{q K^{T}}{\sqrt{d}}\right) V 
 \end{equation}
 $$
-为了进一步提高参与特征的表示能力，在[29]中引入了多头注意，它由 $h$ 个平行的“头”组成。每个头都对应一个独立的点积注意函数。参与输出特征 $f$ 由:
+为了进一步提高参与特征的表示能力，[29] 中引入了多头注意力，它由 $h$ 个平行的“头”组成。 每个头部对应一个独立的缩放点积注意力函数。 参与输出特征 $f$ 由下式给出：
 $$
 \begin{equation}
- f=M A(q, K, V)=[\text{head}_{1} \text{,head} _{2}, \ldots \text{head}_{h}] W^{o} 
+ f=M A(q, K, V)=\left[\right. \text{head}_{1}, \text{head}_{2}, \ldots, \operatorname{head}_{h}] W^{o} 
 \end{equation}\tag{2}
 $$
 
 $$
-\begin{equation}
-\text{head}_{j}=A\left(q W_{j}^{Q}, K W_{j}^{K}, V W_{j}^{V}\right) 
-\end{equation}
+\text{head}_{j}=A\left(q W_{j}^{Q}, K W_{j}^{K}, V W_{j}^{V}\right)
 $$
 
-其中 $ W_{j}^{Q}, W_{j}^{K}, W_{j}^{V} \in \mathbb{R}^{d \times d_{h}} $ 是第 $j$ 个头的投影矩阵，$ W_{o} \in \mathbb{R}^{h * d_{h} \times d} $。$d_h$ 是每个头输出特征的维数。来防止多头注意模型变得太大，我们通常用 $d_h = d/h$。在实践中，我们可以通过将Eq.(2)中的 q 替换为 Q 以无缝地计算对 $m$ 个查询集合 $ Q= \left[q_{1} ; q_{2} ; \ldots ; q_{m}\right] \in \mathbb{R}^{m \times d} $ 的注意函数，从而得到伴随的输出特征 $ F \in \mathbb{R}^{m \times d} $
+其中 $W_{j}^{Q}$, $W_{j}^{K}$, $ W_{j}^{V} \in \mathbb{R}^{d \times d_{h}} $是第 $j$ 个头部的投影矩阵，$ W_{o} \in \mathbb{R}^{h * d_{h} \times d} $ 。 $d_h$ 是每个头部的输出特征的维度。
+
+![image-20211222212009076](assets/image-20211222212009076.png)
+
+我们在多头注意之上构建了两个注意单元来处理 VQA 的多模态输入特征，即自注意 (SA) 单元和引导注意 (GA) 单元。
+
+SA 单元（见图 2a）由多头注意力层和逐点前馈层组成。 取一组输入特征 $ X=\left[x_{1} ; \ldots ; x_{m}\right] \in \mathbb{R}^{m \times d_{x}} $，多头注意力学习 $X$ 内配对样本 $ <x_{i}, x_{j}> $ 之间的成对关系并输出参与的输出特征 $ Z \in \mathbb{R}^{m \times d} $ 通过 $X$ 中所有实例的加权求和。前馈层采用多头注意力层的输出特征，并通过两个具有 ReLU 激活和丢弃 (FC(4d)-ReLU-Dropout(0.1)FC(d))。 此外，将残差连接 [12] 和层归一化 [3] 应用于两层的输出以促进优化。  
+
+GA 单元（见图 2b）采用两组输入特征 $ X \in \mathbb{R}^{m \times d_{x}} $ 和 $ Y=\left[y_{1} ; \ldots ; y_{n}\right] \in \mathbb{R}^{n \times d_{y}} $，其中 $Y$ 指导 $X$ 的注意力学习。注意 $X$ 和 $Y$ 的形状是灵活的，因此它们可用于表示不同模态（例如，问题和图像）的特征。GA 单元分别对来自 $X$ 和 $Y$ 的每个配对样本 $ \left\langle x_{i}, y_{j}\right\rangle $ 之间的成对关系建模。
 
 
 
-### 
+解释：对于具有输入特征 $X$ 的 SA 单元，对于每个 $ x_{i} \in X $，其参与特征 $ f_{i}=\operatorname{MA}\left(x_{i}, X, X\right) $ 可以理解为通过 $X$ 中的所有样本根据它们与 $x_i$ 的归一化相似度重建 $x_i$ 。
 
-![image-20211126174653346](assets/image-20211126174653346.png)
+类似地，对于具有输入特征 $X$ 和 $Y$ 的 GA 单元，$ x_{i} \in X $ 的参与特征 $ f_{i}=\operatorname{MA}\left(x_{i}, Y, Y\right) $ 是通过用 $Y$ 中的所有样本根据它们与 $x_i$ 的归一化跨模态相似度重建 $x_i$ 来获得的 
 
-**Fig. 2** 两个基本的注意单元与多头注意力不同类型的输入。SA 取一组输入特性 X，将参与的特性 Z 输出到 X; GA 算法取两组输入特征 X 和 Y，在 Y 的引导下输出 X 的参与特征 Z。
+For a SA unit with input features $X$, for each $ x_{i} \in X $, its attended feature $ f_{i}=\operatorname{MA}\left(x_{i}, X, X\right) $
+can be understood as reconstructing $x_i$ by all the samples in $X$ with respect to their normalized similarities to $x_i$ .
 
-
-
-为了处理 VQA 的多模态输入特征，我们在多头注意的基础上构建了两个注意单元，即自注意单元和引导注意单元。
-
-SA 单元 (见 Fig. 2a) 由一个多头注意层和一个逐点前馈层组成。取一组输入特征 $ X=\left[x_{1} ; \ldots ; x_{m}\right] \in \mathbb{R}^{m \times d_{x}} $，多头注意学习了 $X$ 内配对样本 $ <x_{i}, x_{j}> $ 之间的成对关系，并通过 $X$ 中所有实例的加权和输出参与的输出特征 $ Z \in \mathbb{R}^{m \times d} $。feed-forward 层取多头注意层的输出特征，并进一步通过两个全连接层进行 ReLU 激活和 dropout (FC(4d)-ReLU-Dropout(0.1)FC(d))的转换。另外，两层的输出采用残差连接[12]和层归一化[3]，便于优化。
-
-GA 单元 (见 Fig. 2b) 需要两组的输入特征 $X$ 和 $ Y=\left[y_{1} ; \ldots ; y_{n}\right] \in \mathbb{R}^{n \times d_{y}} $,  $Y$ 引导注意力学习 $X$ 。$X$ 和 $Y$ 的注意,形状是灵活的，所以他们可以用来代表不同形式的特性(例如,问题和图像)。GA单元分别对 $X$ 和 $Y$ 中 $ \left\langle x_{i}, y_{j}\right\rangle $ 的配对样本之间的成对关系进行建模。
-
-
-
-解释：由于Eq.2 中的多头注意在两个注意单元中扮演着关键的角色，我们仔细研究一下它在不同类型的输入中是如何工作的。
-
-对于具有输入特征 $X$ 的 SA 单元，对于每个 $ x_{i} \in X $，其参与特征 $ f_{i}=\operatorname{MA}\left(x_{i}, X, X\right) $ 可以理解为 $X$ 中的所有样本根据它们与 $X$ 的归一化相似性重构 $x_i$。
-
-类似地，对于具有输入特征 $X$ 和 $Y$ 的 ga 单元 x i∈x的参与特征 $ f_{i}=\operatorname{MA}\left(x_{i}, Y, Y\right) $ 是由 $Y$ 中的所有样本根据它们与 $x_i$ 的归一化交叉模态相似性重构 $x_i$ 得到的
+Analogously, for a GA unit with input features $X$ and $Y$ , the attended feature $ f_{i}=\operatorname{MA}\left(x_{i}, Y, Y\right) $ for $ x_{i} \in X $ is obtained by reconstructing $x_i$ by all the samples in $Y$ with respect to their normalized cross-modal similarity to $x_i$ .
 
 
 
