@@ -134,7 +134,19 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 
 - [ ] 论文示意图 
 - [ ] 论文总架构图
+
+![image-20220113155655012](assets/image-20220113155655012.png)
+
+
+
+![image-20220113155701619](assets/image-20220113155701619.png)
+
+
+
 - [ ] 残差块示意图
+
+![image-20220113155750249](assets/image-20220113155750249.png)
+
 - [ ] 局部特征提取图
 - [ ] 全局特征提取图
 - [ ] 特征聚合图
@@ -147,6 +159,16 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 ## 实验结果图
 
 - [ ] Fig. 4 点云对比图，可视化P2F误差 5*6 矩阵 5个模型 （5个方法+1个GT）    一个boudingbox放大展示局部信息
+
+
+
+It can better preserve the smoothness of local regions and produce a reliable shape, while other methods tend to produce more noisy points between some complex adjacent regions
+
+
+
+
+
+
 
 
 
@@ -987,6 +1009,12 @@ $$
  d(P, Q)=\sum_{p \in P} \min _{q \in Q}\|p-q\|_{2}^{2}+\sum_{q \in Q} \min _{p \in P}\|p-q\|_{2}^{2} 
 \end{equation}
 $$
+
+$$
+\mathcal{L}_{\mathrm{CD}}(P, Q)=\sum_{p \in P} \min _{q \in Q}\|p-q\|_{2}+\sum_{q \in Q} \min _{p \in P}\|p-q\|_{2}
+$$
+
+
 这个距离对点的排序是不变的，这就避免了定义对应关系的需要。相反，网络独立地学习将源点映射到潜在的目标形状分布。由于没有对应关系，重要的是每一对源和目标子集 $ \mathbb{S}, \mathbb{T} $ 都是不相交的，这有助于避免无位移的琐碎解决方案（即 $ \Delta=\overrightarrow{0} $ ）。
 
 This distance is invariant to point ordering, which avoids the need to define correspondence. Instead,the network independently learns to map source points to the underlying target shape distribution. Since there is no correspondence, it is important that each pair of source and target subsets S,T are disjoint, which helps avoid the trivial solution of no-displacement (i.e., Δ = ? 0).
@@ -1009,9 +1037,57 @@ $$
 
 
 
+## EMD
+
+https://zhuanlan.zhihu.com/p/270675634
 
 
 
+**PUGAN**
+
+Both the adversarial and uniform losses do not encourage the generated points to lie on the target surface. Thus, we include a reconstruction loss using the Earth Mover’s distance (EMD)
+
+
+
+
+
+对抗性的和统一的 损失都不鼓励生成的点位于 目标表面。因此，我们包括一个重建损失，使用 地球移动者距离(EMD)
+$$
+\begin{equation}
+ d_{E M D}\left(S_{1}, S_{2}\right)=\min _{\phi: S_{1} \rightarrow S_{2}} \sum_{x \in S_{1}}\|x-\phi(x)\|_{2} 
+\end{equation}
+$$
+
+
+
+$$
+\begin{equation}
+ \mathcal{L}_{\mathrm{EMD}}(\hat{\mathcal{X}}, \mathcal{X})=\min _{\phi: \hat{\mathcal{X}} \rightarrow \mathcal{X}} \sum_{x_{i} \in \hat{\mathcal{X}}}\left\|x_{i}-\phi\left(x_{i}\right)\right\|_{2} 
+\end{equation}
+$$
+
+$$
+\begin{equation}
+ \mathcal{L}_{\text {rec }}=\min _{\phi: \mathcal{Q} \rightarrow \hat{\mathcal{Q}}} \sum_{q_{i} \in \mathcal{Q}}\left\|q_{i}-\phi\left(q_{i}\right)\right\|_{2} 
+\end{equation}
+$$
+
+$$
+\begin{equation}
+ \mathcal{L}_{\mathrm{EMD}}(P, Q)=\min _{\phi: \mathcal{P} \rightarrow \mathcal{Q}} \sum_{p_{i} \in \mathcal{P}}\left\|p_{i}-\phi\left(p_{i}\right)\right\|_{2} 
+\end{equation}
+$$
+
+
+---
+
+## Uniform
+
+$$
+\begin{equation}
+ p_{i}= \sum_{p_{i} \in \mathrm{P}}\sum_{p_{j} \in \mathrm{P},j \neq i} \exp \left(-\left\|p_{i}-p_{j}\right\|^{2} /\left(2 \sigma^{2}\right)\right) 
+\end{equation}
+$$
 
 
 
