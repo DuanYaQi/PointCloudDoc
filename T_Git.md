@@ -109,7 +109,7 @@ readme.txt文件里面增加一行 内容为555555555555，未提交之前，我
 ### 创建ssh key
 
 ```
-ssh-keygen -t rsa –C “youremail@example.com”
+ssh-keygen -t rsa -C “youremail@example.com”
 ```
 
 登录github，setting 中的 SSH Keys 页面 add ssh keys ：填写任意 titile 、 key文本框粘贴pub的内容、点击addkey
@@ -448,6 +448,7 @@ git checkout master
 
 这里实际远程端的其他分支也同步了下来的了，但是 git branch 不会展示出来
 直接 git checkout 分支名 就可以直接切过去了
+
 ```
 
 
@@ -629,3 +630,41 @@ git config --global http.proxy 'http://127.0.0.1:8889'
 git config --global https.proxy 'http://127.0.0.1:8889'
 ```
 
+
+
+## 14. GnuTLS recv error (-110): The TLS connection was non-properly terminated.
+
+https://stackoverflow.com/questions/52529639/gnutls-recv-error-110-the-tls-connection-was-non-properly-terminated
+
+Recompile and install git solve it finally, the steps are the following:
+
+```shell
+sudo apt-get install build-essential fakeroot dpkg-dev -y
+sudo apt-get build-dep git -y
+sudo apt-get install libcurl4-openssl-dev -y
+cd ~
+mkdir source-git
+cd source-git/
+apt-get source git
+cd git-2.*.*/
+sed -i -- 's/libcurl4-gnutls-dev/libcurl4-openssl-dev/' ./debian/control
+sed -i -- '/TEST\s*=\s*test/d' ./debian/rules
+dpkg-buildpackage -rfakeroot -b -uc -us
+sudo dpkg -i ../git_*ubuntu*.deb
+```
+
+
+
+
+
+---
+
+## 15. github,Empty reply from server？
+
+比如现在你的repo地址是：
+
+https: //[http://github.com/xxx/xxx.github.io.git](https://link.zhihu.com/?target=http%3A//github.com/xxx/xxx.github.io.git)
+
+那就把https://换成git@，如下：
+
+git@github.com:xxx/xxx.github.io.git

@@ -135,6 +135,8 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 - [ ] 论文示意图 
 - [ ] 论文总架构图
 
+PU-INN 的总架构图。上图显示了 PU-INN 模型的整体架构，包含三个主要部分：PU-INN 主流层网络（第 4.1 节）、主体（第 4.2 节）和尾部（第 4.3 节）。 PU-Transformer 主体包括一组级联的 Transformer Encoders，作为整个 PU-Transformer 模型的核心组件。 特别地，每个 Transformer Encoder 的详细结构（例如，PU-Transformer body 总共包含 L 个 Transformer Encoders）如下图所示，其中所有注释与 Alg. 中的第 3-5 行一致。 1.
+
 ![image-20220113155655012](assets/image-20220113155655012.png)
 
 
@@ -164,15 +166,75 @@ contribution and experiments 都比较让审稿人满意。但仍有几点值得
 
 It can better preserve the smoothness of local regions and produce a reliable shape, while other methods tend to produce more noisy points between some complex adjacent regions
 
+![image-20220121133031702](assets/image-20220121133031702.png)
 
 
 
 
 
+![image-20220121133120996](assets/image-20220121133120996.png)
+
+
+
+![image-20220121133157413](assets/image-20220121133157413.png)
 
 
 
 - [ ] Fig. 5 曲面对比图，5*6 矩阵 5个模型 （5个方法+1个GT）  一个boudingbox放大展示局部信息
+
+站立人 
+
+Abraham                 8
+
+Aloisius-von_Gonzaga 5
+
+A_Roman_warrior √
+
+Elisabeth  x
+
+Franz_von_Assisi√
+
+Goddess_of_hope√
+
+Leopold  x
+
+Saint_Mary_of_Antioch√
+
+saint_sylvestre x
+
+Standing_Isis_priest x
+
+
+
+坐人
+
+Hans_Christian_Andersen
+
+Ludwig_van_Beethoven
+
+Narcisse_made √
+
+Woman_and_pupil
+
+
+
+头像
+
+Andre_Lens
+
+Charles_Joseph
+
+Friedrich_Schiller
+
+Johan_van_Oldenbarnevelt
+
+
+
+狮子
+
+Lowe
+
+
 
 compute normal ->25
 
