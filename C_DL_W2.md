@@ -547,6 +547,8 @@ mini-batch 梯度不是每次都在下降的。但如果数据足够均匀，右
 
 如果总体样本数量 $m$ 很大时，建议将样本分成许多mini-batches。推荐常用的mini-batch size为 64,128,256,512。这些都是2的幂。之所以这样设置的原因是计算机存储数据一般是2的幂，这样设置可以提高运算速度。
 
+
+
 ---
 
 #### 2.3 指数加权平均
@@ -662,11 +664,10 @@ $$
 
  root mean square prop 均方根，因为你将微分进行平方，然后最后使用平方根。
 $$
-\begin{equation}
  S_{W}=\beta S_{d W}+(1-\beta) d W^{2} \\
  S_{b}=\beta S_{d b}+(1-\beta) d b^{2} \\
- W:=W-\alpha \frac{d W}{\sqrt{S_{W}}}, b:=b-\alpha \frac{d b}{\sqrt{S_{b}}} 
-\end{equation}
+ W:=W-\alpha \frac{d W}{\sqrt{S_{W}}}\\
+ b:=b-\alpha \frac{d b}{\sqrt{S_{b}}} 
 $$
 从下图中可以看出，梯度下降（蓝色折线）在垂直方向（b）上**振荡较大**，在水平方向（W）上振荡较小，表示在b方向上**梯度较大**，即 $db$ 较大，而在 W 方向上梯度较小，即 $dW$ 较小。因此，上述表达式中 $S_b$ 较**大**，而 $S_W$ 较小。在更新 W 和 b 的表达式中，变化值 $ \frac{d W}{\sqrt{S W}} $ 较大，而 $ \frac{d b}{\sqrt{S_{b}}} $ 较**小**。也就使得 W 变化得多一些，b 变化得**少**一些。
 
@@ -688,8 +689,6 @@ $$
 ---
 
 #### 2.8 Adam 优化算法
-
-aidamu
 
 2015年 ICLR 提出的 A method for Stochastic Optimization, that the name is derived from adaptive moment estimation
 
@@ -1015,9 +1014,8 @@ $$
 $$
 通过Softmax激活函数
 $$
-\begin{equation}
- t=e^{z^{[L]}}, \quad t \in \mathbb{R}^{4 \times 1} \\ a^{[L]}=\frac{e^{z^{[L]}}}{\sum_{i=1}^{4} t_{i}}, \quad a_{i}^{[L]}=\frac{t_{i}}{\sum_{i=1}^{4} t_{i}} \\ \operatorname{softmax}: a_{(c, 1)}^{[L]}=g^{[L]}\left(z_{\{c, 1\rangle}^{[L]}\right) 
-\end{equation}
+
+ t=e^{z^{[L]}}, \quad t \in \mathbb{R}^{4 \times 1} \\ a^{[L]}=\frac{e^{z^{[L]}}}{\sum_{i=1}^{4} t_{i}}, \quad a_{i}^{[L]}=\frac{t_{i}}{\sum_{i=1}^{4} t_{i}} \\ \operatorname{softmax}: a_{(c, 1)}^{[L]}=g^{[L]}\left(z_{\{c, 1\rangle}^{[L]}\right) 
 $$
 其中 C 表示分类数量，例子中 C = 4，a 表示对应所属类的概率，维度与 z 相同。且
 $$

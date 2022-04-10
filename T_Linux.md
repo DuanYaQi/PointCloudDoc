@@ -21,6 +21,10 @@
 | sudo dpkg -i xxx              | 安装xxx软件  .deb                                            |
 | sudo dpkg -l xxx              | 查看已经安装的软件                                           |
 | sudo dpkg -r **xxx**          | 卸载xxx                                                      |
+| 更新vscode                    |                                                              |
+| sudo apt-get update           |                                                              |
+| sudo apt-get install code     |                                                              |
+|                               |                                                              |
 |                               |                                                              |
 | locate **xxx**                | 一般寻找**文件**xxx 数据搜寻 搜索数据库（/var/lib/locatedb）<br>比find -name快。使用前，先使用**updatedb**命令，手动更新数据库 |
 | find <指定目录> -name **xxx** | 一般寻找**文件**xxx 硬盘搜寻 档案档名的搜寻  默认当前目录    |

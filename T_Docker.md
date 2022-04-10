@@ -1154,3 +1154,129 @@ cpu限制分析 https://blog.csdn.net/asd05txffh/article/details/52267818Docker
 Docker: 限制容器可用的 CPU https://www.cnblogs.com/sparkdev/p/8052522.html
 
 
+
+---
+
+# Docker overlay
+
+docker container prune # 删除所有退出状态的容器
+docker volume prune # 删除未被使用的数据卷
+docker image prune # 删除 dangling 或所有未被使用的镜像
+
+
+
+
+
+docker 占用的空间可以通过下面的命令查看：
+
+```SHELL
+docker system df
+```
+
+
+
+查看当前占用的空间
+
+```shell
+df -h /home/duan/workspace/docker/
+```
+
+
+
+
+
+---
+
+## portainer 管理
+
+```shell
+docker pull portainer/portainer
+```
+
+
+
+```shell
+docker run -it --restart=always -d --name portainer-docker -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
+
+docker ps
+0.0.0.0:9000
+```
+
+
+
+
+
+```shell
+sudo find . -name "*" -mtime +140
+sudo find . -name "*" -mtime +140 -type d 只要目录
+
+sudo find . -name "*" -mtime +140 -type d -maxdepth 1 第一层目录
+sudo find . -name "*" -mtime +140 -type d -maxdepth 1 | wc -l 第一层目录数目
+
+sudo find . -name "*" -mtime +140 -type d -maxdepth 1 -exec rm -rfv {} \;
+# -exec参数，如果查找有返回，可在exec参数后加上需要操作的命令，查找结果用{}来代替
+
+sudo find . -name "*" -mtime +140 -type d -maxdepth 1 -exec rm -rfv {} \; > /dev/null 2>&1
+# 不输出结果 注意符号;的位置
+
+unzip xx.zip > /dev/null 2>&1
+前半部分 > /dev/null 是将标准输出重定向到空设备，
+后面的2>&1就将标准错误输出重定向到标准输出，这样最终也是到空设备。
+
+
+
+-type f 类型为文件
+-type d 类型为目录
+```
+
+
+
+
+
+**2>&1**
+
+0 1 2是一个文件描述符
+标准输入(stdin)	0	< 或 <<
+标准输出(stdout)	1	>, >>, 1> 或 1>>
+标准错误输出(stderr)	2	2> 或 2>>
+
+符号>&是一个整体，不可分开
+
+
+
+2>1的写法其实是将标准错误输出**重定向**到**名为"1"的文件**里去了
+
+
+
+
+
+**为什么2>&1要放在后面**
+
+考虑如下一条shell命令
+
+```shell
+nohup java -jar app.jar >log 2>&1 &
+```
+
+(最后一个&表示把条命令放到后台执行，不是本文重点，不懂的可以自行Google)
+
+为什么2>&1一定要写到>log后面，才表示标准错误输出和标准输出都定向到log中？
+
+我们不妨把1和2都理解是一个指针,然后来看上面的语句就是这样的：
+
+- 本来1----->屏幕 （1指向屏幕）
+- 执行>log后， 1----->log (1指向log)
+- 执行2>&1后， 2----->1 (2指向1，而1指向log,因此2也指向了log)
+
+再来分析下
+
+```
+nohup` `java -jar app.jar 2>&1 >log &
+```
+
+1. 本来1----->屏幕 （1指向屏幕）
+2. 执行2>&1后， 2----->1 (2指向1，而1指向屏幕,因此2也指向了屏幕)
+3. 执行>log后， 1----->log (1指向log，2还是指向屏幕)
+
+所以这就不是我们想要的结果。
+
