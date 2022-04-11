@@ -312,7 +312,7 @@ CNN有三种类型的layer：
 
 **参数**
 
-池化的超级参数包括过滤器大小 $f$ 和步幅 $s$ ,常用的参数值为 $f=2, s=2$，效果相当于高度和宽度缩减一半。很少用到超参数 padding。最常用的 padding 值是0，输入为$n_{H} \times n_{W} \times n_{c}$，输出为$ \lfloor\frac{n_{H}-f}{s}+1\rfloor \times\lfloor\frac{n_{\mathrm{w}}-f}{s}+ 1\rfloor \times n_{c}$。
+池化的常见参数包括过滤器大小 $f$ 和步幅 $s$ ,常用的参数值为 $f=2, s=2$，效果相当于高度和宽度缩减一半。很少用到超参数 padding。最常用的 padding 值是0，输入为$n_{H} \times n_{W} \times n_{c}$，输出为$ \lfloor\frac{n_{H}-f}{s}+1\rfloor \times\lfloor\frac{n_{\mathrm{w}}-f}{s}+ 1\rfloor \times n_{c}$。
 
 输入与输出**通道数相同**，因为我们对每个通道都做了池化。需要注意的一点是，池化过程中**没有需要学习的参数**。执行反向传播时，反向传播没有参数适用于最大池化。这些设置过的超参数，可能是手动设置的，也可能是通过交叉验证设置的。
 
@@ -460,12 +460,10 @@ skip connection / short cut
 
 上图中红色部分就是skip connection，直接建立 $a[l]$ 与 $a[l+2]$ 之间的隔层联系。相应的表达式如下：
 $$
-\begin{equation}
 z^{[l+1]}=W^{[l+1]} a^{[l]}+b^{[l+1]}\\
 a^{[l+1]}=g\left(z^{[l+1]}\right)\\
 z^{[l+2]}=W^{[l+2]}a^{[l+1]}+b^{[l+2]}\\
 a^{[l+2]}=g\left(z^{[l+2]}+a^{[l]}\right)
-\end{equation}
 $$
 
 
